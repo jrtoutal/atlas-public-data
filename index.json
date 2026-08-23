@@ -1,0 +1,30 @@
+{
+  "schema_version": "1.0",
+  "generated_at": "2026-08-22T00:00:00+08:00",
+  "source": "ATLAS 法規文件庫 · 由 NocoDB 導出",
+  "notice": "本資料源自全國法規資料庫，僅供參考，正式引用請以官方公告為準。",
+  "laws": [
+    {
+      "pcode": "D0070008",
+      "name": "都市更新條例",
+      "category": "都更",
+      "level": "法律",
+      "amended_date": "2024-11-13",
+      "article_count": 0,
+      "source_url": "https://law.moj.gov.tw/LawClass/LawAll.aspx?pcode=D0070008",
+      "data_file": "D0070008.json",
+      "status": "測試樣本"
+    },
+    {
+      "pcode": "D0070249",
+      "name": "都市危險及老舊建築物加速重建條例",
+      "category": "危老",
+      "level": "法律",
+      "amended_date": null,
+      "article_count": 0,
+      "source_url": "https://law.moj.gov.tw/LawClass/LawAll.aspx?pcode=D0070249",
+      "data_file": "D0070249.json",
+      "status": "待匯入"
+    }
+  ]
+}

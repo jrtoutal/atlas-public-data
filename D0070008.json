@@ -1,0 +1,45 @@
+{
+  "schema_version": "1.0",
+  "pcode": "D0070008",
+  "name": "都市更新條例",
+  "category": "都更",
+  "level": "法律",
+  "amended_date": "2024-11-13",
+  "source_url": "https://law.moj.gov.tw/LawClass/LawAll.aspx?pcode=D0070008",
+  "generated_at": "2026-08-22T00:00:00+08:00",
+  "notice": "本資料源自全國法規資料庫，僅供參考，正式引用請以官方公告為準。",
+  "articles": [
+    {
+      "article_id": "D0070008-1",
+      "no": "1",
+      "no_sort": 1.0,
+      "chapter": "第一章 總則",
+      "content": "為促進都市土地有計畫之再開發利用，復甦都市機能，改善居住環境與景觀，增進公共利益，特制定本條例。",
+      "status": "現行"
+    },
+    {
+      "article_id": "D0070008-3",
+      "no": "3",
+      "no_sort": 3.0,
+      "chapter": "第一章 總則",
+      "content": "本條例用詞，定義如下：一、都市更新：指依本條例所定程序，在都市計畫範圍內，實施重建、整建或維護措施。（測試樣本，全文以官方為準）",
+      "status": "現行"
+    },
+    {
+      "article_id": "D0070008-27",
+      "no": "27",
+      "no_sort": 27.0,
+      "chapter": "第四章 權利變換",
+      "content": "（測試樣本欄位，實際內容由同步腳本自 API 匯入）",
+      "status": "現行"
+    },
+    {
+      "article_id": "D0070008-27-1",
+      "no": "27-1",
+      "no_sort": 27.1,
+      "chapter": "第四章 權利變換",
+      "content": "（測試樣本：用來驗證 27-1 這類條號的排序處理是否正確）",
+      "status": "現行"
+    }
+  ]
+}
