@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ATLAS 帷幄 v5.5 — 建材 × 都更 × 個人 AI 作戰平台</title>
+<title>ATLAS 帷幄 v5.6 — 建材 × 都更 × 個人 AI 作戰平台</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700;900&family=Noto+Serif+TC:wght@500;700;900&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap');
 
@@ -1382,7 +1382,7 @@ body.locked > *:not(#gate){visibility:hidden}
   <div class="top-bar-inner">
     <div class="brand">
       <span class="brand-mark">ATLAS<span class="zh">帷幄</span></span>
-      <span class="brand-sub">v5.5 · STRATEGIC HQ</span>
+      <span class="brand-sub">v5.6 · STRATEGIC HQ</span>
     </div>
     <nav class="tabs">
       <button class="tab active" data-view="dashboard"><span class="tab-num">01</span>總覽</button>
@@ -1512,14 +1512,14 @@ body.locked > *:not(#gate){visibility:hidden}
       </ul>
     </a>
     <a class="nav-card" href="finder.html" target="_blank">
-      <div class="nav-card-num">LIVE · ATLAS v5</div>
+      <div class="nav-card-num">LIVE · ATLAS v6 雲端版</div>
       <div class="nav-card-title">選色表（現役）</div>
-      <div class="nav-card-desc">三欄 Finder、版本管理、NocoDB 建材搜尋、Office 風格圖片裁剪、PDF 輸出。</div>
+      <div class="nav-card-desc">三欄 Finder、版本管理、Supabase 產品庫搜尋、Office 風格圖片裁剪、PDF 輸出。登入後自動雲端同步，換裝置資料相同。</div>
       <ul class="nav-card-list">
         <li>建商 / 專案 / V1-V3 版本</li>
-        <li>浮動篩選面板</li>
-        <li>PWA · 手機加主畫面</li>
-        <li>匯出/匯入 JSON 存檔</li>
+        <li>自動儲存 Supabase（finder_state）</li>
+        <li>圖片存 Storage，手機可開</li>
+        <li>匯出/匯入 JSON 當備份</li>
       </ul>
     </a>
   </div>
@@ -1575,7 +1575,7 @@ body.locked > *:not(#gate){visibility:hidden}
     </a>
 
     <!-- 選色資料庫（表三） -->
-    <a class="data-entry" href="finder.html" target="_blank" title="選色表 v5 · 串接表三">
+    <a class="data-entry" href="finder.html" target="_blank" title="選色表 v6 · 雲端同步">
       <div class="de-icon">🎨</div>
       <div>
         <div class="de-title">專案選色資料庫<span class="de-pill">表三 + 選色表</span></div>
@@ -3943,84 +3943,94 @@ const SCH = [
   { id:'A', t:'階段 A · 法規庫上線', d:'9月中 → 10月中',
     goal:'年底最核心的一塊。完成後：手機能查法規、系統會自己盯法規異動、<b>而且你有地方掛實務註記</b>。',
     tasks:[
-      {n:'NocoDB 建「法規條文庫」表（17 欄，含★我的註記）', s:'sat', h:2,
-       w:'✅ 2026-09-12 完成。含適用範圍、法規層級兩欄。我的註記欄獨立，腳本永不覆蓋'},
-      {n:'NocoDB 建「法規異動紀錄」表', s:'sat', h:1,
+      {n:'Supabase 建 law_articles 表（17 欄，含★我的註記）', s:'sat', h:2, done:true,
+       w:'✅ 2026-10-16 完成。原 NocoDB 版已退場；RLS：登入者可讀可改註記'},
+      {n:'atlas_law_push_sb.py：法規 API → Supabase UPSERT', s:'sun', h:4, done:true,
+       w:'✅ 2026-10-16 完成。白名單 SYNC_FIELDS 不含 my_note，腳本永不覆蓋註記'},
+      {n:'16 部核心法規、505 條條文入庫驗證', s:'sat', h:2, done:true,
+       w:'✅ 2026-10-16 完成。Supabase 實際 16 部 505 條'},
+      {n:'law.html 接 Supabase + 登入，部署 Vercel', s:'sat', h:2, done:true,
+       w:'✅ 2026-10-17 完成。atlas-public-data.vercel.app/law.html，手機可開可寫註記'},
+      {n:'建立 PDF 原檔資料夾結構（SynologyDrive）', s:'sat', h:1, done:true,
+       w:'✅ 完成。setup_law_folders.sh：01_中央 / 02_地方 / 03_手冊 / 04_函釋 / 99_原始'},
+      {n:'Supabase 建 law_changes「法規異動紀錄」表', s:'sat', h:1,
        w:'供儀表板顯示「N 筆法規異動待覆核」紅點'},
-      {n:'atlas_law_push.py Phase 2：寫入邏輯（UPSERT）', s:'sun', h:4,
-       w:'✅ 2026-09-12 完成。以條文ID為鍵；PATCH 排除「我的註記」；廢止條文改狀態不刪除'},
-      {n:'16 部核心法規、505 條條文入庫驗證', s:'sat', h:2,
-       w:'✅ 2026-09-12 完成。實際 16 部 505 條（原估 18 部）'},
-      {n:'寫導出腳本：NocoDB → 靜態 JSON（★欄位白名單）', s:'sun', h:3,
-       w:'白名單而非黑名單。「我的註記」絕不進入導出清單，git 歷史刪不掉'},
-      {n:'推上 GitHub，law.html 換成真實資料', s:'sat', h:2,
-       w:'目前 repo 是測試樣本。換完手機再測一次載入速度'},
-      {n:'Synology 工作排程器：每季自動比對法規異動', s:'sat', h:2,
-       w:'注意 SSL 降級問題，排程環境要先驗證腳本跑得動'},
-      {n:'建立 PDF 原檔資料夾結構（SynologyDrive）', s:'sat', h:1,
-       w:'01_中央法規 / 02_地方法規 / 03_手冊 / 04_函釋 / 99_原始資料。跑 setup_law_folders.sh'},
       {n:'★確認官方 PDF 下載網址（決定方案 A 可行性）', s:'sat', h:1,
        w:'到 law.moj.gov.tw 點一部法規，看有無「下載 PDF」及其網址格式。這步決定能否自動化'},
       {n:'下載 16 部核心法規 PDF 原檔並依規範命名', s:'sat', h:2,
        w:'檔名：{面向}_{PCode}_{法規名稱}_{修正日期}.pdf。可自動化就寫腳本，否則手動'},
       {n:'資料入口「PDF 原檔」連結改為 NAS 分享資料夾', s:'sat', h:1,
        w:'待 Ted 設定好 NAS 分享連結後提供，再更新 index.html'},
+      {n:'法規異動排程：每季自動比對（mini 到貨前先手動跑）', s:'sat', h:2,
+       w:'年底 mini 到貨後掛 launchd 排程；之前每季手動 python3 atlas_law_push_sb.py'},
     ]},
   { id:'B', t:'階段 B · 經驗層啟動', d:'10月中 → 11月初',
     goal:'★ 幾乎不需工程，但累積的是<b>唯一的護城河</b>。愈早開始愈好，因為經驗是時間函數。',
     tasks:[
-      {n:'NocoDB 建「案源初判」表（＝案件經驗庫）', s:'sat', h:2,
-       w:'重點欄位：判斷理由、後續追蹤（不投的案子後來怎麼了）。量體概算先手算填入'},
-      {n:'建「速記」表 + Form 表單檢視（手機捕捉入口）', s:'sat', h:1,
-       w:'只要三欄：主題/內容/時間。表單連結存手機主畫面，30 秒能記完'},
-      {n:'把過去 3 個案子的初判補登（含不投的）', s:'any', h:3,
-       w:'憑記憶補登也行。重點是「為什麼這樣判斷」，不是數字精確'},
+      {n:'ur_projects（表一）：補登過去 3 個案子的初判（含不投的）', s:'any', h:2,
+       w:'先用 Supabase 表編輯器直接打，不等輸入頁'},
+      {n:'contacts（表四）：補登現有建商／地主／顧問', s:'any', h:1,
+       w:'表四已建好，關聯用 ur_project_contacts / jc_project_contacts'},
       {n:'開始寫法規「我的註記」：先補 10 條最常用的', s:'any', h:0,
-       w:'例：「這條新北實務上會要求先完成XX」。零碎時間做，不排固定時段'},
-      {n:'每週檢視一次速記，併進正式欄位', s:'sat', h:0,
-       w:'養成習慣比一次寫很多重要。星巴克那半天很適合'},
+       w:'在 law.html 直接寫，手機也能寫。這是 L2 經驗層的起點'},
+      {n:'tasks（表九）：把 kind=系統 的待辦從儀表板搬進去', s:'sat', h:1,
+       w:'案件待辦 kind=案件；系統待辦 kind=系統。之後儀表板從這張表讀'},
+      {n:'每週檢視一次速記／註記，併進正式欄位', s:'any', h:0,
+       w:'持續性任務'},
     ]},
-  { id:'C', t:'階段 C · 導航中樞', d:'11月',
-    goal:'讓儀表板變成<b>真正的入口</b>：打開就能點進某案看進度、跳到某條法規。',
+  { id:'C', t:'階段 C · 雲端骨架完成（D22）', d:'10月中 → 11月',
+    goal:'<b>Vercel 前端 + Supabase 資料庫</b> 取代 NocoDB／Tailscale。完成後：手機、公司、家裡開同一個網址登入即可，不再有連不上的問題。',
     tasks:[
-      {n:'儀表板加「法規查詢」入口（連 law.html）', s:'sat', h:1,
-       w:'先做最簡單的連結，不用花俏'},
-      {n:'儀表板加「案件清單」區塊，讀 NocoDB', s:'sun', h:3,
-       w:'用相對路徑 /api/v2/...（Nginx 已代理）。務必部署到 8081 後測試'},
-      {n:'儀表板顯示「法規異動待覆核」紅點', s:'sat', h:2,
-       w:'資料來源：階段A建的異動紀錄表'},
-      {n:'儀表板＋時程表勾選改存 NocoDB（跨裝置同步）', s:'sun', h:3,
-       w:'原路線圖的③。保留 localStorage 當離線備援'},
+      {n:'Supabase 專案建立、Auth 帳號、關閉自助註冊', s:'sat', h:1, done:true,
+       w:'✅ 2026-10-16。Tokyo 區；Publishable key 公開、Secret key 只在終端機'},
+      {n:'supabase_03_full_schema.sql：13 張表一次建好', s:'sun', h:3, done:true,
+       w:'✅ 2026-10-16。表一～九 + products + version_items + finder_state；全部 RLS auth all'},
+      {n:'儀表板 index.html 加登入、部署 Vercel', s:'sat', h:1, done:true,
+       w:'✅ 2026-10-17。GitHub atlas-app → Vercel 自動部署'},
+      {n:'finder.html v6 接 Supabase（finder_state + Storage）', s:'sun', h:3, done:true,
+       w:'✅ 2026-10-17。資料 1.5 秒自動上雲；圖片縮 1200px 進 Storage；匯入 JSON 一次搬家'},
+      {n:'supabase_04_storage.sql：finder / products 兩個 bucket', s:'sat', h:0.5, done:true,
+       w:'✅ 2026-10-17。公開讀、登入者寫 finder、products 只有 service_role 寫'},
+      {n:'儀表板＋時程表勾選改存 Supabase（跨裝置同步）', s:'sat', h:2,
+       w:'目前勾選存 localStorage，換裝置會不一樣。改存 finder_state 同一張表另一個 key'},
+      {n:'儀表板「案件清單」區塊，讀 ur_projects / jc_projects', s:'sun', h:2,
+       w:'先唯讀列表，新增修改走 Supabase 表編輯器'},
+      {n:'finder 的建商／專案改讀 jc_projects（表二）', s:'sun', h:2,
+       w:'現在建商／專案存在 finder_state 內；接表二後選色版本才能正規化進 color_versions'},
+      {n:'NocoDB 容器停用、Tailscale／Web Station 關閉', s:'sat', h:1,
+       w:'★ 確認 finder 與法規都在 Vercel 正常用一週後再關。NocoDB 資料已導出 noco_export/'},
     ]},
-  { id:'D', t:'階段 D · 補強與收尾', d:'12月',
-    goal:'補上缺口、清掉風險，年底驗收。',
+  { id:'D', t:'階段 D · 產品庫與補強', d:'11月 → 12月',
+    goal:'表五重建：<b>不搬舊的 787 筆</b>，爬蟲重抓現行型錄（加停產狀態、用途、紋理）。順便把地方法規與手冊入庫。',
     tasks:[
-      {n:'地方自治法規：新北市都更自治條例等（輕量爬蟲）', s:'hol', h:4,
-       w:'web.law.ntpc.gov.tw 無 API。20 頁以內，requests+bs4 即可，不用 Scrapy'},
+      {n:'建材爬蟲 atlas_crawler.py 改寫 → Supabase products', s:'sun', h:4,
+       w:'UPSERT by (brand,model,size)；圖片縮圖進 Storage products/；note 欄永不覆蓋'},
+      {n:'跑 6 家廠商型錄，驗證 finder 產品搜尋', s:'sat', h:3,
+       w:'跑完 finder「↻ 載入」應看到產品與圖片牆'},
+      {n:'地方自治法規：新北市都更自治條例等（輕量爬蟲）', s:'sat', h:3,
+       w:'scope 欄填 新北市／臺北市'},
       {n:'都市更新作業手冊（109版）入庫', s:'sat', h:2,
-       w:'這份其實是純文字檔，第二層裡最好處理的。要標示為「參考資料」'},
-      {n:'★ NocoDB 備份：Hyper Backup → Google Drive', s:'sat', h:1,
-       w:'RAID1 防硬碟壞，不防誤刪/損毀/勒索。最該備的是「我的註記」'},
-      {n:'建材爬蟲 pip install（家用 Mac 網路應可解）', s:'sat', h:1,
-       w:'卡了半年，換到家用網路很可能一次就過'},
+       w:'PDF 拆章節；可先只做目錄 + 關鍵表格'},
+      {n:'★ Supabase 備份：每週 pg_dump → NAS（mini 到貨後排程）', s:'sat', h:2,
+       w:'Free plan 沒有自動備份。mini 到貨前先每月手動 Dashboard → Database → Backups 看一次'},
       {n:'年底驗收：手機實測完整流程一次', s:'sat', h:2,
-       w:'關掉 Tailscale 用手機查法規；再開 Tailscale 看案件進度'},
+       w:'手機開 law.html 寫一條註記；開 finder.html 加一張建材；儀表板看得到'},
       {n:'更新 CONTEXT 檔，交接給明年', s:'sat', h:1,
        w:'記錄這一輪學到什麼、哪些估時不準'},
     ]},
-  { id:'E', t:'階段 E · 選色表寫回（D2／選A）', d:'11月–12月，穿插週日',
-    goal:'讓四層架構<b>真正活起來</b>：選色版本自動寫進個案建材明細。這是 2 年願景（戶內選配＋交屋系統）的技術基礎。<br><b>★ 階段1-2 通了才動 finder.html。</b>',
+  { id:'E', t:'階段 E · Mac mini 幕後上線', d:'12月底 → 1月',
+    goal:'mini 到貨後把<b>所有幕後工作</b>搬上去：爬蟲、法規同步、備份、Claude 常駐工作站。NAS 退回純儲存。',
     tasks:[
-      {n:'階段1：寫撈 ID 小工具（欄位ID／Links欄ID／版本recordId）', s:'sat', h:1,
-       w:'不要憑猜寫程式。先確認 API 通、token 有寫入權限、結構如預期'},
-      {n:'★階段2：console 手動測試單筆寫入＋連上版本', s:'sat', h:1,
-       w:'最關鍵驗證點。通了最大不確定性就消除。卡住只損失2hr，且不動生產工具'},
-      {n:'階段3：finder.html 加「儲存到 NocoDB」按鈕', s:'sun', h:3,
-       w:'先清後寫：查該版本所有記錄→刪除→重寫。★刪除務必加「只刪這個版本」條件'},
-      {n:'階段4：測試與強化（空欄位、特殊字元、大量卡片）', s:'sat', h:2,
-       w:'在複製版上測，確認不影響現有 GET 功能。每個版本留備份'},
-      {n:'階段5：反向讀取（從 NocoDB 載回 finder）', s:'sun', h:3,
-       w:'完成後才真正達成跨裝置閉環。時間緊可留到明年'},
+      {n:'mini 開機設定：Ted 帳號自動登入、不休眠、小孩獨立一般帳號', s:'hol', h:2,
+       w:'走網路線不走 Wi-Fi；UPS 優先買'},
+      {n:'Claude 桌面版 + Claude Code 安裝，連 Supabase（service key 只放本機）', s:'hol', h:2,
+       w:'export ATLAS_SB_SECRET 進 ~/.zshrc；永不寫進任何檔案或對話'},
+      {n:'launchd 排程：法規季更、爬蟲月更、pg_dump 週備份 → NAS', s:'hol', h:3,
+       w:'先手動跑一次每支腳本確認可用，再掛排程'},
+      {n:'NAS 排程清空；Tailscale／VPN／Web Station 全部關閉', s:'hol', h:1,
+       w:'退場清單見 D22 架構圖 05'},
+      {n:'（之後）地主／案件加鎖區：MFA aal2 policy', s:'any', h:2,
+       w:'ur_projects / contacts 地主 / ledger 三張表改 aal2 policy；等資料真的有敏感內容再做'},
     ]},
 ];
 
@@ -4031,6 +4041,8 @@ function schRender(){
   const box = document.getElementById('schStages');
   if(!box) return;
   const st = schRead();
+  let seeded=false; SCH.forEach(S=>S.tasks.forEach((t,i)=>{ const k=S.id+i; if(t.done && !(k in st)){ st[k]=true; seeded=true; } }));
+  if(seeded) schWrite(st);
   const openIds = Array.from(document.querySelectorAll('#schStages details[open]')).map(d=>d.dataset.sid);
   box.innerHTML = SCH.map(S=>{
     const done = S.tasks.filter((_,i)=>st[S.id+i]).length;
