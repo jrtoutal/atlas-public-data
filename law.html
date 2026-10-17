@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#0e1012">
-<title>ATLAS 法規條文庫 v1.0</title>
+<title>ATLAS 法規條文庫 v1.2</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Space+Mono:wght@400;700&display=swap');
 :root{
@@ -64,6 +64,11 @@ a{color:var(--teal2)}
 .law-head .arrow{color:var(--muted);font-size:10px;transition:transform .15s}
 .law-group.open .law-head .arrow{transform:rotate(90deg)}
 .law-head .cnt{margin-left:auto;font-size:11px;color:var(--muted);font-family:'Space Mono',monospace}
+.law-head .pdf{font-size:10px;color:var(--gold2,#d8b35a);border:1px solid var(--gold2,#d8b35a);border-radius:4px;padding:0 5px;text-decoration:none}
+.law-head .pdf:hover{background:var(--gold2,#d8b35a);color:#111}
+.d-meta .pdf{color:var(--gold2,#d8b35a)}
+.law-head .dl{font-size:10px;color:var(--muted);border:1px dashed var(--muted);border-radius:4px;padding:0 5px;text-decoration:none}
+.law-head .dl:hover{color:var(--text);border-style:solid}
 .law-head .ab{font-size:10px;color:var(--red);border:1px solid var(--red);border-radius:4px;padding:0 4px}
 .law-body{display:none}
 .law-group.open .law-body{display:block}
@@ -157,7 +162,7 @@ const SB_KEY = 'sb_publishable_R69Hj9hcR5G4dp3Uz1J0PQ_1BabpwsN';
 const sb = supabase.createClient(SB_URL, SB_KEY);
 
 const $ = s => document.querySelector(s);
-let ROWS = [], CUR = null, openLaws = new Set();
+let ROWS = [], CUR = null, openLaws = new Set(), PDFS = new Set();
 
 // ── 登入 ──
 $('#loginForm').addEventListener('submit', async e => {
@@ -184,6 +189,21 @@ async function load() {
     .order('law_code').order('article_sort').range(0, 1999);
   if (error) { $('#list').innerHTML = `<div class="empty" style="color:var(--red)">讀取失敗：${error.message}</div>`; return; }
   ROWS = data; render();
+  loadPdfList();
+}
+// ── PDF 原檔（Supabase Storage / law-pdf，私有，登入者可讀）──
+async function loadPdfList() {
+  try {
+    const { data, error } = await sb.storage.from('law-pdf').list('', { limit: 500 });
+    if (error) throw error;
+    PDFS = new Set((data || []).map(f => f.name.replace(/\.pdf$/i, '')));
+    if (PDFS.size) render();
+  } catch (e) { console.warn('PDF 清單讀取失敗：', e.message); }
+}
+async function openPdf(code) {
+  const { data, error } = await sb.storage.from('law-pdf').createSignedUrl(code + '.pdf', 3600);
+  if (error) { alert('開啟失敗：' + error.message); return; }
+  window.open(data.signedUrl, '_blank', 'noopener');
 }
 
 // ── 篩選 + 渲染 ──
@@ -209,7 +229,7 @@ function render() {
   for (const [code, g] of byLaw) {
     const open = searching || openLaws.has(code);
     h += `<div class="law-group${open ? ' open' : ''}" data-code="${code}">
-      <div class="law-head"><span class="arrow">▶</span><span>${g.name}</span>${g.status === '已廢止' ? '<span class="ab">廢止</span>' : ''}<span class="cnt">${g.arts.length}</span></div>
+      <div class="law-head"><span class="arrow">▶</span><span>${g.name}</span>${g.status === '已廢止' ? '<span class="ab">廢止</span>' : ''}${PDFS.has(code) ? `<a class="pdf" data-pdf="${code}" title="開啟 PDF 原檔">📄 原檔</a>` : `<a class="dl" href="https://law.moj.gov.tw/LawClass/FilesType.aspx?DataId=${code}&md=m" target="_blank" rel="noopener" onclick="event.stopPropagation()" title="到全國法規資料庫下載官方 PDF，存成 ${code}.pdf 後拖進 Supabase Storage / law-pdf">⬇ 官方</a>`}<span class="cnt">${g.arts.length}</span></div>
       <div class="law-body">${g.arts.map(r => `
         <div class="art-row${r.my_note && r.my_note.trim() ? ' noted' : ''}${CUR && CUR.article_id === r.article_id ? ' active' : ''}" data-id="${r.article_id}">
           <span class="no">§${r.article_no}</span><span class="pv">${(r.content||'').slice(0, 40)}</span><span class="dot"></span>
@@ -218,6 +238,8 @@ function render() {
   $('#list').innerHTML = h || '<div class="empty">沒有符合的條文</div>';
 }
 $('#list').addEventListener('click', e => {
+  const pdf = e.target.closest('[data-pdf]');
+  if (pdf) { e.stopPropagation(); openPdf(pdf.dataset.pdf); return; }
   const head = e.target.closest('.law-head');
   if (head) { const g = head.parentElement, c = g.dataset.code; g.classList.toggle('open'); g.classList.contains('open') ? openLaws.add(c) : openLaws.delete(c); return; }
   const row = e.target.closest('.art-row');
@@ -234,7 +256,7 @@ function show(r) {
   $('#detail').innerHTML = `
     <div class="d-law">${r.law_name} · ${r.law_code} · ${r.law_level || ''}</div>
     <div class="d-title"><h2>第 <span class="mono">${r.article_no}</span> 條</h2>${st}<span class="pill asp">${r.aspect || ''}</span></div>
-    <div class="d-meta"><span>${r.chapter || ''}</span><span>修正 ${r.modified_date || '—'}</span><a href="${r.source_url}" target="_blank" rel="noopener">全國法規資料庫 ↗</a></div>
+    <div class="d-meta"><span>${r.chapter || ''}</span><span>修正 ${r.modified_date || '—'}</span><a href="${r.source_url}" target="_blank" rel="noopener">全國法規資料庫 ↗</a>${PDFS.has(r.law_code) ? `<a class="pdf" href="#" onclick="openPdf('${r.law_code}');return false">📄 PDF 原檔</a>` : ''}</div>
     <div class="d-content">${esc(r.content || '')}</div>
     <div class="note-box">
       <div class="note-head">★ 我的註記 <span class="hint">實務經驗、審議慣例、談判眉角 — 只有你看得到，同步永不覆蓋</span></div>
