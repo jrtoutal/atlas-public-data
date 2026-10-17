@@ -1,0 +1,2817 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="ATLAS 選色表">
+<meta name="theme-color" content="#141618">
+<title>ATLAS 選色表 v6.0</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Space+Mono:wght@400;700&display=swap');
+:root{
+  --bg:#0e1012;--sb:#141618;--sb2:#191c1f;--panel:#1e2126;--card:#242830;
+  --border:#252a32;--border2:#2e343e;
+  --accent:#5b8cf5;--gold:#d4a843;--gold2:#f0cc7a;
+  --teal:#3aaa8c;--teal2:#4dc9a8;--red:#e07060;
+  --text:#dde2ee;--sub:#6a7490;--muted:#2e3448;
+  --col1-w:130px;--col2-w:150px;--col3-w:160px;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--text);height:100vh;display:flex;flex-direction:column;font-size:13px;overflow:hidden;}
+
+/* ── Topbar ── */
+.topbar{display:flex;align-items:center;gap:8px;padding:9px 16px;background:var(--sb);border-bottom:1px solid var(--border);flex-shrink:0;flex-wrap:wrap;z-index:10;}
+.logo-m{width:26px;height:26px;border-radius:6px;background:linear-gradient(135deg,var(--gold),#8a5010);display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;}
+.tb-title{font-family:'Space Mono',monospace;font-size:12px;font-weight:700;color:var(--gold2);letter-spacing:.5px;}
+.tb-project{font-size:11px;color:var(--sub);padding:3px 8px;background:var(--card);border-radius:5px;border:1px solid var(--border2);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.spacer{flex:1;}
+.t-btn{background:var(--card);border:1px solid var(--border2);border-radius:6px;color:var(--sub);padding:5px 11px;cursor:pointer;font-size:11px;font-family:inherit;display:flex;align-items:center;gap:4px;transition:all .15s;white-space:nowrap;}
+.t-btn:hover{color:var(--text);border-color:var(--accent);}
+.t-btn.pri{background:var(--accent);color:#fff;border-color:var(--accent);font-weight:600;}
+.t-btn.gld{background:rgba(212,168,67,.1);color:var(--gold2);border-color:rgba(212,168,67,.25);}
+.t-btn.teal{background:rgba(58,170,140,.1);color:var(--teal2);border-color:rgba(58,170,140,.25);}
+.mode-row{display:flex;background:var(--card);border:1px solid var(--border2);border-radius:6px;overflow:hidden;}
+.mode-btn{padding:5px 12px;cursor:pointer;font-size:11px;font-family:inherit;border:none;background:none;color:var(--sub);transition:all .15s;}
+.mode-btn.on{background:var(--accent);color:#fff;font-weight:600;}
+
+/* ── Main layout ── */
+.workspace{display:flex;flex:1;overflow:hidden;}
+
+/* ── Finder sidebar (col1 + col2) ── */
+.finder{display:flex;flex-shrink:0;border-right:1px solid var(--border);}
+.finder-col{display:flex;flex-direction:column;overflow:hidden;}
+.finder-col1{width:var(--col1-w);border-right:1px solid var(--border);background:var(--sb);}
+.finder-col2{width:var(--col2-w);background:var(--sb2);}
+.finder-col3{width:var(--col3-w);background:var(--sb);border-left:1px solid var(--border);}
+.finder-hd{display:flex;align-items:center;justify-content:space-between;padding:8px 10px 6px;border-bottom:1px solid var(--border);}
+.finder-lbl{font-size:9px;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase;font-family:'Space Mono',monospace;font-weight:700;}
+.finder-add{background:none;border:none;color:var(--sub);cursor:pointer;font-size:14px;line-height:1;padding:0 2px;border-radius:3px;transition:color .12s;}
+.finder-add:hover{color:var(--teal2);}
+.finder-list{flex:1;overflow-y:auto;padding:4px 0;}
+.finder-row{display:flex;align-items:center;gap:6px;padding:6px 10px;cursor:pointer;transition:all .12s;position:relative;border-radius:0;}
+.finder-row:hover{background:rgba(255,255,255,.04);}
+.finder-row.active{background:var(--accent);color:#fff;}
+.finder-row.active .fr-sub{color:rgba(255,255,255,.65);}
+.finder-row.drag-over{border-top:2px solid var(--teal2);}
+.finder-row.dragging{opacity:.4;}
+.fr-icon{font-size:13px;flex-shrink:0;}
+.fr-drag{color:var(--muted);cursor:grab;font-size:11px;flex-shrink:0;padding:0 2px;user-select:none;}
+.fr-drag:active{cursor:grabbing;}
+.fr-name{font-size:11px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.fr-sub{font-size:9px;color:var(--sub);}
+.fr-del{background:none;border:none;color:transparent;cursor:pointer;font-size:10px;padding:1px 3px;border-radius:3px;flex-shrink:0;transition:all .12s;}
+.finder-row:hover .fr-del{color:var(--sub);}
+.finder-row.active .fr-del{color:rgba(255,255,255,.5);}
+.fr-del:hover{color:var(--red)!important;background:rgba(224,112,96,.15);}
+.fr-menu{background:none;border:none;color:transparent;cursor:pointer;font-size:14px;padding:0 4px;border-radius:3px;flex-shrink:0;transition:all .12s;line-height:1;}
+.finder-row:hover .fr-menu{color:var(--sub);}
+.finder-row.active .fr-menu{color:rgba(255,255,255,.6);}
+.fr-menu:hover{color:var(--teal2)!important;background:rgba(101,163,176,.15);}
+.ver-popup{position:fixed;background:var(--card);border:1px solid var(--border);border-radius:6px;box-shadow:0 4px 16px rgba(0,0,0,.35);padding:4px;z-index:9999;min-width:140px;}
+.ver-popup-item{display:flex;align-items:center;gap:8px;padding:7px 10px;font-size:12px;color:var(--text);cursor:pointer;border-radius:4px;transition:background .1s;}
+.ver-popup-item:hover{background:var(--sb);}
+.ver-popup-item.danger{color:var(--red);}
+.ver-popup-item.danger:hover{background:rgba(224,112,96,.12);}
+.ver-popup-sep{height:1px;background:var(--border);margin:3px 0;}
+.finder-empty{font-size:10px;color:var(--muted);padding:12px 10px;text-align:center;line-height:1.6;}
+
+/* ── Right panel (settings) ── */
+.rp{width:272px;min-width:272px;background:var(--sb);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow-y:auto;}
+.rp-sec{padding:10px 12px;border-bottom:1px solid var(--border);}
+.rp-lbl{font-size:9px;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase;font-weight:700;font-family:'Space Mono',monospace;margin-bottom:7px;}
+.f{margin-bottom:7px;}
+.f label{display:block;font-size:10px;color:var(--sub);margin-bottom:2px;}
+.f input,.f textarea,.f select{width:100%;background:var(--card);border:1px solid var(--border2);border-radius:6px;color:var(--text);padding:6px 9px;font-family:inherit;font-size:11px;outline:none;transition:border-color .15s;}
+.f input:focus,.f textarea:focus{border-color:var(--accent);}
+.f textarea{resize:vertical;min-height:50px;}
+.tog-row{display:flex;gap:4px;margin-bottom:7px;}
+.tog{flex:1;padding:4px;border-radius:5px;border:1px solid var(--border2);background:var(--card);color:var(--sub);cursor:pointer;font-size:10px;font-family:inherit;text-align:center;transition:all .15s;}
+.tog.on{background:rgba(91,140,245,.12);color:var(--accent);border-color:rgba(91,140,245,.4);}
+.logo-drop{border:2px dashed var(--border2);border-radius:7px;padding:10px;text-align:center;cursor:pointer;transition:all .15s;position:relative;}
+.logo-drop:hover{border-color:var(--accent);}
+.logo-drop.has{border-style:solid;border-color:var(--teal);}
+.logo-clr{position:absolute;top:4px;right:4px;background:rgba(0,0,0,.6);border:none;color:white;border-radius:3px;width:16px;height:16px;cursor:pointer;font-size:10px;display:flex;align-items:center;justify-content:center;}
+
+/* NocoDB 搜尋 */
+.srch-inputs{display:flex;flex-direction:column;gap:5px;margin-bottom:6px;}
+.srch-inputs input,.srch-inputs select{width:100%;background:var(--card);border:1px solid var(--border2);border-radius:6px;color:var(--text);padding:5px 8px;font-family:inherit;font-size:11px;outline:none;transition:border-color .15s;}
+.srch-inputs input:focus{border-color:var(--accent);}
+.srch-btn-row{display:flex;gap:5px;}
+.srch-go{flex:1;background:var(--accent);border:none;border-radius:6px;color:#fff;padding:5px;cursor:pointer;font-size:11px;font-family:inherit;}
+.srch-result{display:flex;flex-direction:column;gap:3px;max-height:180px;overflow-y:auto;margin-top:5px;}
+.srch-item{display:flex;align-items:center;gap:6px;padding:5px 7px;background:var(--card);border:1px solid var(--border2);border-radius:6px;cursor:pointer;transition:all .12s;}
+.srch-item:hover{border-color:var(--teal);background:rgba(58,170,140,.05);}
+.srch-thumb{width:32px;height:32px;border-radius:4px;object-fit:cover;background:var(--muted);flex-shrink:0;}
+.srch-thumb-ph{width:32px;height:32px;border-radius:4px;flex-shrink:0;background:var(--muted);display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--sub);}
+.srch-inf{flex:1;overflow:hidden;}
+.srch-code{font-family:'Space Mono',monospace;font-size:9px;color:var(--teal2);}
+.srch-name{font-size:10px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.srch-meta{font-size:9px;color:var(--sub);}
+.srch-add{background:none;border:none;color:var(--teal2);cursor:pointer;font-size:15px;padding:1px 4px;border-radius:3px;flex-shrink:0;}
+.srch-add:hover{background:rgba(58,170,140,.12);}
+.srch-status{font-size:10px;color:var(--sub);text-align:center;padding:6px 0;}
+.noco-dot{width:6px;height:6px;border-radius:50%;background:var(--muted);display:inline-block;margin-left:5px;}
+
+/* Col editor */
+.col-list{display:flex;flex-direction:column;gap:4px;}
+.col-row{display:flex;align-items:center;gap:4px;background:var(--card);border:1px solid var(--border2);border-radius:6px;padding:4px 7px;}
+.col-drag{color:var(--muted);cursor:grab;font-size:13px;flex-shrink:0;}
+.col-vis{width:16px;height:16px;border-radius:2px;border:1px solid var(--border2);background:none;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;}
+.col-vis.off{color:var(--muted);opacity:.5;}
+.col-vis.on{color:var(--teal);}
+.col-lbl{flex:1;background:none;border:none;outline:none;color:var(--text);font-size:10px;font-family:inherit;}
+.col-key{width:68px;background:var(--bg);border:1px solid var(--border);border-radius:3px;color:var(--sub);padding:2px 4px;font-size:8px;font-family:'Space Mono',monospace;outline:none;text-align:center;}
+.col-del{background:none;border:none;color:var(--muted);cursor:pointer;font-size:11px;padding:1px 2px;}
+.col-del:hover{color:var(--red);}
+.add-col{width:100%;padding:5px;border-radius:6px;background:none;border:1px dashed var(--border2);color:var(--sub);cursor:pointer;font-size:10px;font-family:inherit;transition:all .15s;margin-top:4px;}
+.add-col:hover{border-color:var(--accent);color:var(--accent);}
+
+/* Item list */
+.item-list{display:flex;flex-direction:column;gap:4px;}
+.item-row{display:flex;align-items:center;gap:5px;background:var(--card);border:1px solid var(--border2);border-radius:6px;padding:4px 7px;transition:all .12s;}
+.item-row:hover{border-color:var(--accent);}
+.item-row.drag-over{border-color:var(--teal);background:rgba(58,170,140,.07);}
+.item-drag{color:var(--muted);cursor:grab;font-size:13px;flex-shrink:0;}
+.item-sw{width:24px;height:24px;border-radius:4px;border:1px solid rgba(255,255,255,.08);flex-shrink:0;overflow:hidden;cursor:pointer;}
+.item-sw img{width:100%;height:100%;object-fit:cover;}
+.item-inf{flex:1;overflow:hidden;cursor:pointer;}
+.item-code{font-family:'Space Mono',monospace;font-size:8px;color:var(--sub);}
+.item-name{font-size:10px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.item-arrows{display:flex;flex-direction:column;gap:0;flex-shrink:0;}
+.item-arr{background:none;border:none;color:var(--muted);cursor:pointer;font-size:9px;padding:1px 2px;border-radius:2px;line-height:1;transition:all .12s;}
+.item-arr:hover{color:var(--accent);}
+.item-arr:disabled{opacity:.2;cursor:default;}
+.item-del{background:none;border:none;color:var(--muted);cursor:pointer;font-size:11px;padding:1px 3px;border-radius:2px;flex-shrink:0;}
+.item-del:hover{color:var(--red);}
+.item-copy{background:none;border:none;color:var(--muted);cursor:pointer;font-size:12px;padding:1px 3px;border-radius:2px;flex-shrink:0;transition:color .12s;}
+.item-copy:hover{color:var(--teal2);}
+.add-item{width:100%;padding:6px;border-radius:6px;background:none;border:1px dashed var(--border2);color:var(--sub);cursor:pointer;font-size:10px;font-family:inherit;transition:all .15s;margin-top:3px;}
+.add-item:hover{border-color:var(--accent);color:var(--accent);}
+
+/* Modal */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:200;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(6px);opacity:0;pointer-events:none;transition:opacity .2s;}
+.modal-bg.open{opacity:1;pointer-events:all;}
+.modal{background:var(--panel);border:1px solid var(--border2);border-radius:14px;padding:20px;width:460px;max-height:88vh;overflow-y:auto;transform:translateY(12px);transition:transform .2s;}
+.modal-bg.open .modal{transform:translateY(0);}
+.modal h2{font-size:14px;margin-bottom:12px;}
+.modal label{display:block;font-size:10px;color:var(--sub);margin-bottom:2px;margin-top:7px;}
+.modal input,.modal select,.modal textarea{width:100%;background:var(--bg);border:1px solid var(--border2);border-radius:7px;color:var(--text);padding:6px 9px;font-family:inherit;font-size:11px;outline:none;transition:border-color .15s;}
+.modal input:focus{border-color:var(--accent);}
+.modal textarea{resize:vertical;min-height:50px;}
+.m-actions{display:flex;gap:7px;justify-content:flex-end;margin-top:12px;}
+.btn-ok{background:var(--accent);color:#fff;border:none;border-radius:6px;padding:7px 16px;cursor:pointer;font-family:inherit;font-size:11px;font-weight:600;}
+.btn-cancel{background:var(--card);color:var(--sub);border:1px solid var(--border2);border-radius:6px;padding:7px 12px;cursor:pointer;font-family:inherit;font-size:11px;}
+.btn-teal{background:none;color:var(--teal2);border:1px solid rgba(58,170,140,.3);border-radius:6px;padding:7px 12px;cursor:pointer;font-family:inherit;font-size:11px;}
+.img-drop{border:2px dashed var(--border2);border-radius:7px;padding:10px;text-align:center;cursor:pointer;transition:all .15s;position:relative;margin-top:3px;}
+.img-drop:hover{border-color:var(--accent);}
+.img-drop.has{border-style:solid;border-color:var(--teal);}
+.img-prev{max-height:80px;max-width:160px;object-fit:contain;border-radius:4px;}
+.img-clr{position:absolute;top:4px;right:4px;background:rgba(0,0,0,.6);border:none;color:white;border-radius:3px;width:16px;height:16px;cursor:pointer;font-size:10px;display:flex;align-items:center;justify-content:center;}
+.pal-row{display:flex;flex-wrap:wrap;gap:5px;margin-top:4px;}
+.pal-sw{width:24px;height:24px;border-radius:4px;cursor:pointer;border:2px solid transparent;transition:all .15s;}
+.pal-sw.on{border-color:white;transform:scale(1.12);}
+.cfg-status{font-size:10px;padding:6px 9px;border-radius:6px;margin-top:7px;display:none;}
+.cfg-status.ok{background:rgba(58,170,140,.12);color:var(--teal2);display:block;}
+.cfg-status.err{background:rgba(224,112,96,.12);color:var(--red);display:block;}
+
+/* 圖片控制器 */
+.img-ctrl{display:none;margin-top:8px;background:var(--card);border:1px solid var(--border2);border-radius:8px;padding:10px 12px;}
+.img-ctrl.show{display:block;}
+.img-ctrl-row{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
+.img-ctrl-row:last-child{margin-bottom:0;}
+.img-ctrl-label{font-size:10px;color:var(--sub);width:36px;flex-shrink:0;}
+.img-ctrl-val{font-size:10px;color:var(--teal2);width:32px;text-align:right;flex-shrink:0;font-family:'Space Mono',monospace;}
+.img-ctrl input[type=range]{flex:1;accent-color:var(--teal2);height:4px;}
+.bg-swatch.on{outline:2px solid var(--teal2);outline-offset:1px;}
+.border-swatch.on{outline:2px solid var(--teal2);outline-offset:1px;}
+.img-mode-row{display:flex;gap:5px;margin-bottom:8px;}
+.img-mode-btn{flex:1;padding:4px;border-radius:5px;border:1px solid var(--border2);background:var(--card);color:var(--sub);cursor:pointer;font-size:10px;font-family:inherit;text-align:center;transition:all .15s;}
+.img-mode-btn.on{background:rgba(58,170,140,.12);color:var(--teal2);border-color:rgba(58,170,140,.4);}
+/* Office 風格裁剪預覽 */
+.img-crop-outer{width:100%;height:200px;border-radius:6px;background:#888;margin-bottom:8px;position:relative;overflow:hidden;user-select:none;}
+.img-crop-img{position:absolute;cursor:move;transform-origin:0 0;image-rendering:auto;}
+.img-crop-overlay{position:absolute;inset:0;background:rgba(0,0,0,0.45);pointer-events:none;}
+.img-crop-frame{position:absolute;border:2px solid #fff;box-shadow:0 0 0 9999px rgba(0,0,0,0.45);cursor:move;box-sizing:border-box;}
+.img-crop-handle{position:absolute;width:10px;height:10px;background:#fff;border:1px solid #555;border-radius:2px;box-sizing:border-box;}
+.img-crop-handle.tl{top:-5px;left:-5px;cursor:nw-resize;}
+.img-crop-handle.tc{top:-5px;left:calc(50% - 5px);cursor:n-resize;}
+.img-crop-handle.tr{top:-5px;right:-5px;cursor:ne-resize;}
+.img-crop-handle.ml{top:calc(50% - 5px);left:-5px;cursor:w-resize;}
+.img-crop-handle.mr{top:calc(50% - 5px);right:-5px;cursor:e-resize;}
+.img-crop-handle.bl{bottom:-5px;left:-5px;cursor:sw-resize;}
+.img-crop-handle.bc{bottom:-5px;left:calc(50% - 5px);cursor:s-resize;}
+.img-crop-handle.br{bottom:-5px;right:-5px;cursor:se-resize;}
+.img-preview-box{display:none;}
+/* 圖片牆 */
+.img-wall-item{border-radius:6px;overflow:hidden;cursor:pointer;border:1px solid var(--border2);transition:all .15s;background:var(--card);position:relative;}
+.img-wall-item:hover{border-color:var(--teal2);transform:scale(1.02);}
+.img-wall-item img{width:100%;aspect-ratio:1;object-fit:cover;display:block;}
+.img-wall-item .iw-info{padding:4px 6px;}
+.img-wall-item .iw-code{font-family:'Space Mono',monospace;font-size:8px;color:var(--teal2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.img-wall-item .iw-name{font-size:9px;color:var(--sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.img-wall-item .iw-add{position:absolute;top:4px;right:4px;width:20px;height:20px;background:rgba(58,170,140,.85);border:none;border-radius:50%;color:#fff;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .15s;}
+.img-wall-item:hover .iw-add{opacity:1;}
+/* fd-dim-row */
+.fd-dim-row{padding:6px 10px;font-size:11px;cursor:pointer;color:var(--text);border-radius:5px;transition:all .12s;}
+.fd-dim-row:hover{background:var(--accent);color:#fff;}
+.fd-dim-row.active{background:rgba(91,140,245,.15);color:var(--accent);}
+.fd-tag{display:flex;align-items:center;gap:4px;background:rgba(58,170,140,.12);border:1px solid rgba(58,170,140,.3);border-radius:12px;padding:2px 8px;font-size:10px;color:var(--teal2);}
+.fd-tag button{background:none;border:none;color:var(--teal2);cursor:pointer;font-size:11px;padding:0;line-height:1;}
+/* Preview */
+.preview{flex:1;overflow:auto;background:#c8c4bc;display:flex;flex-direction:column;align-items:center;padding:20px;}
+.a4{width:794px;background:#fff;box-shadow:0 4px 32px rgba(0,0,0,.35);font-family:'Noto Sans TC',sans-serif;color:#1a1a1a;margin-bottom:16px;}
+.a4-in{padding:28px 32px;}
+.doc-hd{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px;padding-bottom:12px;border-bottom:2px solid #1a1a1a;}
+.dh-brand .brand-logo{max-height:46px;max-width:140px;object-fit:contain;display:block;}
+.dh-brand .brand-name{font-size:14px;font-weight:700;}
+.dh-brand .brand-contact{font-size:10px;color:#666;line-height:1.5;margin-top:2px;}
+.dh-r .doc-title{font-size:20px;font-weight:900;letter-spacing:-.5px;}
+.dh-r .meta-grid{margin-top:5px;display:grid;grid-template-columns:auto 1fr;gap:2px 8px;font-size:10px;}
+.dh-r .mk{color:#888;text-align:right;}
+.dh-r .mv{color:#1a1a1a;font-weight:500;}
+.doc-notes{background:#faf8f3;border-left:3px solid #d4a843;padding:8px 12px;margin-bottom:14px;border-radius:0 5px 5px 0;font-size:10px;color:#555;line-height:1.6;}
+.card-grid{display:grid;border-top:2px solid #1a1a1a;border-left:2px solid #1a1a1a;}
+.mat-card{border-right:2px solid #1a1a1a;border-bottom:2px solid #1a1a1a;page-break-inside:avoid;}
+.mat-num-row{padding:7px 11px;border-bottom:1px solid #ddd;display:flex;align-items:center;justify-content:space-between;}
+.mat-num-input{background:none;border:none;outline:none;font-size:15px;font-weight:900;font-family:'Noto Sans TC',sans-serif;color:#1a1a1a;width:100%;cursor:text;}
+.mat-img{background:#f0eeea;display:flex;align-items:center;justify-content:center;overflow:hidden;}
+.mat-img img{width:100%;height:100%;object-fit:cover;display:block;}
+.mat-info-table{width:100%;border-collapse:collapse;border-top:1px solid #ddd;}
+.mat-key{width:108px;font-size:10px;color:#555;padding:5px 8px 5px 10px;border-bottom:1px solid #ece8e0;border-right:1px solid #ece8e0;background:#f8f6f2;vertical-align:top;white-space:nowrap;}
+.mat-val-td{font-size:10px;font-weight:500;color:#1a1a1a;padding:5px 9px;border-bottom:1px solid #ece8e0;vertical-align:top;word-break:break-word;white-space:pre-wrap;}
+.mat-val-td:focus{outline:none;background:#fff9ec;}
+.mat-val-td:empty::before{content:attr(data-ph);color:#c0bdb6;font-style:italic;font-weight:normal;}
+.mat-info-table tr:last-child .mat-key,.mat-info-table tr:last-child .mat-val-td{border-bottom:none;}
+.pro-tbl{width:100%;border-collapse:collapse;font-size:10px;}
+.pro-tbl th{background:#1a1a1a;color:#fff;padding:6px 8px;text-align:left;font-size:9px;font-weight:700;letter-spacing:.5px;}
+.pro-tbl td{border-bottom:1px solid #e8e4dc;padding:0;vertical-align:middle;}
+.pro-tbl tr.grp-hd td{background:#f0ede6;font-weight:700;font-size:10px;padding:6px 10px;border-top:2px solid #d4a843;color:#7a5010;}
+.pro-tbl tr.subtot td{background:#f5f3ee;font-size:9px;color:#999;padding:4px 10px;font-style:italic;border-top:1px dashed #ccc;}
+.pro-sw{border-radius:4px;border:1px solid rgba(0,0,0,.08);display:block;}
+.pro-edit{padding:5px 7px;min-height:28px;cursor:text;line-height:1.4;}
+.pro-edit:focus{outline:none;background:rgba(91,140,245,.04);}
+.pro-edit:empty::before{content:attr(data-ph);color:#ccc;font-style:italic;}
+.doc-footer{margin-top:12px;padding-top:9px;border-top:1px solid #ddd;display:flex;justify-content:space-between;font-size:9px;color:#bbb;}
+.doc-sum{background:#f8f7f3;border:1px solid #e8e4dc;border-radius:5px;padding:10px 12px;margin-top:10px;font-size:10px;}
+.ds-ttl{font-weight:700;margin-bottom:6px;color:#333;}
+.ds-row{display:flex;justify-content:space-between;padding:2px 0;color:#555;}
+.ds-row.tot{font-weight:700;color:#1a1a1a;border-top:1px solid #ddd;margin-top:4px;padding-top:4px;}
+::-webkit-scrollbar{width:4px;height:4px;}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:10px;}
+/* ════════════════════════════════════════════
+   手機版 RWD
+   ════════════════════════════════════════════ */
+@media (max-width: 600px){
+  /* 隱藏 Finder 雙欄，改成頂部下拉 */
+  .finder{ display:none!important; }
+  #finder-tab{ display:none!important; }
+
+  /* 右側設定面板也收起，只顯示預覽 */
+  .rp{ display:none; }
+
+  /* 預覽區全寬 */
+  .preview{padding:0;background:#fff;}
+
+  /* A4 縮放到手機寬度 */
+  .a4{
+    width:100%;
+    box-shadow:none;
+    margin:0;
+    transform-origin: top left;
+  }
+  .a4-in{padding:16px;}
+
+  /* Topbar 精簡 */
+  .topbar{padding:8px 12px;gap:6px;}
+  .tb-title{display:none;}
+  .tb-project{max-width:120px;font-size:10px;}
+
+  /* 手機版底部工具列 */
+  .mobile-bar{
+    display:flex!important;
+    position:fixed;bottom:0;left:0;right:0;
+    background:var(--sb);border-top:1px solid var(--border);
+    padding:8px 12px;padding-bottom:max(8px,env(safe-area-inset-bottom));
+    gap:8px;z-index:50;
+  }
+  .mobile-bar button{
+    flex:1;padding:10px 6px;border-radius:8px;
+    background:var(--card);border:1px solid var(--border2);
+    color:var(--text);font-size:11px;font-family:inherit;cursor:pointer;
+    display:flex;flex-direction:column;align-items:center;gap:2px;
+  }
+  .mobile-bar button.pri{background:var(--accent);color:#fff;border-color:var(--accent);}
+  .mobile-bar button span.icon{font-size:16px;}
+  .mobile-bar button span.lbl{font-size:9px;color:inherit;opacity:.8;}
+
+  /* 手機版側邊抽屜 */
+  .mobile-drawer{
+    display:block!important;
+    position:fixed;inset:0;z-index:100;
+    pointer-events:none;
+  }
+  .mobile-drawer-overlay{
+    position:absolute;inset:0;background:rgba(0,0,0,.6);
+    opacity:0;transition:opacity .25s;pointer-events:none;
+  }
+  .mobile-drawer-overlay.show{opacity:1;pointer-events:all;}
+  .mobile-drawer-panel{
+    position:absolute;left:0;top:0;bottom:0;width:85%;max-width:340px;
+    background:var(--sb);overflow-y:auto;
+    transform:translateX(-100%);transition:transform .28s cubic-bezier(.4,0,.2,1);
+    pointer-events:all;
+  }
+  .mobile-drawer-panel.show{transform:translateX(0);}
+  .mobile-drawer-panel2{
+    position:absolute;right:0;top:0;bottom:0;width:85%;max-width:340px;
+    background:var(--sb);overflow-y:auto;
+    transform:translateX(100%);transition:transform .28s cubic-bezier(.4,0,.2,1);
+    pointer-events:all;
+  }
+  .mobile-drawer-panel2.show{transform:translateX(0);}
+
+  /* 預覽縮放 */
+  .a4-scaler{
+    overflow-x:auto;
+    width:100%;
+  }
+
+  /* 底部工具列佔用空間 */
+  .workspace{padding-bottom:70px;}
+
+  /* 隱藏桌面版頂部按鈕 */
+  .topbar .t-btn:not(.keep-mobile){display:none;}
+  .topbar .mode-row{display:none;}
+}
+
+/* 桌面版隱藏手機專用元素 */
+.mobile-bar{ display:none; }
+.mobile-drawer{ display:none; }
+
+@media print{
+  @page{margin:8mm 8mm 10mm;size:A4 portrait;}
+  *{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  /* 強制全白底,消除深色主題殘留(黑色區塊主因) */
+  html,body,.workspace,.preview,.a4,.a4-in{background:#fff !important;}
+  body,html{height:auto;width:210mm;margin:0;padding:0;}
+  /* 隱藏所有非列印 UI */
+  .topbar,.finder,.rp,.mobile-bar,.mobile-drawer,
+  #finder-tab,.modal-bg{display:none!important;}
+  .workspace{display:block;width:210mm;}
+  .preview{background:#fff !important;padding:0;overflow:visible;width:210mm;display:block;min-height:0 !important;}
+  /* A4 撐滿寬度 */
+  .a4{box-shadow:none;width:100% !important;max-width:100% !important;margin:0;padding:0;}
+  .a4-in{padding:0 2px 2px 0;overflow:hidden;}
+  /* 標題不截斷 */
+  .doc-hd{width:100%;box-sizing:border-box;overflow:hidden;}
+  .dh-r{min-width:0;overflow:hidden;}
+  .dh-r .doc-title{font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  /* table 結構讓 thead 每頁重複 */
+  .a4-in table{width:100%;}
+  .a4-in thead{display:table-header-group;}
+  .a4-in tfoot{display:table-footer-group;}
+  .a4-in tbody{display:table-row-group;}
+  /* 卡片不分頁 */
+  .mat-card{page-break-inside:avoid;break-inside:avoid;}
+  .card-grid{page-break-inside:auto;break-inside:auto;width:100%;}
+  /* 列印邊框:只用卡片自己的border,grid不畫外框(避免框住空白) */
+  /* align-content:start 讓 grid 不把列撐滿整頁高度 */
+  .card-grid{border:none !important;gap:0 !important;background:transparent !important;padding:0 !important;align-content:start !important;}
+  .mat-card{border:1px solid #1a1a1a !important;outline:none !important;box-sizing:border-box !important;margin:0 !important;background:#fff !important;}
+  /* 列印時圖片邊框用 content-box(不裁圖,邊框加在外側) */
+  .mat-img img{box-sizing:content-box !important;}
+  .mat-img > div > div{box-sizing:content-box !important;}
+  /* 卡片內部底線:確保每列資料的橫線都在 */
+  .mat-info-table{border-collapse:collapse !important;}
+  .mat-info-table td{border-bottom:0.5px solid #ddd !important;}
+  /* 一頁4張：縮小卡片 padding 讓兩行可以放進一頁 */
+  .mat-num-row{padding:4px 8px;}
+  .mat-key{padding:3px 6px 3px 8px;font-size:9px;}
+  .mat-val-td{padding:3px 6px;font-size:9px;}
+  .mat-num-input{font-size:13px;}
+  /* 避免尾端空白 table row 產生多餘空白頁/黑塊 */
+  .a4-in tfoot td{padding:0;}
+  .a4-in table:last-child{margin-bottom:0;}
+}
+/* 頁碼區塊（print 時顯示） */
+.pdf-footer{display:none;}
+/* ════════════════════════════════════════════
+   手機版 RWD
+   ════════════════════════════════════════════ */
+@media (max-width: 600px){
+  /* 隱藏 Finder 雙欄，改成頂部下拉 */
+  .finder{ display:none!important; }
+  #finder-tab{ display:none!important; }
+
+  /* 右側設定面板也收起，只顯示預覽 */
+  .rp{ display:none; }
+
+  /* 預覽區全寬 */
+  .preview{padding:0;background:#fff;}
+
+  /* A4 縮放到手機寬度 */
+  .a4{
+    width:100%;
+    box-shadow:none;
+    margin:0;
+    transform-origin: top left;
+  }
+  .a4-in{padding:16px;}
+
+  /* Topbar 精簡 */
+  .topbar{padding:8px 12px;gap:6px;}
+  .tb-title{display:none;}
+  .tb-project{max-width:120px;font-size:10px;}
+
+  /* 手機版底部工具列 */
+  .mobile-bar{
+    display:flex!important;
+    position:fixed;bottom:0;left:0;right:0;
+    background:var(--sb);border-top:1px solid var(--border);
+    padding:8px 12px;padding-bottom:max(8px,env(safe-area-inset-bottom));
+    gap:8px;z-index:50;
+  }
+  .mobile-bar button{
+    flex:1;padding:10px 6px;border-radius:8px;
+    background:var(--card);border:1px solid var(--border2);
+    color:var(--text);font-size:11px;font-family:inherit;cursor:pointer;
+    display:flex;flex-direction:column;align-items:center;gap:2px;
+  }
+  .mobile-bar button.pri{background:var(--accent);color:#fff;border-color:var(--accent);}
+  .mobile-bar button span.icon{font-size:16px;}
+  .mobile-bar button span.lbl{font-size:9px;color:inherit;opacity:.8;}
+
+  /* 手機版側邊抽屜 */
+  .mobile-drawer{
+    display:block!important;
+    position:fixed;inset:0;z-index:100;
+    pointer-events:none;
+  }
+  .mobile-drawer-overlay{
+    position:absolute;inset:0;background:rgba(0,0,0,.6);
+    opacity:0;transition:opacity .25s;pointer-events:none;
+  }
+  .mobile-drawer-overlay.show{opacity:1;pointer-events:all;}
+  .mobile-drawer-panel{
+    position:absolute;left:0;top:0;bottom:0;width:85%;max-width:340px;
+    background:var(--sb);overflow-y:auto;
+    transform:translateX(-100%);transition:transform .28s cubic-bezier(.4,0,.2,1);
+    pointer-events:all;
+  }
+  .mobile-drawer-panel.show{transform:translateX(0);}
+  .mobile-drawer-panel2{
+    position:absolute;right:0;top:0;bottom:0;width:85%;max-width:340px;
+    background:var(--sb);overflow-y:auto;
+    transform:translateX(100%);transition:transform .28s cubic-bezier(.4,0,.2,1);
+    pointer-events:all;
+  }
+  .mobile-drawer-panel2.show{transform:translateX(0);}
+
+  /* 預覽縮放 */
+  .a4-scaler{
+    overflow-x:auto;
+    width:100%;
+  }
+
+  /* 底部工具列佔用空間 */
+  .workspace{padding-bottom:70px;}
+
+  /* 隱藏桌面版頂部按鈕 */
+  .topbar .t-btn:not(.keep-mobile){display:none;}
+  .topbar .mode-row{display:none;}
+}
+
+/* 桌面版隱藏手機專用元素 */
+.mobile-bar{ display:none; }
+.mobile-drawer{ display:none; }
+
+</style>
+  <script src="https://cdn.jsdelivr.net/npm/heic-to@1.4.2/dist/iife/heic-to.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.106.2/dist/umd/supabase.min.js"></script>
+  <style>
+    #gate{position:fixed;inset:0;z-index:9999;background:var(--bg,#0f1115);display:flex;align-items:center;justify-content:center;font-family:inherit}
+    #gate .box{width:320px;max-width:90vw;background:var(--card,#181b22);border:1px solid var(--border2,#2a2f3a);border-radius:12px;padding:28px 26px}
+    #gate h1{font-size:15px;margin:0 0 4px;color:var(--gold2,#d8b35a);letter-spacing:2px}
+    #gate .sub{font-size:11px;color:var(--sub,#8a8f9a);margin-bottom:18px}
+    #gate label{display:block;font-size:10px;color:var(--sub,#8a8f9a);margin:10px 0 4px;letter-spacing:1px}
+    #gate input{width:100%;box-sizing:border-box;padding:9px 10px;border-radius:7px;border:1px solid var(--border2,#2a2f3a);background:var(--bg,#0f1115);color:var(--text,#e8e8e8);font-size:13px;font-family:inherit}
+    #gate button{width:100%;margin-top:16px;padding:10px;border-radius:7px;border:none;background:var(--gold2,#d8b35a);color:#111;font-weight:700;font-size:13px;cursor:pointer;font-family:inherit}
+    #gate button:disabled{opacity:.5}
+    #gate .err{font-size:11px;color:var(--red,#e06c6c);margin-top:8px;min-height:14px}
+    body.locked>*:not(#gate){filter:blur(3px);pointer-events:none;user-select:none}
+  </style>
+</head>
+<body class="locked">
+<div id="gate">
+  <form class="box" id="gateForm" autocomplete="on">
+    <h1>🏛 ATLAS 選色表</h1>
+    <div class="sub">雲端版 v6.0 · 請登入</div>
+    <label>EMAIL</label><input id="gate-email" type="email" autocomplete="username" required>
+    <label>密碼</label><input id="gate-pw" type="password" autocomplete="current-password" required>
+    <button id="gate-btn" type="submit">登入</button>
+    <div class="err" id="gate-err"></div>
+  </form>
+</div>
+
+<!-- Topbar -->
+<div class="topbar">
+  <div class="logo-m">🏛</div>
+  <span class="tb-title">ATLAS</span>
+  <span class="tb-project" id="tb-project">選色表</span>
+  <div class="mode-row">
+    <button class="mode-btn on" id="mb-card" onclick="setMode('card',this)">📋 卡片</button>
+    <button class="mode-btn" id="mb-pro" onclick="setMode('pro',this)">📊 表格</button>
+  </div>
+  <div class="spacer"></div>
+  <button class="t-btn teal" onclick="cloudInfo()" title="雲端同步狀態">☁ 雲端<span class="noco-dot" id="noco-dot"></span></button>
+  <button class="t-btn" onclick="exportJSON()" title="儲存到選定資料夾">💾 存檔</button>
+  <span id="dir-tip" onclick="changeSaveDir()" title="點擊更換存檔資料夾" style="font-size:10px;color:var(--teal2);cursor:pointer;white-space:nowrap;max-width:120px;overflow:hidden;text-overflow:ellipsis;"></span>
+  <button class="t-btn" onclick="document.getElementById('import-file').click()" title="載入之前儲存的 JSON 繼續編輯">📂 讀檔</button>
+  <input type="file" id="import-file" accept=".json" style="display:none" onchange="importJSON(this)">
+  <span id="last-save-tip" style="font-size:10px;color:var(--sub);white-space:nowrap;"></span>
+  <button class="t-btn gld" onclick="openItemModal(null)">＋ 新增建材</button>
+  <button class="t-btn" id="grp-btn" style="display:none" onclick="addGroup()">＋ 分組</button>
+  <button class="t-btn pri" onclick="doPrint()">🖨 輸出 PDF</button>
+  <button class="t-btn" onclick="cloudLogout()" title="登出">⎋</button>
+</div>
+
+<div class="workspace">
+
+<!-- Finder 雙欄 -->
+<div class="finder" id="finder-panel">
+  <!-- Col1：建商/營造 -->
+  <div class="finder-col finder-col1">
+    <div class="finder-hd">
+      <span class="finder-lbl">建商</span>
+      <button class="finder-add" onclick="addClient()" title="手動新增建商">＋</button>
+    </div>
+    <div class="finder-list" id="col1-list"></div>
+  </div>
+  <!-- Col2：專案名稱 -->
+  <div class="finder-col finder-col2">
+    <div class="finder-hd">
+      <span class="finder-lbl">專案</span>
+      <button class="finder-add" onclick="addProject()" title="新增專案">＋</button>
+    </div>
+    <div class="finder-list" id="col2-list"></div>
+  </div>
+  <!-- Col3：版本 -->
+  <div class="finder-col finder-col3">
+    <div class="finder-hd">
+      <span class="finder-lbl">版本</span>
+      <button class="finder-add" onclick="addVersion()" title="新增版本">＋</button>
+    </div>
+    <div class="finder-list" id="col3-list"></div>
+  </div>
+</div>
+<!-- Finder 收折 tab -->
+<div id="finder-tab" onclick="toggleFinder()" title="展開/收起案件列表"
+  style="width:14px;background:var(--sb);border-right:1px solid var(--border);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .15s;user-select:none;"
+  onmouseover="this.style.background='var(--card)'" onmouseout="this.style.background='var(--sb)'">
+  <span id="finder-tab-icon" style="font-size:9px;color:var(--sub);writing-mode:vertical-rl;letter-spacing:2px">◀</span>
+</div>
+
+<!-- Right panel -->
+<div class="rp">
+
+  <!-- 建材搜尋 -->
+  <div class="rp-sec" style="position:relative">
+    <div class="rp-lbl" style="display:flex;align-items:center;justify-content:space-between">
+      <span>建材搜尋</span>
+      <button onclick="loadNocoFilters()" style="background:none;border:none;color:var(--teal2);cursor:pointer;font-size:10px;padding:0">↻ 載入</button>
+    </div>
+    <!-- 型號直搜 -->
+    <input id="s-code" placeholder="型號直搜 e.g. GD6360" oninput="liveSearch()"
+      style="width:100%;background:var(--card);border:1px solid var(--border2);border-radius:6px;color:var(--text);padding:6px 9px;font-family:inherit;font-size:11px;outline:none;margin-bottom:6px;">
+    <!-- 浮動雙下拉 -->
+    <div style="display:flex;gap:5px;margin-bottom:6px;position:relative">
+      <!-- 篩選1 -->
+      <div style="flex:1;position:relative">
+        <div id="fd1-btn" onclick="toggleFd(1)"
+          style="background:var(--card);border:1px solid var(--border2);border-radius:6px;padding:5px 8px;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;color:var(--sub)">
+          <span id="fd1-lbl">篩選 1</span><span style="font-size:9px">▾</span>
+        </div>
+        <div id="fd1-panel" style="display:none;position:absolute;top:calc(100% + 3px);left:0;right:0;background:var(--panel);border:1px solid var(--border2);border-radius:8px;z-index:100;box-shadow:0 8px 24px rgba(0,0,0,.5);overflow:hidden;min-width:200px">
+          <!-- 維度選擇 -->
+          <div id="fd1-dims" style="padding:6px">
+            <div style="font-size:9px;color:var(--muted);padding:3px 6px;letter-spacing:1px">選擇篩選維度</div>
+            <div class="fd-dim-row" onclick="setFdDim(1,'品牌')">品牌</div>
+            <div class="fd-dim-row" onclick="setFdDim(1,'大類別')">大類別</div>
+            <div class="fd-dim-row" onclick="setFdDim(1,'系列')">系列</div>
+            <div class="fd-dim-row" onclick="setFdDim(1,'尺寸')">尺寸</div>
+            <div class="fd-dim-row" onclick="setFdDim(1,'顏色')">顏色</div>
+            <div class="fd-dim-row" onclick="setFdDim(1,'用途')">用途</div>
+            <div class="fd-dim-row" onclick="setFdDim(1,'紋理')">紋理</div>
+            <div class="fd-dim-row" onclick="setFdDim(1,'面感')">面感</div>
+          </div>
+          <!-- 值選擇 -->
+          <div id="fd1-vals" style="display:none;max-height:180px;overflow-y:auto"></div>
+        </div>
+      </div>
+      <!-- 篩選2 -->
+      <div style="flex:1;position:relative">
+        <div id="fd2-btn" onclick="toggleFd(2)"
+          style="background:var(--card);border:1px solid var(--border2);border-radius:6px;padding:5px 8px;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;color:var(--sub)">
+          <span id="fd2-lbl">篩選 2</span><span style="font-size:9px">▾</span>
+        </div>
+        <div id="fd2-panel" style="display:none;position:absolute;top:calc(100% + 3px);left:0;right:0;background:var(--panel);border:1px solid var(--border2);border-radius:8px;z-index:100;box-shadow:0 8px 24px rgba(0,0,0,.5);overflow:hidden;min-width:200px">
+          <div id="fd2-dims" style="padding:6px">
+            <div style="font-size:9px;color:var(--muted);padding:3px 6px;letter-spacing:1px">選擇篩選維度</div>
+            <div class="fd-dim-row" onclick="setFdDim(2,'品牌')">品牌</div>
+            <div class="fd-dim-row" onclick="setFdDim(2,'大類別')">大類別</div>
+            <div class="fd-dim-row" onclick="setFdDim(2,'系列')">系列</div>
+            <div class="fd-dim-row" onclick="setFdDim(2,'尺寸')">尺寸</div>
+            <div class="fd-dim-row" onclick="setFdDim(2,'顏色')">顏色</div>
+            <div class="fd-dim-row" onclick="setFdDim(2,'用途')">用途</div>
+            <div class="fd-dim-row" onclick="setFdDim(2,'紋理')">紋理</div>
+            <div class="fd-dim-row" onclick="setFdDim(2,'面感')">面感</div>
+          </div>
+          <div id="fd2-vals" style="display:none;max-height:180px;overflow-y:auto"></div>
+        </div>
+      </div>
+    </div>
+    <!-- 已選標籤 -->
+    <div id="fd-tags" style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:5px;min-height:0"></div>
+    <!-- 圖片牆（載入後顯示） -->
+    <div id="img-wall" style="display:none;margin-bottom:6px">
+      <div style="font-size:9px;color:var(--muted);margin-bottom:5px;display:flex;align-items:center;justify-content:space-between">
+        <span id="img-wall-count"></span>
+        <span style="color:var(--sub)">點圖片加入選色表</span>
+      </div>
+      <div id="img-wall-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:4px;max-height:300px;overflow-y:auto"></div>
+    </div>
+    <!-- 搜尋結果列表 -->
+    <div id="srch-result" class="srch-result">
+      <div class="srch-status">輸入型號或展開篩選</div>
+    </div>
+  </div>
+
+  <!-- 品牌識別 -->
+  <div class="rp-sec">
+    <div class="rp-lbl">品牌識別</div>
+    <div class="tog-row">
+      <button class="tog on" id="tog-logo" onclick="setBrand('logo',this)">Logo</button>
+      <button class="tog" id="tog-text" onclick="setBrand('text',this)">文字</button>
+      <button class="tog" id="tog-none" onclick="setBrand('none',this)">無</button>
+    </div>
+    <div id="logo-sec">
+      <div class="logo-drop" id="logo-drop" onclick="document.getElementById('logo-file').click()"
+        ondragover="event.preventDefault()" ondrop="handleLogoDrop(event)">
+        <input type="file" id="logo-file" accept="image/*,.heic,.heif,.HEIC,.HEIF" style="display:none" onchange="handleLogoFile(this)">
+        <div id="logo-ph"><div style="font-size:18px">🖼</div><div style="font-size:9px;color:var(--sub);margin-top:2px">上傳 Logo</div></div>
+        <img id="logo-img" style="max-height:40px;max-width:150px;object-fit:contain;display:none">
+        <button class="logo-clr" id="logo-clr" style="display:none" onclick="event.stopPropagation();clearLogo()">✕</button>
+      </div>
+    </div>
+    <div id="text-sec" style="display:none">
+      <div class="f"><label>公司名稱</label><input id="co-name" placeholder="ATLAS 建材顧問" oninput="render()"></div>
+      <div class="f"><label>聯絡資訊</label><textarea id="co-contact" placeholder="電話／Email" oninput="render()"></textarea></div>
+    </div>
+  </div>
+
+  <!-- 文件資訊 -->
+  <div class="rp-sec">
+    <div class="rp-lbl">文件資訊</div>
+    <div class="f"><label>文件標題</label><input id="doc-title" value="建材選色提案" oninput="render()"></div>
+    <div class="f"><label>業主姓名</label><input id="owner" placeholder="王先生" oninput="render()"></div>
+    <div class="f"><label>案件名稱</label><input id="project-f" placeholder="南港國際-單元二" oninput="render()"></div>
+    <div class="f"><label>空間說明</label><input id="spacedesc" placeholder="外牆、公共區域" oninput="render()"></div>
+    <div class="f"><label>日期</label><input type="date" id="docdate" oninput="render()"></div>
+    <div class="f"><label>版本</label><input id="version" placeholder="V1.0" oninput="render()"></div>
+  </div>
+
+  <!-- 備注 -->
+  <div class="rp-sec">
+    <div class="rp-lbl">備注</div>
+    <textarea id="notes" placeholder="色差以實際樣品為準..." style="width:100%;background:var(--card);border:1px solid var(--border2);border-radius:6px;color:var(--text);padding:6px 9px;font-family:inherit;font-size:11px;outline:none;resize:vertical;min-height:50px;" oninput="render()"></textarea>
+    <label style="font-size:10px;color:var(--sub);display:flex;align-items:center;gap:4px;margin-top:5px">
+      <input type="checkbox" id="show-notes" checked onchange="render()"> 顯示備注
+    </label>
+  </div>
+
+  <!-- 欄位設定 -->
+  <div class="rp-sec">
+    <div class="rp-lbl">欄位設定</div>
+    <div class="col-list" id="col-list"></div>
+    <button class="add-col" onclick="addCol()">＋ 新增欄位</button>
+  </div>
+
+  <!-- 卡片設定 -->
+  <div class="rp-sec" id="card-opts">
+    <div class="rp-lbl">卡片設定</div>
+    <div class="f"><label>每行張數</label>
+      <select id="ncols" onchange="onNcolsChange()">
+        <option value="1">1 張</option>
+        <option value="2" selected>2 張（每頁4張）</option>
+        <option value="3">3 張（每頁6張）</option>
+      </select>
+    </div>
+    <div class="f"><label>圖片高度</label>
+      <select id="img-h" onchange="render()">
+        <option value="120">120px 緊湊</option>
+        <option value="160">160px</option>
+        <option value="195" selected>195px 自動（配合A4）</option>
+        <option value="220">220px</option>
+        <option value="280">280px 大圖</option>
+      </select>
+    </div>
+    <label style="font-size:10px;color:var(--sub);display:flex;align-items:center;gap:4px">
+      <input type="checkbox" id="show-footer" checked onchange="render()"> 頁尾聲明
+    </label>
+  </div>
+
+  <!-- 表格設定 -->
+  <div class="rp-sec" id="pro-opts" style="display:none">
+    <div class="rp-lbl">表格設定</div>
+    <label style="font-size:10px;color:var(--sub);display:flex;align-items:center;gap:4px;margin-bottom:5px"><input type="checkbox" id="show-sub" checked onchange="render()"> 分組小計</label>
+    <label style="font-size:10px;color:var(--sub);display:flex;align-items:center;gap:4px;margin-bottom:5px"><input type="checkbox" id="show-sum" checked onchange="render()"> 總計摘要</label>
+    <label style="font-size:10px;color:var(--sub);display:flex;align-items:center;gap:4px"><input type="checkbox" id="show-footer-p" checked onchange="render()"> 頁尾聲明</label>
+  </div>
+
+  <!-- 建材清單 -->
+  <div class="rp-sec" style="flex:1">
+    <div class="rp-lbl">建材清單 <span id="item-count" style="color:var(--teal2);font-size:9px"></span></div>
+    <div class="item-list" id="item-list"></div>
+    <button class="add-item" onclick="openItemModal(null)">＋ 手動新增</button>
+  </div>
+
+</div><!-- /rp -->
+
+<div class="preview"><div class="a4"><div class="a4-in" id="a4-in"></div></div></div>
+</div><!-- /workspace -->
+
+<!-- 手機版底部工具列 -->
+<div class="mobile-bar">
+  <button onclick="mobileDrawer('left')">
+    <span class="icon">📁</span>
+    <span class="lbl">專案</span>
+  </button>
+  <button onclick="mobileDrawer('right')">
+    <span class="icon">⚙️</span>
+    <span class="lbl">設定</span>
+  </button>
+  <button onclick="openItemModal(null)">
+    <span class="icon">＋</span>
+    <span class="lbl">建材</span>
+  </button>
+  <button onclick="exportJSON()">
+    <span class="icon">💾</span>
+    <span class="lbl">存檔</span>
+  </button>
+  <button class="pri" onclick="doPrint()">
+    <span class="icon">🖨</span>
+    <span class="lbl">PDF</span>
+  </button>
+</div>
+
+<!-- 左抽屜：Finder + 建材清單 -->
+<div class="mobile-drawer" id="mobile-drawer-left">
+  <div class="mobile-drawer-overlay" onclick="closeDrawer('left')"></div>
+  <div class="mobile-drawer-panel" id="mdp-left">
+    <div style="padding:14px 14px 8px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border)">
+      <span style="font-size:13px;font-weight:700;color:var(--gold2)">📁 專案 / 建材</span>
+      <button onclick="closeDrawer('left')" style="background:none;border:none;color:var(--sub);font-size:18px;cursor:pointer">✕</button>
+    </div>
+    <!-- Finder 雙欄（手機版垂直排） -->
+    <div style="padding:10px 12px;border-bottom:1px solid var(--border)">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+        <span style="font-size:9px;letter-spacing:1.5px;color:var(--muted);font-family:'Space Mono',monospace">建商</span>
+        <div style="display:flex;gap:5px">
+          <button onclick="addClient()" style="background:none;border:none;color:var(--teal2);cursor:pointer;font-size:16px">＋</button>
+        </div>
+      </div>
+      <div id="mob-col1-list"></div>
+    </div>
+    <div style="padding:10px 12px;border-bottom:1px solid var(--border)">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+        <span style="font-size:9px;letter-spacing:1.5px;color:var(--muted);font-family:'Space Mono',monospace">專案</span>
+        <button onclick="addProject()" style="background:none;border:none;color:var(--teal2);cursor:pointer;font-size:16px">＋</button>
+      </div>
+      <div id="mob-col2-list"></div>
+    </div>
+    <!-- 建材清單 -->
+    <div style="padding:10px 12px">
+      <div style="font-size:9px;letter-spacing:1.5px;color:var(--muted);font-family:'Space Mono',monospace;margin-bottom:6px">
+        建材清單 <span id="mob-item-count" style="color:var(--teal2)"></span>
+      </div>
+      <div id="mob-item-list" style="display:flex;flex-direction:column;gap:4px"></div>
+      <button onclick="openItemModal(null);closeDrawer('left')"
+        style="width:100%;margin-top:8px;padding:10px;border-radius:8px;background:none;border:1px dashed var(--border2);color:var(--sub);cursor:pointer;font-size:12px;font-family:inherit">
+        ＋ 新增建材
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- 右抽屜：文件設定 -->
+<div class="mobile-drawer" id="mobile-drawer-right">
+  <div class="mobile-drawer-overlay" onclick="closeDrawer('right')"></div>
+  <div class="mobile-drawer-panel2" id="mdp-right">
+    <div style="padding:14px 14px 8px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border)">
+      <span style="font-size:13px;font-weight:700;color:var(--gold2)">⚙️ 文件設定</span>
+      <button onclick="closeDrawer('right')" style="background:none;border:none;color:var(--sub);font-size:18px;cursor:pointer">✕</button>
+    </div>
+    <!-- 複製右側面板的設定區 -->
+    <div style="padding:12px;display:flex;flex-direction:column;gap:10px">
+      <div>
+        <div style="font-size:9px;letter-spacing:1.5px;color:var(--muted);font-family:'Space Mono',monospace;margin-bottom:6px">文件資訊</div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <input placeholder="文件標題" id="mob-doc-title" oninput="syncField('doc-title',this.value)"
+            style="background:var(--card);border:1px solid var(--border2);border-radius:6px;color:var(--text);padding:8px 10px;font-family:inherit;font-size:12px;outline:none;width:100%">
+          <input placeholder="業主姓名" id="mob-owner" oninput="syncField('owner',this.value)"
+            style="background:var(--card);border:1px solid var(--border2);border-radius:6px;color:var(--text);padding:8px 10px;font-family:inherit;font-size:12px;outline:none;width:100%">
+          <input placeholder="案件名稱" id="mob-project-f" oninput="syncField('project-f',this.value)"
+            style="background:var(--card);border:1px solid var(--border2);border-radius:6px;color:var(--text);padding:8px 10px;font-family:inherit;font-size:12px;outline:none;width:100%">
+          <input type="date" id="mob-docdate" oninput="syncField('docdate',this.value)"
+            style="background:var(--card);border:1px solid var(--border2);border-radius:6px;color:var(--text);padding:8px 10px;font-family:inherit;font-size:12px;outline:none;width:100%">
+          <input placeholder="版本 V1.0" id="mob-version" oninput="syncField('version',this.value)"
+            style="background:var(--card);border:1px solid var(--border2);border-radius:6px;color:var(--text);padding:8px 10px;font-family:inherit;font-size:12px;outline:none;width:100%">
+        </div>
+      </div>
+      <div>
+        <div style="font-size:9px;letter-spacing:1.5px;color:var(--muted);font-family:'Space Mono',monospace;margin-bottom:6px">卡片設定</div>
+        <div style="display:flex;gap:8px">
+          <select id="mob-ncols" onchange="syncSelect('ncols',this.value)"
+            style="flex:1;background:var(--card);border:1px solid var(--border2);border-radius:6px;color:var(--text);padding:8px;font-family:inherit;font-size:12px;outline:none">
+            <option value="1">1 張</option>
+            <option value="2" selected>2 張（每頁4張）</option>
+            <option value="3">3 張（每頁6張）</option>
+          </select>
+          <select id="mob-img-h" onchange="syncSelect('img-h',this.value)"
+            style="flex:1;background:var(--card);border:1px solid var(--border2);border-radius:6px;color:var(--text);padding:8px;font-family:inherit;font-size:12px;outline:none">
+            <option value="120">120px</option>
+            <option value="160">160px</option>
+            <option value="195" selected>195px</option>
+            <option value="220">220px</option>
+            <option value="280">280px 大圖</option>
+          </select>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button onclick="exportJSON();closeDrawer('right')"
+          style="flex:1;padding:12px;border-radius:8px;background:var(--card);border:1px solid var(--border2);color:var(--text);cursor:pointer;font-size:12px;font-family:inherit">
+          💾 存檔
+        </button>
+        <button onclick="document.getElementById('import-file').click();closeDrawer('right')"
+          style="flex:1;padding:12px;border-radius:8px;background:var(--card);border:1px solid var(--border2);color:var(--text);cursor:pointer;font-size:12px;font-family:inherit">
+          📂 讀檔
+        </button>
+      </div>
+      <button onclick="cloudLogout()"
+        style="width:100%;padding:12px;border-radius:8px;background:rgba(58,170,140,.1);border:1px solid rgba(58,170,140,.3);color:var(--teal2);cursor:pointer;font-size:12px;font-family:inherit">
+        ⎋ 登出
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Item Modal -->
+<div class="modal-bg" id="item-modal">
+  <div class="modal">
+    <h2 id="modal-h">🧱 新增建材</h2>
+    <input type="hidden" id="edit-idx">
+    <label>編號</label><input id="f-num" placeholder="TL-01">
+    <label>圖片</label>
+    <div class="img-drop" id="img-drop" onclick="document.getElementById('img-file').click()"
+      ondragover="event.preventDefault()" ondrop="handleImgDrop(event)">
+      <input type="file" id="img-file" accept="image/*,.heic,.heif,.HEIC,.HEIF" style="display:none" onchange="handleImgFile(this)">
+      <div id="img-ph"><div style="font-size:20px">📷</div><div style="font-size:10px;color:var(--sub)">點擊或拖曳圖片</div></div>
+      <img id="img-prev" class="img-prev" style="display:none">
+      <button class="img-clr" id="img-clr" style="display:none" onclick="event.stopPropagation();clearImgPrev()">✕</button>
+    </div>
+    <!-- 圖片顯示控制 -->
+    <div class="img-ctrl" id="img-ctrl">
+      <!-- 模式切換 -->
+      <div class="img-mode-row">
+        <button class="img-mode-btn on" id="imode-cover"   onclick="setImgMode('cover')">填滿 Cover</button>
+        <button class="img-mode-btn"    id="imode-contain"  onclick="setImgMode('contain')">完整 Contain</button>
+      </div>
+      <!-- 底圖背景色 -->
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:7px">
+        <span style="font-size:10px;color:var(--sub);width:36px;flex-shrink:0">底圖</span>
+        <div style="display:flex;gap:4px;flex-wrap:wrap">
+          <div class="bg-swatch on" data-bg="transparent" title="無" onclick="setImgBg(this,'transparent')"
+            style="width:22px;height:22px;border-radius:4px;background:transparent;border:1px dashed var(--sub);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--sub)">∅</div>
+          <div class="bg-swatch" data-bg="#ffffff" title="白色" onclick="setImgBg(this,'#ffffff')"
+            style="width:22px;height:22px;border-radius:4px;background:#ffffff;border:1px solid var(--border2);cursor:pointer"></div>
+          <div class="bg-swatch" data-bg="#f0eeea" title="米白" onclick="setImgBg(this,'#f0eeea')"
+            style="width:22px;height:22px;border-radius:4px;background:#f0eeea;border:1px solid var(--border2);cursor:pointer"></div>
+          <div class="bg-swatch" data-bg="#e0ddd8" title="淺灰" onclick="setImgBg(this,'#e0ddd8')"
+            style="width:22px;height:22px;border-radius:4px;background:#e0ddd8;border:1px solid var(--border2);cursor:pointer"></div>
+          <div class="bg-swatch" data-bg="#c8c4bc" title="中灰" onclick="setImgBg(this,'#c8c4bc')"
+            style="width:22px;height:22px;border-radius:4px;background:#c8c4bc;border:1px solid var(--border2);cursor:pointer"></div>
+          <div class="bg-swatch" data-bg="#888580" title="深灰" onclick="setImgBg(this,'#888580')"
+            style="width:22px;height:22px;border-radius:4px;background:#888580;border:1px solid var(--border2);cursor:pointer"></div>
+          <div class="bg-swatch" data-bg="#2a2a2a" title="黑" onclick="setImgBg(this,'#2a2a2a')"
+            style="width:22px;height:22px;border-radius:4px;background:#2a2a2a;border:1px solid var(--border2);cursor:pointer"></div>
+          <div class="bg-swatch" data-bg="checker" title="棋盤格" onclick="setImgBg(this,'checker')"
+            style="width:22px;height:22px;border-radius:4px;cursor:pointer;background-image:linear-gradient(45deg,#ccc 25%,transparent 25%),linear-gradient(-45deg,#ccc 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#ccc 75%),linear-gradient(-45deg,transparent 75%,#ccc 75%);background-size:6px 6px;background-position:0 0,0 3px,3px -3px,-3px 0;border:1px solid var(--border2)"></div>
+        </div>
+      </div>
+      <!-- 圖片邊框 -->
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:7px">
+        <span style="font-size:10px;color:var(--sub);width:36px;flex-shrink:0">邊框</span>
+        <div style="display:flex;gap:4px;align-items:center;flex:1">
+          <div class="border-swatch on" data-bw="0" title="無框" onclick="setImgBorder(this,0)"
+            style="width:22px;height:22px;border-radius:4px;background:var(--card);border:1px dashed var(--sub);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--sub)">∅</div>
+          <div class="border-swatch" data-bw="1" title="細框 1px" onclick="setImgBorder(this,1)"
+            style="width:22px;height:22px;border-radius:4px;background:var(--card);border:1px solid #aaa;cursor:pointer"></div>
+          <div class="border-swatch" data-bw="2" title="框 2px" onclick="setImgBorder(this,2)"
+            style="width:22px;height:22px;border-radius:4px;background:var(--card);border:2px solid #aaa;cursor:pointer"></div>
+          <div class="border-swatch" data-bw="4" title="粗框 4px" onclick="setImgBorder(this,4)"
+            style="width:22px;height:22px;border-radius:4px;background:var(--card);border:4px solid #aaa;cursor:pointer"></div>
+          <input type="color" id="ic-border-color" value="#dddddd" title="邊框顏色"
+            style="width:28px;height:22px;border:1px solid var(--border2);border-radius:4px;cursor:pointer;padding:1px 2px;background:none"
+            oninput="editImgCtrl.borderColor=this.value;updateImgPreview()">
+          <span style="font-size:9px;color:var(--muted)">顏色</span>
+        </div>
+      </div>
+      <!-- Office 風格裁剪 -->
+      <div style="font-size:9px;color:var(--muted);margin-bottom:4px">拖曳<b style="color:var(--text)">圖片</b>移動 ／ 拖曳<b style="color:var(--teal2)">白框</b>調整裁剪範圍 ／ 拖曳<b style="color:var(--teal2)">角點</b>縮放框</div>
+      <div class="img-crop-outer" id="img-crop-outer">
+        <img id="img-crop-img" class="img-crop-img" draggable="false">
+        <div class="img-crop-frame" id="img-crop-frame">
+          <div class="img-crop-handle tl" data-handle="tl"></div>
+          <div class="img-crop-handle tc" data-handle="tc"></div>
+          <div class="img-crop-handle tr" data-handle="tr"></div>
+          <div class="img-crop-handle ml" data-handle="ml"></div>
+          <div class="img-crop-handle mr" data-handle="mr"></div>
+          <div class="img-crop-handle bl" data-handle="bl"></div>
+          <div class="img-crop-handle bc" data-handle="bc"></div>
+          <div class="img-crop-handle br" data-handle="br"></div>
+        </div>
+      </div>
+      <div class="img-ctrl-row">
+        <span class="img-ctrl-label">圖片縮放</span>
+        <input type="range" id="ic-zoom" min="50" max="400" value="100" oninput="onZoomChange()">
+        <span class="img-ctrl-val" id="ic-zoom-v">100%</span>
+      </div>
+    </div>
+
+    <div style="margin-top:6px;font-size:10px;color:var(--sub)">無圖時用色盤：</div>
+    <div class="pal-row" id="pal-picker"></div>
+    <div id="modal-fields"></div>
+    <div class="m-actions">
+      <button class="btn-cancel" onclick="closeItemModal()">取消</button>
+      <button class="btn-ok" onclick="saveItem()">儲存</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Client Modal -->
+<div class="modal-bg" id="client-modal">
+  <div class="modal" style="width:360px">
+    <h2 id="client-modal-h">🏢 新增建商</h2>
+    <input type="hidden" id="client-edit-id">
+    <label>建商／營造名稱</label><input id="client-name" placeholder="e.g. 南港國際、富邦">
+    <div class="m-actions">
+      <button class="btn-cancel" onclick="closeModal('client-modal')">取消</button>
+      <button class="btn-ok" onclick="saveClient()">儲存</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Project Modal -->
+<div class="modal-bg" id="project-modal">
+  <div class="modal" style="width:380px">
+    <h2 id="proj-modal-h">📁 新增專案</h2>
+    <input type="hidden" id="proj-edit-id">
+    <label>專案名稱</label><input id="proj-name" placeholder="e.g. 單元二、板橋A案">
+    <label>備注（選填）</label><input id="proj-note" placeholder="建材選色">
+    <div class="m-actions">
+      <button class="btn-cancel" onclick="closeModal('project-modal')">取消</button>
+      <button class="btn-ok" onclick="saveProjectModal()">儲存</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ════════════════════════════════════════════
+//  資料結構
+// ════════════════════════════════════════════
+let cols=[
+  {key:'name',lbl:'名稱 Name.',vis:true},
+  {key:'code',lbl:'型號 Serial No.',vis:true},
+  {key:'color',lbl:'顏色 Color.',vis:true},
+  {key:'size',lbl:'尺寸 Dimension.',vis:true},
+  {key:'area',lbl:'區域 Area.',vis:true},
+  {key:'producer',lbl:'廠商 Producer.',vis:true},
+  {key:'note',lbl:'註釋 Annotation.',vis:true},
+];
+let mode='card',brandMode='logo',logoUrl=null;
+let editImgUrl=null,editPal=null;
+let editImgCtrl={mode:'cover',zoom:100,offsetX:0,offsetY:0,cropX:undefined,cropY:undefined,cropW:undefined,cropH:undefined,bg:'transparent',borderWidth:0,borderColor:'#dddddd'};
+let items=[],proRows=[];
+let dragCI=null,dragItemIdx=null;
+
+// 多案件資料
+// { clients:[{id,name}], projects:[{id,clientId,name,note,items,proRows,meta}] }
+let db=JSON.parse(localStorage.getItem('atlas-db-v1')||'null')||{clients:[],projects:[],versions:[]};
+if(!db.versions) db.versions=[]; // 舊資料相容
+let activeClientId=null, activeProjectId=null, activeVersionId=null;
+
+// ── Supabase（Publishable key 可公開，權限由 RLS 控制）──
+const SB_URL='https://riiflvhbxrnmzriwngjs.supabase.co';
+const SB_KEY='sb_publishable_R69Hj9hcR5G4dp3Uz1J0PQ_1BabpwsN';
+const sb=supabase.createClient(SB_URL,SB_KEY);
+let SB_UID=null;
+let nocoCfg={}; // 相容舊匯出檔欄位，已無作用
+
+const PALS=[
+  null,
+  ['#f5f0e8','#e0dbd2','#ccc7bb','#a09a90'],
+  ['#9a9a9a','#7a7a7a','#5a5a5a','#3a3a3a'],
+  ['#2a2a2a','#1a1a1a','#3a3636','#4a4444'],
+  ['#c8a882','#b09070','#d4bc9e','#e8d4b8'],
+  ['#7a9cba','#5a7c9a','#9abcda','#c0d4e8'],
+  ['#6aaa7a','#4a8a5a','#8aca9a','#c0e8c8'],
+  ['#c06060','#a04040','#d08080','#e8b0b0'],
+  ['#d4b840','#b8980a','#e8d070','#f0e0a0'],
+];
+const PLBLS=['無填滿','白/米','灰','黑','米棕','藍','綠','紅','黃'];
+
+// 預設案場：南港國際-單元二
+const NANGANG_ITEMS=[
+  {area:'外牆',name:'短筋面磚（深色）',code:'',size:'4.5x19.5cm',producer:'',color:'深色',note:''},
+  {area:'外牆',name:'木紋磚',code:'',size:'4.5x19.5cm',producer:'',color:'',note:''},
+  {area:'車道',name:'車道磚',code:'',size:'10x10cm',producer:'',color:'',note:'止滑'},
+  {area:'陽台',name:'止滑石英磚',code:'',size:'20x20cm',producer:'',color:'',note:'止滑'},
+  {area:'垃圾儲藏室',name:'止滑石英磚（地）',code:'',size:'30x30cm',producer:'',color:'',note:'止滑'},
+  {area:'廁所&茶水間',name:'止滑石英磚（地）',code:'GD6360',size:'30x30cm',producer:'冠軍',color:'',note:'止滑'},
+  {area:'儲藏室',name:'止滑石英磚（地）',code:'',size:'30x30cm',producer:'',color:'',note:'止滑'},
+  {area:'垃圾儲藏室',name:'石英磚（牆）',code:'',size:'30x60cm',producer:'',color:'',note:''},
+  {area:'廁所',name:'石英磚（地）',code:'',size:'30x60cm',producer:'',color:'',note:''},
+  {area:'廁所&茶水間',name:'石英磚（牆）',code:'HD3F61',size:'30x60cm',producer:'冠軍',color:'',note:''},
+  {area:'樓梯',name:'止滑石英磚',code:'',size:'20x20cm',producer:'',color:'',note:'止滑'},
+  {area:'樓梯',name:'止滑石英磚+止滑條',code:'',size:'20x26cm',producer:'',color:'',note:'止滑條'},
+  {area:'梯廳',name:'拋光石英磚（地）',code:'PA66001S',size:'60x60cm',producer:'冠軍',color:'',note:''},
+  {area:'電梯廳',name:'磁磚（地）60x60',code:'DB6009',size:'60x60cm',producer:'冠軍',color:'',note:''},
+  {area:'電梯廳',name:'磁磚（地）80x80',code:'',size:'80x80cm',producer:'',color:'',note:''},
+  {area:'電梯廳',name:'磁磚（地）60x120',code:'',size:'60x120cm',producer:'',color:'',note:''},
+  {area:'電梯廳',name:'磁磚（牆）60x120',code:'',size:'60x120cm',producer:'',color:'',note:''},
+  {area:'（公益設施）電梯廳',name:'磁磚（牆）',code:'',size:'',producer:'',color:'',note:''},
+  {area:'水箱',name:'面磚',code:'',size:'20x20cm',producer:'',color:'',note:''},
+];
+
+// ════════════════════════════════════════════
+//  初始化
+// ════════════════════════════════════════════
+function initApp(){
+  // 日期不再於此無條件設今天，改由 loadActiveProject 依案件資料載入
+  // (全新案件才 fallback 今天，使用者手動改的日期會被保存)
+
+  // 如果是第一次啟動，建立預設資料
+  if(db.clients.length===0){
+    const cid='c'+Date.now();
+    const pid='p'+Date.now();
+    const vid='v'+Date.now();
+    db.clients.push({id:cid,name:'南港國際'});
+    db.projects.push({id:pid, clientId:cid, name:'單元二', note:'建材選色'});
+    db.versions.push({
+      id:vid, projectId:pid, name:'V1 草稿',
+      items: NANGANG_ITEMS.map((it,i)=>({num:'',imgUrl:null,pal:PALS[1],...it})),
+      proRows: NANGANG_ITEMS.map((_,i)=>({type:'item',ref:i})),
+      meta:{docTitle:'建材選色提案',owner:'',project:'南港國際-單元二',spacedesc:'外牆、公共區域',version:'V1.0',notes:''}
+    });
+    saveDb();
+    activeClientId=cid; activeProjectId=pid; activeVersionId=vid;
+  }else{
+    activeClientId=db.clients[0]?.id||null;
+    activeProjectId=db.projects.find(p=>p.clientId===activeClientId)?.id||null;
+    // 幫舊專案建立預設版本
+    migrateVersions();
+    // 驗證 activeVersionId 是否仍有效，無效則重設
+    const validVer=db.versions?.find(v=>v.id===activeVersionId);
+    if(!validVer && activeProjectId){
+      activeVersionId=db.versions?.find(v=>v.projectId===activeProjectId)?.id||null;
+    }
+  }
+
+  // 產品庫（Supabase products）背景載入
+  loadNocoFilters(true);
+
+  loadActiveProject();
+  renderFinder();
+  renderColList(); renderItemList(); buildPalPicker();
+  render();
+  // 初始化上次儲存提示，每分鐘更新
+  updateLastSaveTip();
+  setInterval(updateLastSaveTip, 60000);
+}
+
+// ════════════════════════════════════════════
+//  資料庫
+// ════════════════════════════════════════════
+function saveDb(){
+  try{
+    localStorage.setItem('atlas-db-v1',JSON.stringify(db));
+    localStorage.setItem('atlas-last-save', new Date().toISOString());
+    updateLastSaveTip();
+  }catch(e){ console.warn('localStorage 寫入失敗：',e.message); }
+  cloudSave();
+}
+function updateLastSaveTip(){
+  const el = document.getElementById('last-save-tip');
+  if(!el) return;
+  const t = localStorage.getItem('atlas-last-save');
+  if(!t){ el.textContent=''; return; }
+  const d = new Date(t);
+  const now = new Date();
+  const diff = Math.floor((now-d)/1000);
+  let label;
+  if(diff < 60) label = '剛剛自動儲存';
+  else if(diff < 3600) label = `${Math.floor(diff/60)} 分鐘前儲存`;
+  else label = `${d.getMonth()+1}/${d.getDate()} ${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')} 儲存`;
+  el.textContent = '✓ ' + label;
+}
+
+// ════════════════════════════════════════════
+//  匯出 / 匯入 JSON
+// ════════════════════════════════════════════
+// ── 存檔目錄 handle（每個專案獨立）──
+let _dirHandles = {}; // projectId → FileSystemDirectoryHandle
+
+function _getSaveFilename(){
+  const proj = db.projects.find(p=>p.id===activeProjectId);
+  const client = db.clients.find(c=>c.id===activeClientId);
+  const dateStr = new Date().toISOString().slice(0,10);
+  const name = [client?.name, proj?.name].filter(Boolean).join('-') || 'atlas';
+  return `atlas-${name}-${dateStr}.json`;
+}
+
+function _makePayload(){
+  saveActiveProject();
+  return JSON.stringify({
+    version: 3,
+    exported: new Date().toISOString(),
+    nocoCfg: {url:nocoCfg.url||'', table:nocoCfg.table||'', table2:nocoCfg.table2||''},
+    db: JSON.parse(JSON.stringify(db)),
+    activeClientId, activeProjectId, activeVersionId
+  }, null, 2);
+}
+
+async function exportJSON(){
+  const filename = _getSaveFilename();
+  const json = _makePayload();
+  const blob = new Blob([json], {type:'application/json'});
+
+  // 用 showSaveFilePicker 讓使用者選擇存檔位置（需 HTTPS 或 localhost）
+  if(window.showSaveFilePicker){
+    try{
+      const fileHandle = await window.showSaveFilePicker({
+        suggestedName: filename,
+        types:[{description:'ATLAS 存檔', accept:{'application/json':['.json']}}],
+        startIn: _dirHandles[activeProjectId] || 'documents'
+      });
+      // 記住這個專案的目錄（從 fileHandle 取得父目錄名）
+      _dirHandles[activeProjectId] = fileHandle;
+      _updateDirTip(fileHandle.name);
+      const writable = await fileHandle.createWritable();
+      await writable.write(blob);
+      await writable.close();
+      const el = document.getElementById('last-save-tip');
+      if(el) el.textContent = `✓ 已儲存 ${fileHandle.name}`;
+      setTimeout(updateLastSaveTip, 4000);
+      return;
+    }catch(err){
+      if(err.name==='AbortError') return;
+      console.warn('showSaveFilePicker 失敗，改用下載：', err);
+    }
+  }
+  // fallback：一般下載（HTTP 環境）
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.download = filename; a.href = url; a.click();
+  URL.revokeObjectURL(url);
+}
+
+function _updateDirTip(dirName){
+  const el = document.getElementById('dir-tip');
+  if(el) el.textContent = dirName ? `📁 ${dirName}` : '';
+}
+
+async function changeSaveDir(){
+  if(!window.showDirectoryPicker){ alert('您的瀏覽器不支援資料夾選擇'); return; }
+  try{
+    const dirHandle = await window.showDirectoryPicker({mode:'readwrite', startIn:'documents'});
+    _dirHandles[activeProjectId] = dirHandle;
+    _updateDirTip(dirHandle.name);
+  }catch(err){ if(err.name!=='AbortError') console.warn(err); }
+}
+
+function importJSON(input){
+  const file = input.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try{
+      const payload = JSON.parse(e.target.result);
+      if(!payload.db) throw new Error('格式不正確，找不到 db 欄位');
+
+      // 確認覆蓋
+      const clientCount = payload.db.clients?.length||0;
+      const projCount   = payload.db.projects?.length||0;
+      if(!confirm(`匯入將覆蓋現有資料。
+
+檔案包含：${clientCount} 個建商、${projCount} 個專案
+匯出時間：${payload.exported||'不明'}
+
+確定匯入？`)){
+        input.value=''; return;
+      }
+
+      // 還原資料
+      db = payload.db;
+      saveDb();
+
+      // 還原 NocoDB 設定（不覆蓋 token）
+      if(payload.nocoCfg){
+        nocoCfg.url   = payload.nocoCfg.url   || nocoCfg.url;
+        nocoCfg.table = payload.nocoCfg.table  || nocoCfg.table;
+        nocoCfg.table2= payload.nocoCfg.table2 || nocoCfg.table2;
+        localStorage.setItem('atlas-noco-cfg', JSON.stringify(nocoCfg));
+      }
+
+      // 還原選中狀態
+      activeClientId  = payload.activeClientId  || db.clients[0]?.id  || null;
+      activeProjectId = payload.activeProjectId || db.projects[0]?.id || null;
+      activeVersionId = payload.activeVersionId || (db.versions||[]).find(v=>v.projectId===activeProjectId)?.id || null;
+
+      // 重新渲染
+      loadActiveProject();
+      renderFinder();
+      renderColList();
+      renderItemList();
+      render();
+
+      // 提示
+      const dot = document.getElementById('noco-dot');
+      dot.style.background='var(--gold2)';
+      dot.title='已匯入資料';
+      setTimeout(()=>{ dot.style.background=nocoCfg.url?'var(--teal2)':'var(--muted)'; dot.title=''; },3000);
+
+      alert(`✅ 匯入成功！
+${clientCount} 個建商、${projCount} 個專案已還原。`);
+    }catch(err){
+      alert('❌ 匯入失敗：' + err.message);
+    }
+    input.value='';
+  };
+  reader.readAsText(file);
+}
+
+function loadActiveProject(){
+  // 優先從 version 載入，fallback 到 project（相容舊資料）
+  const ver=db.versions?.find(v=>v.id===activeVersionId);
+  const proj=db.projects.find(p=>p.id===activeProjectId);
+  const src=ver||proj;
+  if(!src) return;
+  items=JSON.parse(JSON.stringify(src.items||[]));
+  proRows=JSON.parse(JSON.stringify(src.proRows||[]));
+  const m=src.meta||{};
+  document.getElementById('doc-title').value=m.docTitle||'建材選色提案';
+  document.getElementById('owner').value=m.owner||'';
+  document.getElementById('project-f').value=m.project||(proj?.name||'');
+  document.getElementById('spacedesc').value=m.spacedesc||'';
+  document.getElementById('version').value=m.version||'V1.0';
+  document.getElementById('notes').value=m.notes||'';
+  // 日期：優先讀案件存的值，從未設過才 fallback 今天
+  document.getElementById('docdate').value=m.docdate||new Date().toISOString().slice(0,10);
+  // 更新標題列
+  const client=db.clients.find(c=>c.id===proj?.clientId);
+  const verName=ver?` ／ ${ver.name}`:'';
+  document.getElementById('tb-project').textContent=`${client?.name||''} ／ ${proj?.name||''}${verName}`;
+  renderItemList(); render();
+}
+
+function saveActiveProject(){
+  // 優先存到 version，fallback 到 project
+  const ver=db.versions?.find(v=>v.id===activeVersionId);
+  const proj=db.projects.find(p=>p.id===activeProjectId);
+  const target=ver||proj;
+  if(!target) return;
+  target.items=JSON.parse(JSON.stringify(items));
+  target.proRows=JSON.parse(JSON.stringify(proRows));
+  target.meta={
+    docTitle:val('doc-title'), owner:val('owner'), project:val('project-f'),
+    spacedesc:val('spacedesc'), version:val('version'), notes:val('notes'),
+    docdate:val('docdate')
+  };
+  saveDb();
+}
+
+
+// ════════════════════════════════════════════
+//  Finder 拖曳排序
+// ════════════════════════════════════════════
+let _dragId = null, _dragCol = null;
+
+function onDragStart(e, col, el){
+  _dragId = el.dataset.id;
+  _dragCol = col;
+  el.classList.add('dragging');
+  e.dataTransfer.effectAllowed = 'move';
+  setTimeout(()=>el.classList.add('dragging'), 0);
+}
+
+function onDragOver(e){
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  const row = e.currentTarget;
+  if(row.dataset.id !== _dragId) row.classList.add('drag-over');
+}
+
+function onDragLeave(e){
+  e.currentTarget.classList.remove('drag-over');
+}
+
+function onDrop(e, col){
+  e.preventDefault();
+  const targetEl = e.currentTarget;
+  targetEl.classList.remove('drag-over');
+  const targetId = targetEl.dataset.id;
+  if(!_dragId || _dragId === targetId || _dragCol !== col) return;
+
+  if(col === '1'){
+    const arr = db.clients;
+    const from = arr.findIndex(x=>x.id===_dragId);
+    const to   = arr.findIndex(x=>x.id===targetId);
+    if(from<0||to<0) return;
+    arr.splice(to, 0, arr.splice(from,1)[0]);
+  } else if(col === '2'){
+    const arr = db.projects.filter(p=>p.clientId===activeClientId);
+    const allProjs = db.projects;
+    const from = arr.findIndex(x=>x.id===_dragId);
+    const to   = arr.findIndex(x=>x.id===targetId);
+    if(from<0||to<0) return;
+    // 重新排序 db.projects 裡這個 client 的專案
+    const clientProjs = arr.splice(0); // copy
+    clientProjs.splice(to, 0, clientProjs.splice(from,1)[0]);
+    // 把其他 client 的專案保留，只替換這個 client 的順序
+    db.projects = db.projects.filter(p=>p.clientId!==activeClientId);
+    db.projects.push(...clientProjs);
+  } else if(col === '3'){
+    const arr = (db.versions||[]).filter(v=>v.projectId===activeProjectId);
+    const from = arr.findIndex(x=>x.id===_dragId);
+    const to   = arr.findIndex(x=>x.id===targetId);
+    if(from<0||to<0) return;
+    arr.splice(to, 0, arr.splice(from,1)[0]);
+    db.versions = db.versions.filter(v=>v.projectId!==activeProjectId);
+    db.versions.push(...arr);
+  }
+  _dragId = null; _dragCol = null;
+  saveDb();
+  renderFinder();
+}
+
+// ════════════════════════════════════════════
+//  Finder 三欄
+// ════════════════════════════════════════════
+function renderFinder(){
+  // 確保版本資料已 migrate，且 activeVersionId 有效
+  if(!db.versions) db.versions=[];
+  if(activeProjectId){
+    const hasProjVer=db.versions.some(v=>v.projectId===activeProjectId);
+    if(!hasProjVer) migrateVersions();
+    if(!db.versions.find(v=>v.id===activeVersionId)){
+      activeVersionId=db.versions.find(v=>v.projectId===activeProjectId)?.id||null;
+    }
+  }
+  // Col1：建商
+  document.getElementById('col1-list').innerHTML=db.clients.length
+    ? db.clients.map(c=>`
+      <div class="finder-row ${c.id===activeClientId?'active':''}" onclick="selectClient('${c.id}')" draggable="true" data-id="${c.id}" data-col="1" ondragstart="onDragStart(event,'1',this)" ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event,'1')">
+        <span class="fr-drag" onclick="event.stopPropagation()">⠿</span>
+        <span class="fr-icon">🏢</span>
+        <span class="fr-name">${esc(c.name)}</span>
+        <button class="fr-del" onclick="event.stopPropagation();deleteClient('${c.id}')">✕</button>
+      </div>`).join('')
+    : '<div class="finder-empty">點 ＋ 新增建商</div>';
+
+  // Col2：專案（只顯示選中建商的）
+  const projs=db.projects.filter(p=>p.clientId===activeClientId);
+  document.getElementById('col2-list').innerHTML=projs.length
+    ? projs.map(p=>`
+      <div class="finder-row ${p.id===activeProjectId?'active':''}" onclick="selectProject('${p.id}')" draggable="true" data-id="${p.id}" data-col="2" ondragstart="onDragStart(event,'2',this)" ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event,'2')">
+        <span class="fr-drag" onclick="event.stopPropagation()">⠿</span>
+        <span class="fr-icon">📁</span>
+        <div style="flex:1;overflow:hidden">
+          <div class="fr-name">${esc(p.name)}</div>
+          <div class="fr-sub">${esc(p.note||'')}</div>
+        </div>
+        <button class="fr-del" onclick="event.stopPropagation();deleteProject('${p.id}')">✕</button>
+      </div>`).join('')
+    : '<div class="finder-empty">點 ＋ 新增專案</div>';
+
+  // Col3：版本（只顯示選中專案的）
+  const vers=(db.versions||[]).filter(v=>v.projectId===activeProjectId);
+  document.getElementById('col3-list').innerHTML=vers.length
+    ? vers.map(v=>`
+      <div class="finder-row ${v.id===activeVersionId?'active':''}" onclick="selectVersion('${v.id}')" draggable="true" data-id="${v.id}" data-col="3" ondragstart="onDragStart(event,'3',this)" ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event,'3')">
+        <span class="fr-drag" onclick="event.stopPropagation()">⠿</span>
+        <span class="fr-icon">📋</span>
+        <div style="flex:1;overflow:hidden;min-width:0">
+          <div class="fr-name" ondblclick="event.stopPropagation();renameVersion('${v.id}',this)" title="雙擊改名">${esc(v.name)}</div>
+          <div class="fr-sub">${esc(v.items?.length||0)} 項建材</div>
+        </div>
+        <button class="fr-menu" onclick="event.stopPropagation();showVersionMenu('${v.id}',event)" title="更多操作">⋮</button>
+        <button class="fr-del" onclick="event.stopPropagation();deleteVersion('${v.id}')">✕</button>
+      </div>`).join('')
+    : '<div class="finder-empty">點 ＋ 新增版本</div>';
+}
+
+// 版本改名（雙擊）
+function renameVersion(id, el){
+  const ver = db.versions?.find(v=>v.id===id);
+  if(!ver) return;
+  const input = document.createElement('input');
+  input.value = ver.name;
+  input.style.cssText = 'width:100%;background:transparent;border:none;border-bottom:1px solid var(--teal2);color:inherit;font-size:11px;font-family:inherit;outline:none;padding:0;';
+  el.replaceWith(input);
+  input.focus();
+  input.select();
+  const commit = ()=>{
+    const val = input.value.trim() || ver.name;
+    ver.name = val;
+    saveDb();
+    renderFinder();
+  };
+  input.addEventListener('blur', commit);
+  input.addEventListener('keydown', e=>{
+    if(e.key==='Enter'){ e.preventDefault(); commit(); }
+    if(e.key==='Escape'){ renderFinder(); }
+  });
+}
+
+// 選版本
+function selectVersion(id){
+  if(activeVersionId===id) return;
+  saveActiveProject();
+  activeVersionId=id;
+  loadActiveProject();
+  renderFinder();
+}
+
+// 新增版本
+function addVersion(){
+  if(!activeProjectId){ alert('請先選擇專案'); return; }
+  const vers=(db.versions||[]).filter(v=>v.projectId===activeProjectId);
+  const name=prompt('版本名稱：', `V${vers.length+1} 草稿`);
+  if(!name) return;
+  // 問要不要複製目前版本
+  const copy=vers.length>0 && confirm('複製目前版本的建材清單？\n確定 = 複製，取消 = 從空白開始');
+  saveActiveProject();
+  const vid='v'+Date.now();
+  const newVer={
+    id:vid, projectId:activeProjectId, name,
+    items: copy ? JSON.parse(JSON.stringify(items)) : [],
+    proRows: copy ? JSON.parse(JSON.stringify(proRows)) : [],
+    meta: copy ? JSON.parse(JSON.stringify(db.versions?.find(v=>v.id===activeVersionId)?.meta||{})) : {}
+  };
+  if(!db.versions) db.versions=[];
+  db.versions.push(newVer);
+  activeVersionId=vid;
+  saveDb();
+  loadActiveProject();
+  renderFinder();
+}
+
+// 刪除版本
+function deleteVersion(id){
+  const vers=(db.versions||[]).filter(v=>v.projectId===activeProjectId);
+  if(vers.length<=1){ alert('至少保留一個版本'); return; }
+  if(!confirm('刪除此版本？')) return;
+  db.versions=db.versions.filter(v=>v.id!==id);
+  if(activeVersionId===id){
+    activeVersionId=vers.find(v=>v.id!==id)?.id||null;
+    if(activeVersionId) loadActiveProject();
+    else{ items=[]; proRows=[]; renderItemList(); render(); }
+  }
+  saveDb(); renderFinder();
+}
+
+// 顯示版本卡片右鍵選單 (⋮)
+function showVersionMenu(id, ev){
+  closeVersionMenu();
+  const ver = db.versions?.find(v=>v.id===id);
+  if(!ver) return;
+  const rect = ev.target.getBoundingClientRect();
+  const menu = document.createElement('div');
+  menu.className = 'ver-popup';
+  menu.id = 'ver-popup';
+  menu.innerHTML = `
+    <div class="ver-popup-item" onclick="copyVersion('${id}');closeVersionMenu();">
+      <span>📋</span><span>複製此版本</span>
+    </div>
+    <div class="ver-popup-item" onclick="closeVersionMenu();renameVersionPrompt('${id}');">
+      <span>✏️</span><span>重新命名</span>
+    </div>
+    <div class="ver-popup-sep"></div>
+    <div class="ver-popup-item danger" onclick="closeVersionMenu();deleteVersion('${id}');">
+      <span>🗑</span><span>刪除版本</span>
+    </div>
+  `;
+  document.body.appendChild(menu);
+  // 計算位置（右下方,如果超出邊界往左）
+  const mw = 150, mh = 100;
+  let left = rect.right + 4;
+  let top = rect.top;
+  if(left + mw > window.innerWidth) left = rect.left - mw - 4;
+  if(top + mh > window.innerHeight) top = window.innerHeight - mh - 8;
+  menu.style.left = left + 'px';
+  menu.style.top = top + 'px';
+  // 點外面就關
+  setTimeout(()=>{
+    document.addEventListener('click', closeVersionMenu, {once:true});
+  }, 0);
+}
+
+function closeVersionMenu(){
+  const m = document.getElementById('ver-popup');
+  if(m) m.remove();
+}
+
+// 複製指定版本(不限定當前版本)
+function copyVersion(id){
+  const src = db.versions?.find(v=>v.id===id);
+  if(!src){ alert('找不到此版本'); return; }
+  const newName = prompt('新版本名稱：', `${src.name} (複本)`);
+  if(!newName) return;
+  // 如果複製的是當前版本,先存檔避免遺漏未存
+  if(id === activeVersionId) saveActiveProject();
+  const vid = 'v'+Date.now();
+  const newVer = {
+    id: vid,
+    projectId: src.projectId,
+    name: newName,
+    items: JSON.parse(JSON.stringify(src.items||[])),
+    proRows: JSON.parse(JSON.stringify(src.proRows||[])),
+    meta: JSON.parse(JSON.stringify(src.meta||{}))
+  };
+  if(!db.versions) db.versions = [];
+  db.versions.push(newVer);
+  activeVersionId = vid;
+  saveDb();
+  loadActiveProject();
+  renderFinder();
+  toast(`✅ 已複製為「${newName}」 (${newVer.items.length} 項建材)`);
+}
+
+// 重新命名版本(prompt 版,給選單用)
+function renameVersionPrompt(id){
+  const ver = db.versions?.find(v=>v.id===id);
+  if(!ver) return;
+  const newName = prompt('新名稱：', ver.name);
+  if(!newName || newName.trim() === ver.name) return;
+  ver.name = newName.trim();
+  saveDb();
+  renderFinder();
+}
+
+// 簡易 toast 提示(右下角)
+function toast(msg, ms=2500){
+  const old = document.getElementById('toast-msg');
+  if(old) old.remove();
+  const el = document.createElement('div');
+  el.id = 'toast-msg';
+  el.textContent = msg;
+  el.style.cssText = 'position:fixed;right:20px;bottom:20px;background:var(--card);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:10px 16px;font-size:13px;box-shadow:0 4px 12px rgba(0,0,0,.3);z-index:10000;animation:fadeIn .2s;';
+  document.body.appendChild(el);
+  setTimeout(()=>el.remove(), ms);
+}
+
+// 舊資料遷移：把 project 裡的 items 移到 version
+function migrateVersions(){
+  if(!db.versions) db.versions=[];
+  db.projects.forEach(p=>{
+    const hasVersion=db.versions.some(v=>v.projectId===p.id);
+    if(!hasVersion && p.items && p.items.length>0){
+      const vid='v'+Date.now()+Math.random();
+      db.versions.push({
+        id:vid, projectId:p.id, name:'V1 草稿',
+        items:p.items||[], proRows:p.proRows||[], meta:p.meta||{}
+      });
+      // 清空 project 的 items（資料移到 version）
+      delete p.items; delete p.proRows; delete p.meta;
+    } else if(!hasVersion){
+      // 空專案也給一個空版本
+      const vid='v'+Date.now()+Math.random();
+      db.versions.push({id:vid, projectId:p.id, name:'V1 草稿', items:[], proRows:[], meta:{}});
+    }
+  });
+  // 設定 activeVersionId
+  if(!activeVersionId && activeProjectId){
+    activeVersionId=db.versions.find(v=>v.projectId===activeProjectId)?.id||null;
+  }
+  saveDb();
+}
+
+function selectClient(id){
+  if(activeClientId===id) return;
+  saveActiveProject();
+  activeClientId=id;
+  const firstProj=db.projects.find(p=>p.clientId===id);
+  activeProjectId=firstProj?.id||null;
+  if(activeProjectId) loadActiveProject();
+  else{ items=[]; proRows=[]; renderItemList(); render(); }
+  renderFinder();
+}
+
+function selectProject(id){
+  // 更新存檔目錄提示
+  setTimeout(()=>{
+    const h = _dirHandles[id];
+    _updateDirTip(h ? h.name : '');
+  }, 50);
+  if(activeProjectId===id) return;
+  saveActiveProject();
+  activeProjectId=id;
+  // 自動選該專案的第一個版本
+  activeVersionId=(db.versions||[]).find(v=>v.projectId===id)?.id||null;
+  if(activeVersionId) loadActiveProject();
+  else{ items=[]; proRows=[]; renderItemList(); render(); }
+  renderFinder();
+}
+
+// 新增建商
+function addClient(){
+  document.getElementById('client-edit-id').value='';
+  document.getElementById('client-name').value='';
+  document.getElementById('client-modal-h').textContent='🏢 新增建商';
+  document.getElementById('client-modal').classList.add('open');
+  setTimeout(()=>document.getElementById('client-name').focus(),80);
+}
+function saveClient(){
+  const name=document.getElementById('client-name').value.trim();
+  if(!name)return;
+  const editId=document.getElementById('client-edit-id').value;
+  if(editId){
+    const c=db.clients.find(x=>x.id===editId);
+    if(c) c.name=name;
+  }else{
+    const id='c'+Date.now();
+    db.clients.push({id,name});
+    activeClientId=id; activeProjectId=null;
+  }
+  saveDb(); closeModal('client-modal'); renderFinder();
+}
+function deleteClient(id){
+  if(!confirm('刪除此建商及其所有專案？'))return;
+  db.clients=db.clients.filter(c=>c.id!==id);
+  db.projects=db.projects.filter(p=>p.clientId!==id);
+  if(activeClientId===id){
+    activeClientId=db.clients[0]?.id||null;
+    activeProjectId=db.projects.find(p=>p.clientId===activeClientId)?.id||null;
+    if(activeProjectId) loadActiveProject();
+    else{ items=[]; proRows=[]; renderItemList(); render(); }
+  }
+  saveDb(); renderFinder();
+}
+
+// 新增專案
+function addProject(){
+  if(!activeClientId){alert('請先選擇建商');return;}
+  document.getElementById('proj-edit-id').value='';
+  document.getElementById('proj-name').value='';
+  document.getElementById('proj-note').value='';
+  document.getElementById('proj-modal-h').textContent='📁 新增專案';
+  document.getElementById('project-modal').classList.add('open');
+  setTimeout(()=>document.getElementById('proj-name').focus(),80);
+}
+function saveProjectModal(){
+  const name=document.getElementById('proj-name').value.trim();
+  if(!name)return;
+  const note=document.getElementById('proj-note').value.trim();
+  const editId=document.getElementById('proj-edit-id').value;
+  if(editId){
+    const p=db.projects.find(x=>x.id===editId);
+    if(p){p.name=name;p.note=note;}
+  }else{
+    saveActiveProject();
+    const id='p'+Date.now();
+    db.projects.push({id,clientId:activeClientId,name,note,items:[],proRows:[],meta:{}});
+    activeProjectId=id;
+    items=[]; proRows=[];
+    document.getElementById('project-f').value=name;
+    renderItemList(); render();
+  }
+  saveDb(); closeModal('project-modal'); renderFinder();
+  const client=db.clients.find(c=>c.id===activeClientId);
+  document.getElementById('tb-project').textContent=`${client?.name||''} ／ ${name}`;
+}
+function deleteProject(id){
+  if(!confirm('刪除此專案及所有版本？'))return;
+  db.projects=db.projects.filter(p=>p.id!==id);
+  db.versions=(db.versions||[]).filter(v=>v.projectId!==id);
+  if(activeProjectId===id){
+    const next=db.projects.find(p=>p.clientId===activeClientId);
+    activeProjectId=next?.id||null;
+    activeVersionId=(db.versions||[]).find(v=>v.projectId===activeProjectId)?.id||null;
+    if(activeVersionId) loadActiveProject();
+    else{ items=[]; proRows=[]; renderItemList(); render(); }
+  }
+  saveDb(); renderFinder();
+}
+
+// ════════════════════════════════════════════
+//  雲端同步（Supabase finder_state / Storage）
+// ════════════════════════════════════════════
+let _cloudTimer=null, _cloudBusy=false, _cloudDirty=false;
+function updateNocoDot(ok,title){
+  const d=document.getElementById('noco-dot'); if(!d)return;
+  d.style.background=ok===null?'var(--gold2)':ok?'var(--teal2)':'var(--red)';
+  d.title=title||(ok?'雲端已同步':'雲端未同步');
+}
+function cloudSave(){
+  if(!SB_UID) return;
+  _cloudDirty=true; updateNocoDot(null,'等待上傳…');
+  clearTimeout(_cloudTimer);
+  _cloudTimer=setTimeout(cloudFlush,1500);
+}
+async function cloudFlush(){
+  if(!SB_UID||_cloudBusy){ if(_cloudBusy) _cloudDirty=true; return; }
+  _cloudBusy=true; _cloudDirty=false;
+  try{
+    const {error}=await sb.from('finder_state').upsert({user_id:SB_UID,data:db},{onConflict:'user_id'});
+    if(error) throw error;
+    updateNocoDot(true,'雲端已同步 '+new Date().toLocaleTimeString('zh-TW',{hour12:false}));
+  }catch(e){ console.warn('雲端儲存失敗：',e.message); updateNocoDot(false,'雲端儲存失敗：'+e.message); _cloudDirty=true; }
+  _cloudBusy=false;
+  if(_cloudDirty) cloudSave();
+}
+window.addEventListener('beforeunload',e=>{ if(_cloudDirty||_cloudTimer){ clearTimeout(_cloudTimer); cloudFlush(); } });
+
+async function cloudLoad(){
+  // 回傳 true=雲端有資料並已載入 db；false=雲端是空的
+  const {data,error}=await sb.from('finder_state').select('data').eq('user_id',SB_UID).maybeSingle();
+  if(error){ console.warn('雲端讀取失敗：',error.message); updateNocoDot(false,'雲端讀取失敗：'+error.message); return false; }
+  if(data&&data.data&&Array.isArray(data.data.clients)&&data.data.clients.length){
+    db=data.data; if(!db.versions) db.versions=[];
+    try{ localStorage.setItem('atlas-db-v1',JSON.stringify(db)); }catch{}
+    updateNocoDot(true,'已從雲端載入'); return true;
+  }
+  return false;
+}
+
+// 圖片：縮圖 → 上傳 Storage → 回傳公開網址
+async function uploadImage(dataUrl, hint){
+  const img=await new Promise((ok,no)=>{const i=new Image();i.onload=()=>ok(i);i.onerror=no;i.src=dataUrl;});
+  const MAX=1200, s=Math.min(1,MAX/Math.max(img.naturalWidth,img.naturalHeight));
+  const c=document.createElement('canvas'); c.width=Math.round(img.naturalWidth*s); c.height=Math.round(img.naturalHeight*s);
+  c.getContext('2d').drawImage(img,0,0,c.width,c.height);
+  const blob=await new Promise(ok=>c.toBlob(ok,'image/jpeg',0.86));
+  const path=`${SB_UID.slice(0,8)}/${Date.now()}-${Math.random().toString(36).slice(2,8)}.jpg`;
+  const {error}=await sb.storage.from('finder').upload(path,blob,{contentType:'image/jpeg',upsert:false});
+  if(error) throw error;
+  return `${SB_URL}/storage/v1/object/public/finder/${path}`;
+}
+// 把資料裡殘留的 base64 圖片搬到 Storage（第一次上雲、或上傳中途存檔的情況）
+async function migrateDataUrls(){
+  const list=[]; (db.versions||[]).concat(db.projects||[]).forEach(t=>(t.items||[]).forEach(it=>{ if(it.imgUrl&&it.imgUrl.startsWith('data:')) list.push(it); }));
+  if(!list.length) return 0;
+  let done=0, fail=0;
+  for(const it of list){
+    updateNocoDot(null,`圖片上雲中 ${done+fail+1}/${list.length}`);
+    try{ it.imgUrl=await uploadImage(it.imgUrl); done++; }catch(e){ console.warn('圖片上傳失敗：',e.message); fail++; }
+  }
+  // 同步目前編輯中的 items（避免 saveActiveProject 把舊 base64 寫回去）
+  const ver=db.versions?.find(v=>v.id===activeVersionId); if(ver) items=JSON.parse(JSON.stringify(ver.items||[]));
+  if(done){ saveDb(); render(); renderItemList(); }
+  if(fail) alert(`有 ${fail} 張圖片上傳失敗，請確認 Supabase Storage 已建立 finder bucket`);
+  return done;
+}
+function cloudInfo(){
+  const d=document.getElementById('noco-dot');
+  alert(`雲端同步狀態：${d.title}
+
+資料存放：Supabase finder_state
+圖片存放：Supabase Storage / finder
+
+換電腦或手機登入同一帳號即可看到相同資料。`);
+}
+async function cloudLogout(){ await cloudFlush(); await sb.auth.signOut(); location.reload(); }
+
+// ════════════════════════════════════════════
+//  Finder 收折
+// ════════════════════════════════════════════
+let finderVisible=true;
+function toggleFinder(){
+  finderVisible=!finderVisible;
+  const panel=document.getElementById('finder-panel');
+  const icon=document.getElementById('finder-tab-icon');
+  panel.style.display=finderVisible?'flex':'none';
+  icon.textContent=finderVisible?'◀':'▶';
+}
+
+// ════════════════════════════════════════════
+//  浮動篩選下拉
+// ════════════════════════════════════════════
+let fdState={1:{dim:null,val:null},2:{dim:null,val:null}};
+let nocoAllRows=[];
+
+function toggleFd(n){
+  const panel=document.getElementById(`fd${n}-panel`);
+  const other=document.getElementById(`fd${n===1?2:1}-panel`);
+  const isOpen=panel.style.display!=='none';
+  other.style.display='none';
+  panel.style.display=isOpen?'none':'block';
+  if(!isOpen){
+    // 顯示維度選擇
+    document.getElementById(`fd${n}-dims`).style.display='block';
+    document.getElementById(`fd${n}-vals`).style.display='none';
+  }
+}
+
+function setFdDim(n,dim){
+  fdState[n].dim=dim;
+  fdState[n].val=null;
+  // 取得該維度的唯一值
+  const vals=[...new Set(nocoAllRows.map(r=>r[dim]).filter(Boolean))].sort();
+  const valsEl=document.getElementById(`fd${n}-vals`);
+  valsEl.innerHTML=`
+    <div style="padding:4px 10px;display:flex;align-items:center;gap:5px;border-bottom:1px solid var(--border)">
+      <span style="font-size:9px;color:var(--sub);cursor:pointer" onclick="backToDims(${n})">← 返回</span>
+      <span style="font-size:10px;color:var(--gold2);font-weight:600">${dim}</span>
+    </div>
+    <div style="padding:4px 6px">
+      <div class="fd-dim-row" onclick="setFdVal(${n},null)">全部</div>
+      ${vals.map(v=>`<div class="fd-dim-row ${fdState[n].val===v?'active':''}" onclick="setFdVal(${n},'${v.replace(/'/g,"\\'")}')">
+        ${v}
+      </div>`).join('')}
+    </div>`;
+  document.getElementById(`fd${n}-dims`).style.display='none';
+  valsEl.style.display='block';
+}
+
+function backToDims(n){
+  document.getElementById(`fd${n}-dims`).style.display='block';
+  document.getElementById(`fd${n}-vals`).style.display='none';
+}
+
+function setFdVal(n,val){
+  fdState[n].val=val;
+  document.getElementById(`fd${n}-panel`).style.display='none';
+  // 更新 btn label
+  const lbl=document.getElementById(`fd${n}-lbl`);
+  if(val) lbl.textContent=`${fdState[n].dim}: ${val}`;
+  else if(fdState[n].dim) lbl.textContent=`${fdState[n].dim}: 全部`;
+  else lbl.textContent=`篩選 ${n}`;
+  lbl.style.color=val?'var(--teal2)':'var(--sub)';
+  updateFdTags();
+  doSearch();
+}
+
+function updateFdTags(){
+  const tags=[];
+  [1,2].forEach(n=>{
+    if(fdState[n].dim&&fdState[n].val){
+      tags.push(`<span class="fd-tag">${fdState[n].dim}: ${esc(fdState[n].val)}<button onclick="clearFd(${n})">✕</button></span>`);
+    }
+  });
+  document.getElementById('fd-tags').innerHTML=tags.join('');
+}
+
+function clearFd(n){
+  fdState[n]={dim:null,val:null};
+  document.getElementById(`fd${n}-lbl`).textContent=`篩選 ${n}`;
+  document.getElementById(`fd${n}-lbl`).style.color='var(--sub)';
+  updateFdTags(); doSearch();
+}
+
+// 點外面關閉浮動面板
+document.addEventListener('click',e=>{
+  if(!e.target.closest('#fd1-btn')&&!e.target.closest('#fd1-panel'))
+    document.getElementById('fd1-panel').style.display='none';
+  if(!e.target.closest('#fd2-btn')&&!e.target.closest('#fd2-panel'))
+    document.getElementById('fd2-panel').style.display='none';
+});
+
+// ════════════════════════════════════════════
+//  動態載入 NocoDB 篩選選項
+const PROD_IMG=`${SB_URL}/storage/v1/object/public/products/`;
+function mapProduct(p){
+  return {
+    _id:p.id, _img:p.image_path?PROD_IMG+p.image_path:null,
+    '型號':p.model||'', '產品名稱':p.name||'', '品牌':p.brand||'', '工廠':p.factory||'',
+    '大類別':p.category||'', '系列':p.series||'', '尺寸':p.size||'', '顏色':p.color||'',
+    '用途':(p.usages||[]).join('、'), '紋理':p.texture||'', '面感':p.finish||'', '狀態':p.status||''
+  };
+}
+async function loadNocoFilters(silent){
+  if(!SB_UID){ if(!silent) alert('請先登入'); return; }
+  const res=document.getElementById('srch-result');
+  if(!silent){ res.innerHTML='<div class="srch-status">載入中...</div>'; document.getElementById('img-wall').style.display='none'; }
+  try{
+    const all=[]; let from=0;
+    while(true){
+      const {data,error}=await sb.from('products').select('id,model,name,brand,factory,category,series,size,color,usages,texture,finish,status,image_path')
+        .eq('status','現行').order('brand').order('model').range(from,from+999);
+      if(error) throw error;
+      all.push(...data); if(data.length<1000) break; from+=1000;
+    }
+    nocoAllRows=all.map(mapProduct);
+    if(!silent){ res.innerHTML=all.length?'':'<div class="srch-status">產品庫目前是空的（等爬蟲入庫）</div>'; }
+    updateFdOptions();
+    if(!silent) renderImgWall(nocoAllRows);
+  }catch(e){
+    if(!silent) res.innerHTML=`<div class="srch-status" style="color:var(--red)">❌ ${e.message}</div>`;
+    console.warn('產品庫載入失敗：',e.message);
+  }
+}
+
+function updateFdOptions(){
+  // 根據 nocoAllRows 更新兩個浮動篩選的值列表
+  [1,2].forEach(n=>{
+    const dim=fdState[n].dim;
+    if(dim) setFdDim(n,dim); // 重新載入該維度的值
+  });
+}
+
+function renderImgWall(rows){
+  const wall=document.getElementById('img-wall');
+  const grid=document.getElementById('img-wall-grid');
+  const count=document.getElementById('img-wall-count');
+  if(!rows.length){ wall.style.display='none'; return; }
+  wall.style.display='block';
+  count.textContent=`共 ${rows.length} 筆`;
+  // 存到 window 供 addFromWall 用
+  window._wallRows=rows;
+  grid.innerHTML=rows.map((row,i)=>{
+    const thumb=getThumbUrl(row);
+    const imgEl=thumb
+      ?`<img src="${thumb}" onerror="this.parentElement.style.background='var(--muted)';this.remove()">`
+      :`<div style="width:100%;aspect-ratio:1;background:var(--muted);display:flex;align-items:center;justify-content:center;font-size:18px">📦</div>`;
+    return`<div class="img-wall-item" onclick="addFromWall(${i})">
+      ${imgEl}
+      <div class="iw-info">
+        <div class="iw-code">${esc(row['型號']||'')}</div>
+        <div class="iw-name">${esc(row['系列']||row['品牌']||'')}</div>
+      </div>
+      <button class="iw-add" onclick="event.stopPropagation();addFromWall(${i})">＋</button>
+    </div>`;
+  }).join('');
+}
+
+function addFromWall(idx){
+  const row=(window._wallRows||[])[idx];
+  if(!row)return;
+  const thumb=getThumbUrl(row);
+  const it={
+    num:'',
+    imgUrl:thumb,pal:PALS[1],imgCtrl:{mode:'cover',zoom:100,offsetX:0,offsetY:0,bg:'transparent',borderWidth:0,borderColor:'#dddddd'},
+    name:row['產品名稱']||row['系列']||row['品牌']||'',
+    code:row['型號']||'',color:row['顏色']||'',size:row['尺寸']||'',
+    area:'',producer:row['品牌']||row['工廠']||'',note:row['系列']||''
+  };
+  // 自動載入圖片原始比例
+  if(thumb){const _img=new Image();_img.onload=()=>{it.imgCtrl.naturalW=_img.naturalWidth;it.imgCtrl.naturalH=_img.naturalHeight;saveActiveProject();};_img.src=thumb;}
+  items.push(it);proRows.push({type:'item',ref:items.length-1});
+  saveActiveProject();renderItemList();render();
+  // 閃爍提示
+  const el=document.querySelector(`#img-wall-grid .img-wall-item:nth-child(${idx+1})`);
+  if(el){el.style.borderColor='var(--teal2)';el.style.background='rgba(58,170,140,.1)';setTimeout(()=>{el.style.borderColor='';el.style.background='';},1000);}
+}
+
+let searchTimer=null;
+function liveSearch(){clearTimeout(searchTimer);searchTimer=setTimeout(doSearch,400);}
+async function doSearch(){
+  if(!SB_UID){
+    document.getElementById('srch-result').innerHTML='<div class="srch-status" style="color:var(--gold)">⚠️ 請先登入</div>';return;
+  }
+  const code=document.getElementById('s-code').value.trim();
+  const fd1=fdState[1]; const fd2=fdState[2];
+  const hasFilter=code||(fd1.dim&&fd1.val)||(fd2.dim&&fd2.val);
+
+  if(!hasFilter){
+    // 沒有任何篩選：若有載入資料就顯示全部，否則提示
+    if(nocoAllRows.length){
+      renderSrchResult(nocoAllRows.slice(0,30));
+    }else{
+      document.getElementById('srch-result').innerHTML='<div class="srch-status">輸入型號或展開篩選</div>';
+    }
+    return;
+  }
+  document.getElementById('srch-result').innerHTML='<div class="srch-status">🔍 搜尋中...</div>';
+
+  // 若有本機快取，直接本機篩選（不重新 fetch）
+  if(nocoAllRows.length){
+    let result=nocoAllRows;
+    if(code) result=result.filter(r=>(r['型號']||'').toUpperCase().includes(code.toUpperCase()));
+    if(fd1.dim&&fd1.val) result=result.filter(r=>(r[fd1.dim]||'').includes(fd1.val));
+    if(fd2.dim&&fd2.val) result=result.filter(r=>(r[fd2.dim]||'').includes(fd2.val));
+    renderSrchResult(result);
+    return;
+  }
+
+  // 無快取：先從雲端載入產品庫，再本機篩選
+  await loadNocoFilters(true);
+  if(nocoAllRows.length) return doSearch();
+  document.getElementById('srch-result').innerHTML='<div class="srch-status">產品庫目前是空的（等爬蟲入庫）</div>';
+}
+
+function renderSrchResult(list){
+  // 同步更新圖片牆
+  renderImgWall(list);
+  if(!list.length){document.getElementById('srch-result').innerHTML='<div class="srch-status">找不到符合建材</div>';return;}
+  window._srchRows=list;
+  document.getElementById('srch-result').innerHTML=list.slice(0,50).map((row,i)=>{
+    const thumb=getThumbUrl(row);
+    const thumbEl=thumb?`<img class="srch-thumb" src="${thumb}" onerror="this.style.display='none'">`:`<div class="srch-thumb-ph">📦</div>`;
+    return`<div class="srch-item" onclick="addFromNoco(${i})" data-idx="${i}">
+      ${thumbEl}
+      <div class="srch-inf">
+        <div class="srch-code">${esc(row['型號']||'')} <span style="color:var(--sub)">${esc(row['尺寸']||'')}</span></div>
+        <div class="srch-name">${esc(row['系列']||row['產品名稱']||'')}</div>
+        <div class="srch-meta">${esc(row['品牌']||'')} ${esc(row['大類別']||'')} ${esc(row['顏色']||'')}</div>
+      </div>
+      <button class="srch-add" title="加入">＋</button>
+    </div>`;
+  }).join('')+(list.length>50?`<div class="srch-status">顯示前 50 筆，共 ${list.length} 筆</div>`:'');
+}
+function getThumbUrl(row){ return row&&row._img||null; }
+function addFromNoco(idx){
+  const row=(window._srchRows||[])[idx];if(!row)return;
+  const thumb=getThumbUrl(row);
+  const it={num:'TL-'+(items.length+1).toString().padStart(2,'0'),imgUrl:thumb,pal:PALS[1],
+    imgCtrl:{mode:'cover',zoom:100,offsetX:0,offsetY:0,bg:'transparent',borderWidth:0,borderColor:'#dddddd'},
+    name:row['產品名稱']||row['系列']||row['品牌']||'',code:row['型號']||'',
+    color:row['顏色']||'',size:row['尺寸']||'',area:'',producer:row['品牌']||row['工廠']||'',note:row['系列']||''};
+  if(thumb){const _img=new Image();_img.onload=()=>{it.imgCtrl.naturalW=_img.naturalWidth;it.imgCtrl.naturalH=_img.naturalHeight;saveActiveProject();};_img.src=thumb;}
+  items.push(it);proRows.push({type:'item',ref:items.length-1});
+  saveActiveProject(); renderItemList(); render();
+  const btn=document.querySelector(`[data-idx="${idx}"] .srch-add`);
+  if(btn){btn.textContent='✓';btn.style.color='var(--teal2)';setTimeout(()=>{btn.textContent='＋';btn.style.color='';},1200);}
+}
+
+// ════════════════════════════════════════════
+//  欄位、模式
+// ════════════════════════════════════════════
+function renderColList(){
+  document.getElementById('col-list').innerHTML=cols.map((c,i)=>`
+    <div class="col-row" draggable="true"
+      ondragstart="dragCI=${i};event.dataTransfer.effectAllowed='move'"
+      ondragover="event.preventDefault()"
+      ondrop="event.preventDefault();if(dragCI!==null&&dragCI!==${i}){const m=cols.splice(dragCI,1)[0];cols.splice(${i},0,m);dragCI=null;renderColList();render()}">
+      <span class="col-drag">⠿</span>
+      <span class="col-vis ${c.vis?'on':'off'}" onclick="cols[${i}].vis=!cols[${i}].vis;renderColList();render()">${c.vis?'👁':'○'}</span>
+      <input class="col-lbl" value="${esc(c.lbl)}" onchange="cols[${i}].lbl=this.value;render()">
+      <input class="col-key" value="${esc(c.key)}" onchange="cols[${i}].key=this.value;render()">
+      <button class="col-del" onclick="if(confirm('刪除？')){cols.splice(${i},1);renderColList();render()}">✕</button>
+    </div>`).join('');
+}
+function addCol(){cols.push({key:'c'+Date.now(),lbl:'自訂欄位',vis:true});renderColList();render();}
+function onNcolsChange(){
+  const nc=+document.getElementById('ncols').value;
+  const imgH=document.getElementById('img-h');
+  // 根據每行張數自動建議圖片高度（含表頭一頁顯示 2 行）
+  if(nc===2) imgH.value='195';  // 2欄 → 每頁4張
+  if(nc===3) imgH.value='195';  // 3欄 → 每頁6張
+  if(nc===1) imgH.value='280';  // 1欄 → 每頁2張
+  render();
+}
+function setMode(m,el){
+  mode=m;
+  document.querySelectorAll('.mode-btn').forEach(b=>b.classList.remove('on'));el.classList.add('on');
+  document.getElementById('card-opts').style.display=m==='card'?'block':'none';
+  document.getElementById('pro-opts').style.display=m==='pro'?'block':'none';
+  document.getElementById('grp-btn').style.display=m==='pro'?'flex':'none';
+  render();
+}
+function setBrand(m,el){
+  brandMode=m;
+  document.querySelectorAll('.tog').forEach(b=>b.classList.remove('on'));el.classList.add('on');
+  document.getElementById('logo-sec').style.display=m==='logo'?'block':'none';
+  document.getElementById('text-sec').style.display=m==='text'?'block':'none';
+  render();
+}
+function handleLogoFile(i){const f=i.files[0];if(!f)return;const r=new FileReader();r.onload=e=>{logoUrl=e.target.result;document.getElementById('logo-ph').style.display='none';const img=document.getElementById('logo-img');img.src=logoUrl;img.style.display='block';document.getElementById('logo-clr').style.display='flex';document.getElementById('logo-drop').classList.add('has');render();};r.readAsDataURL(f);}
+function handleLogoDrop(e){e.preventDefault();const f=e.dataTransfer.files[0];if(!f||!f.type.startsWith('image/'))return;const dt=new DataTransfer();dt.items.add(f);document.getElementById('logo-file').files=dt.files;handleLogoFile(document.getElementById('logo-file'));}
+function clearLogo(){logoUrl=null;document.getElementById('logo-ph').style.display='block';document.getElementById('logo-img').style.display='none';document.getElementById('logo-clr').style.display='none';document.getElementById('logo-drop').classList.remove('has');render();}
+
+// ════════════════════════════════════════════
+//  建材清單
+// ════════════════════════════════════════════
+function renderItemList(){
+  document.getElementById('item-count').textContent=`(${items.length})`;
+  document.getElementById('item-list').innerHTML=items.map((it,i)=>{
+    const bg=it.imgUrl?'':(it.pal===null?'transparent':`linear-gradient(135deg,${(it.pal||['#ccc']).join(',')})`);
+    return`<div class="item-row" draggable="true"
+      ondragstart="dragItemIdx=${i};event.dataTransfer.effectAllowed='move'"
+      ondragover="event.preventDefault();document.querySelectorAll('.item-row').forEach(r=>r.classList.remove('drag-over'));this.classList.add('drag-over')"
+      ondragleave="this.classList.remove('drag-over')"
+      ondrop="event.preventDefault();this.classList.remove('drag-over');moveItem(dragItemIdx,${i});dragItemIdx=null">
+      <span class="item-drag">⠿</span>
+      <div class="item-sw" style="background:${bg};display:flex;align-items:center;justify-content:center;" onclick="openItemModal(${i})">${thumbHtml(it,24)}</div>
+      <div class="item-inf" onclick="openItemModal(${i})">
+        <div class="item-code">${esc(it.num||'')} ${esc(it.code||'')}</div>
+        <div class="item-name">${esc(it.area||it.name||'（未命名）')}</div>
+      </div>
+      <div class="item-arrows">
+        <button class="item-arr" onclick="moveItem(${i},${i-1})" ${i===0?'disabled':''}>▲</button>
+        <button class="item-arr" onclick="moveItem(${i},${i+1})" ${i===items.length-1?'disabled':''}>▼</button>
+      </div>
+      <button class="item-copy" onclick="event.stopPropagation();copyItem(${i})" title="複製此建材">⧉</button>
+      <button class="item-del" onclick="event.stopPropagation();deleteItem(${i})">✕</button>
+    </div>`;
+  }).join('');
+}
+function moveItem(from,to){
+  if(to<0||to>=items.length||from===to)return;
+  const m=items.splice(from,1)[0];items.splice(to,0,m);
+  proRows=[...proRows.filter(r=>r.type==='group'),...items.map((_,i)=>({type:'item',ref:i}))];
+  saveActiveProject(); renderItemList(); render();
+}
+function deleteItem(i){
+  if(!confirm('刪除？'))return;
+  items.splice(i,1);
+  proRows=proRows.filter(r=>!(r.type==='item'&&r.ref===i)).map(r=>r.type==='item'&&r.ref>i?{...r,ref:r.ref-1}:r);
+  saveActiveProject(); renderItemList(); render();
+}
+// 複製單一建材(深拷貝,插在原項目後面)
+function copyItem(i){
+  if(i<0||i>=items.length)return;
+  const src=items[i];
+  const dup=JSON.parse(JSON.stringify(src));
+  // 名稱加 (複本) 標記,方便辨識
+  if(dup.area) dup.area=dup.area+' (複本)';
+  else if(dup.name) dup.name=dup.name+' (複本)';
+  // 插在原項目後面
+  items.splice(i+1,0,dup);
+  // 重建 proRows 的 item 索引
+  proRows=[...proRows.filter(r=>r.type==='group'),...items.map((_,idx)=>({type:'item',ref:idx}))];
+  saveActiveProject(); renderItemList(); render();
+}
+
+// ════════════════════════════════════════════
+//  建材 Modal
+// ════════════════════════════════════════════
+// ── 圖片顯示控制 ──
+function showImgCtrl(url){
+  const ctrl=document.getElementById('img-ctrl');
+  ctrl.classList.add('show');
+  const c=editImgCtrl;
+  document.getElementById('imode-cover').classList.toggle('on',c.mode==='cover');
+  document.getElementById('imode-contain').classList.toggle('on',c.mode==='contain');
+  document.getElementById('ic-zoom').value=c.zoom||100;
+  document.getElementById('ic-zoom-v').textContent=(c.zoom||100)+'%';
+  document.querySelectorAll('.bg-swatch').forEach(s=>s.classList.toggle('on',s.dataset.bg===(c.bg||'transparent')));
+  document.querySelectorAll('.border-swatch').forEach(s=>s.classList.toggle('on',+s.dataset.bw===(c.borderWidth||0)));
+  document.getElementById('ic-border-color').value=c.borderColor||'#dddddd';
+  const img=document.getElementById('img-crop-img');
+  img.onload=()=>initCropUI();
+  img.src=url;
+}
+
+// ── 裁剪 UI 狀態 ──
+let cropState={
+  imgX:0, imgY:0,           // 圖片左上角位置（px，相對於容器）
+  imgW:0, imgH:0,           // 圖片顯示尺寸
+  frameX:0, frameY:0,       // 裁剪框左上角
+  frameW:0, frameH:0,       // 裁剪框尺寸
+  dragging:null,            // 'img' | 'frame' | handle名稱
+  startMX:0, startMY:0,
+  startState:null
+};
+
+function initCropUI(){
+  const outer=document.getElementById('img-crop-outer');
+  const img=document.getElementById('img-crop-img');
+  const frame=document.getElementById('img-crop-frame');
+  if(!outer||!img)return;
+
+  const ow=outer.offsetWidth, oh=outer.offsetHeight;
+  const c=editImgCtrl;
+  const zoom=(c.zoom||100)/100;
+
+  // 圖片原始比例
+  const nw=img.naturalWidth||400, nh=img.naturalHeight||400;
+  const aspect=nw/nh;
+
+  // 圖片顯示尺寸：不管長寬比，預設讓圖片完整填入容器並置中
+  let baseW, baseH;
+  if(aspect>ow/oh){ baseW=ow; baseH=ow/aspect; }
+  else{ baseH=oh; baseW=oh*aspect; }
+  cropState.imgW=baseW*zoom; cropState.imgH=baseH*zoom;
+
+  // 圖片置中（初次）或還原儲存位置
+  if(c.offsetX===undefined||c.cropX===undefined){
+    // 初次：圖片置中
+    cropState.imgX=ow/2 - cropState.imgW/2;
+    cropState.imgY=oh/2 - cropState.imgH/2;
+  } else {
+    cropState.imgX=ow/2 - cropState.imgW/2 + (c.offsetX||0);
+    cropState.imgY=oh/2 - cropState.imgH/2 + (c.offsetY||0);
+  }
+
+  // 裁剪框：初次以圖片實際顯示範圍為基準，置中對齊
+  if(c.cropX===undefined){
+    // 讓裁剪框預設剛好包住圖片顯示範圍（置中）
+    cropState.frameW=cropState.imgW;
+    cropState.frameH=cropState.imgH;
+    cropState.frameX=cropState.imgX;
+    cropState.frameY=cropState.imgY;
+    // 確保不超出容器
+    cropState.frameX=Math.max(0, cropState.frameX);
+    cropState.frameY=Math.max(0, cropState.frameY);
+    cropState.frameW=Math.min(ow-cropState.frameX, cropState.frameW);
+    cropState.frameH=Math.min(oh-cropState.frameY, cropState.frameH);
+  } else {
+    cropState.frameX=c.cropX; cropState.frameY=c.cropY;
+    cropState.frameW=c.cropW; cropState.frameH=c.cropH;
+  }
+
+  applyCropUI();
+  bindCropEvents(outer, img, frame);
+}
+
+function applyCropUI(){
+  const img=document.getElementById('img-crop-img');
+  const frame=document.getElementById('img-crop-frame');
+  const outer=document.getElementById('img-crop-outer');
+  if(!img||!frame||!outer)return;
+  // 套用圖片
+  img.style.left=cropState.imgX+'px';
+  img.style.top=cropState.imgY+'px';
+  img.style.width=cropState.imgW+'px';
+  img.style.height=cropState.imgH+'px';
+  // 套用裁剪框
+  frame.style.left=cropState.frameX+'px';
+  frame.style.top=cropState.frameY+'px';
+  frame.style.width=cropState.frameW+'px';
+  frame.style.height=cropState.frameH+'px';
+  // 儲存到 editImgCtrl
+  const ow2=outer.offsetWidth, oh2=outer.offsetHeight;
+  // 儲存相對比例（0~1），這樣不管卡片尺寸都能正確還原
+  editImgCtrl.offsetX=cropState.imgX-(ow2/2-cropState.imgW/2);
+  editImgCtrl.offsetY=cropState.imgY-(oh2/2-cropState.imgH/2);
+  editImgCtrl.cropX=cropState.frameX;
+  editImgCtrl.cropY=cropState.frameY;
+  editImgCtrl.cropW=cropState.frameW;
+  editImgCtrl.cropH=cropState.frameH;
+  // 儲存圖片原始尺寸（用於卡片高度依原始比例計算）
+  const imgEl=document.getElementById('crop-img');
+  if(imgEl&&imgEl.naturalWidth){
+    editImgCtrl.naturalW=imgEl.naturalWidth;
+    editImgCtrl.naturalH=imgEl.naturalHeight;
+  }
+  // 儲存相對比例（以圖片顯示尺寸為基準，這樣不受容器大小影響）
+  // 圖片顯示尺寸 = cropState.imgW x cropState.imgH
+  const iw=cropState.imgW, ih=cropState.imgH;
+  if(iw>0 && ih>0){
+    // 裁剪框相對於圖片的位置與尺寸（0~1）
+    editImgCtrl.cropRelX=(cropState.frameX - cropState.imgX) / iw;
+    editImgCtrl.cropRelY=(cropState.frameY - cropState.imgY) / ih;
+    editImgCtrl.cropRelW=cropState.frameW / iw;
+    editImgCtrl.cropRelH=cropState.frameH / ih;
+  }
+  // 同時保留 px 值供下次還原
+  editImgCtrl.imgXpct=(cropState.imgX/ow2);
+  editImgCtrl.imgYpct=(cropState.imgY/oh2);
+  editImgCtrl.imgWpct=(cropState.imgW/ow2);
+  editImgCtrl.imgHpct=(cropState.imgH/oh2);
+  editImgCtrl.cropXpct=(cropState.frameX/ow2);
+  editImgCtrl.cropYpct=(cropState.frameY/oh2);
+  editImgCtrl.cropWpct=(cropState.frameW/ow2);
+  editImgCtrl.cropHpct=(cropState.frameH/oh2);
+  // 底圖
+  const c=editImgCtrl;
+  if(c.bg==='checker'){
+    outer.style.backgroundImage="linear-gradient(45deg,#ccc 25%,transparent 25%),linear-gradient(-45deg,#ccc 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#ccc 75%),linear-gradient(-45deg,transparent 75%,#ccc 75%)";
+    outer.style.backgroundSize="8px 8px"; outer.style.backgroundPosition="0 0,0 4px,4px -4px,-4px 0"; outer.style.backgroundColor='';
+  }else{ outer.style.backgroundImage=''; outer.style.backgroundSize=''; outer.style.backgroundColor=c.bg||'#888'; }
+}
+
+function bindCropEvents(outer, img, frame){
+  // 移除舊的事件
+  outer.onmousedown=null; outer.ontouchstart=null;
+
+  function getPos(e){ return e.touches?{x:e.touches[0].clientX,y:e.touches[0].clientY}:{x:e.clientX,y:e.clientY}; }
+
+  outer.addEventListener('mousedown', startDrag);
+  outer.addEventListener('touchstart', startDrag, {passive:false});
+
+  function startDrag(e){
+    const pos=getPos(e);
+    const rect=outer.getBoundingClientRect();
+    const mx=pos.x-rect.left, my=pos.y-rect.top;
+
+    // 判斷點到哪裡
+    let target=e.target;
+    if(target.dataset&&target.dataset.handle){
+      cropState.dragging=target.dataset.handle;
+    } else if(target===frame||frame.contains(target)){
+      cropState.dragging='frame';
+    } else {
+      cropState.dragging='img';
+    }
+    cropState.startMX=mx; cropState.startMY=my;
+    cropState.startState={...cropState};
+    e.preventDefault();
+  }
+
+  window.addEventListener('mousemove', doDrag);
+  window.addEventListener('touchmove', doDrag, {passive:false});
+  function doDrag(e){
+    if(!cropState.dragging)return;
+    const pos=getPos(e);
+    const rect=outer.getBoundingClientRect();
+    const mx=pos.x-rect.left, my=pos.y-rect.top;
+    const dx=mx-cropState.startMX, dy=my-cropState.startMY;
+    const s=cropState.startState;
+    const ow=outer.offsetWidth, oh=outer.offsetHeight;
+    const minSize=30;
+
+    if(cropState.dragging==='img'){
+      cropState.imgX=s.imgX+dx;
+      cropState.imgY=s.imgY+dy;
+    } else if(cropState.dragging==='frame'){
+      cropState.frameX=Math.max(0,Math.min(ow-s.frameW, s.frameX+dx));
+      cropState.frameY=Math.max(0,Math.min(oh-s.frameH, s.frameY+dy));
+    } else {
+      // 控制點 resize
+      let {frameX:fx,frameY:fy,frameW:fw,frameH:fh}=s;
+      const h=cropState.dragging;
+      if(h.includes('r')){ fw=Math.max(minSize, fw+dx); }
+      if(h.includes('l')){ const nw=Math.max(minSize, fw-dx); fx=fx+(fw-nw); fw=nw; }
+      if(h.includes('b')){ fh=Math.max(minSize, fh+dy); }
+      if(h.includes('t')){ const nh=Math.max(minSize, fh-dy); fy=fy+(fh-nh); fh=nh; }
+      // 邊界
+      fx=Math.max(0,Math.min(ow-fw,fx)); fy=Math.max(0,Math.min(oh-fh,fy));
+      fw=Math.min(ow-fx,fw); fh=Math.min(oh-fy,fh);
+      cropState.frameX=fx; cropState.frameY=fy; cropState.frameW=fw; cropState.frameH=fh;
+    }
+    applyCropUI();
+    e.preventDefault();
+  }
+
+  window.addEventListener('mouseup', ()=>{ cropState.dragging=null; });
+  window.addEventListener('touchend', ()=>{ cropState.dragging=null; });
+}
+
+function onZoomChange(){
+  const z=+document.getElementById('ic-zoom').value;
+  document.getElementById('ic-zoom-v').textContent=z+'%';
+  editImgCtrl.zoom=z;
+  // 重新計算圖片尺寸，保持中心點不變
+  const outer=document.getElementById('img-crop-outer');
+  const img=document.getElementById('img-crop-img');
+  if(!outer||!img)return;
+  const ow=outer.offsetWidth, oh=outer.offsetHeight;
+  const nw=img.naturalWidth||400, nh=img.naturalHeight||400;
+  const aspect=nw/nh;
+  let baseW,baseH;
+  if(aspect>ow/oh){baseW=ow;baseH=ow/aspect;}else{baseH=oh;baseW=oh*aspect;}
+  const newW=baseW*(z/100), newH=baseH*(z/100);
+  // 保持圖片中心不變
+  const cx=cropState.imgX+cropState.imgW/2;
+  const cy=cropState.imgY+cropState.imgH/2;
+  cropState.imgW=newW; cropState.imgH=newH;
+  cropState.imgX=cx-newW/2; cropState.imgY=cy-newH/2;
+  applyCropUI();
+}
+
+function setImgMode(m){
+  editImgCtrl.mode=m;
+  document.getElementById('imode-cover').classList.toggle('on',m==='cover');
+  document.getElementById('imode-contain').classList.toggle('on',m==='contain');
+}
+
+function setImgBg(el,bg){
+  editImgCtrl.bg=bg;
+  document.querySelectorAll('.bg-swatch').forEach(s=>s.classList.remove('on'));
+  el.classList.add('on');
+  applyCropUI();
+}
+
+function setImgBorder(el,w){
+  editImgCtrl.borderWidth=w;
+  document.querySelectorAll('.border-swatch').forEach(s=>s.classList.remove('on'));
+  el.classList.add('on');
+}
+
+function updateImgPreview(){ applyCropUI(); }
+function applyImgCtrlStyle(){ }  // 保留空函式避免舊呼叫報錯
+
+// ── 卡片渲染：用裁剪參數 ──
+// 產生縮圖 HTML（照裁剪框比例，套用在任意尺寸容器）
+function thumbHtml(it, size){
+  const ctrl = it?.imgCtrl;
+  const sz = size || 40;
+  const g = it?.pal===null?'transparent':`linear-gradient(135deg,${(it?.pal||['#ccc']).join(',')})`;
+  if(!it?.imgUrl) return `<div style="width:${sz}px;height:${sz}px;background:${g};border-radius:4px;border:1px solid rgba(0,0,0,.08);flex-shrink:0;"></div>`;
+  if(ctrl?.cropRelW > 0 && ctrl?.cropRelH > 0){
+    const imgW100 = Math.round(1/ctrl.cropRelW*100);
+    const imgH100 = Math.round(1/ctrl.cropRelH*100);
+    const imgL = Math.round(-ctrl.cropRelX/ctrl.cropRelW*100);
+    const imgT = Math.round(-ctrl.cropRelY/ctrl.cropRelH*100);
+    // 裁剪框比例決定縮圖形狀，最大邊=sz
+    const aspect = ctrl.cropRelH/ctrl.cropRelW;
+    let w,h;
+    if(aspect>1){h=sz;w=Math.round(sz/aspect);}
+    else{w=sz;h=Math.round(sz*aspect);}
+    return `<div style="width:${w}px;height:${h}px;overflow:hidden;position:relative;border-radius:3px;border:1px solid rgba(0,0,0,.08);flex-shrink:0;"><img src="${it.imgUrl}" style="position:absolute;left:${imgL}%;top:${imgT}%;width:${imgW100}%;height:${imgH100}%;object-fit:fill;display:block;"></div>`;
+  }
+  return `<div style="width:${sz}px;height:${sz}px;overflow:hidden;border-radius:3px;border:1px solid rgba(0,0,0,.08);flex-shrink:0;display:flex;align-items:center;justify-content:center;"><img src="${it.imgUrl}" style="max-width:${sz}px;max-height:${sz}px;width:auto;height:auto;display:block;"></div>`;
+}
+
+function imgBgStyle(ctrl){
+  if(!ctrl||!ctrl.bg||ctrl.bg==='transparent') return '';
+  if(ctrl.bg==='checker') return 'background-image:linear-gradient(45deg,#ccc 25%,transparent 25%),linear-gradient(-45deg,#ccc 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#ccc 75%),linear-gradient(-45deg,transparent 75%,#ccc 75%);background-size:8px 8px;background-position:0 0,0 4px,4px -4px,-4px 0;';
+  return `background-color:${ctrl.bg};`;
+}
+
+function imgCtrlStyle(ctrl){
+  if(!ctrl) return 'width:100%;height:100%;object-fit:cover;display:block;';
+
+  // cropRelX/Y/W/H 是「裁剪框相對於圖片顯示尺寸」的比例（0~1）
+  // 意思是：
+  //   cropRelX = 裁剪框左邊距離圖片左邊 / 圖片寬度
+  //   cropRelW = 裁剪框寬度 / 圖片寬度
+  // 卡片容器 = 裁剪框顯示範圍（100% x 100%）
+  // 圖片在卡片容器裡的位置：
+  //   left = -cropRelX / cropRelW * 100%
+  //   top  = -cropRelY / cropRelH * 100%
+  //   width  = 1 / cropRelW * 100%
+  //   height = 1 / cropRelH * 100%
+  if(ctrl.cropRelW !== undefined && ctrl.cropRelW > 0 && ctrl.cropRelH > 0){
+    const left = -ctrl.cropRelX / ctrl.cropRelW * 100;
+    const top  = -ctrl.cropRelY / ctrl.cropRelH * 100;
+    const w    = 1 / ctrl.cropRelW * 100;
+    const h    = 1 / ctrl.cropRelH * 100;
+    return `position:absolute;left:${left}%;top:${top}%;width:${w}%;height:${h}%;object-fit:fill;display:block;`;
+  }
+
+  return `width:100%;height:100%;object-fit:${ctrl.mode||'cover'};display:block;`;
+}
+
+function imgContainerStyle(ctrl){
+  if(!ctrl) return '';
+  const border=ctrl.borderWidth>0?`border:${ctrl.borderWidth}px solid ${ctrl.borderColor||'#ddd'};box-sizing:border-box;`:'';
+  return `position:relative;overflow:hidden;${border}`;
+}
+
+
+function buildPalPicker(){
+  document.getElementById('pal-picker').innerHTML=PALS.map((p,i)=>{
+    const isNull=p===null;
+    const bg=isNull?'transparent':`linear-gradient(135deg,${p.join(',')})`;
+    const extra=isNull?'border:1px dashed var(--sub);color:var(--sub);font-size:9px;display:flex;align-items:center;justify-content:center':'';
+    const isOn=JSON.stringify(editPal)===JSON.stringify(p);
+    return `<div class="pal-sw ${isOn?'on':''}" style="background:${bg};${extra}" title="${PLBLS[i]}"
+      onclick="editPal=PALS[${i}];document.querySelectorAll('.pal-sw').forEach(e=>e.classList.remove('on'));this.classList.add('on')">${isNull?'∅':''}</div>`;
+  }).join('');
+}
+function openItemModal(idx){
+  editImgUrl=null;
+  const it=idx!==null?items[idx]:null;
+  document.getElementById('modal-h').textContent=it?'✏️ 編輯建材':'🧱 新增建材';
+  document.getElementById('edit-idx').value=idx!==null?idx:'';
+  document.getElementById('f-num').value=it?it.num:'';
+  editPal=it?it.pal||PALS[1]:PALS[1];
+  editImgCtrl=it&&it.imgCtrl?{...it.imgCtrl}:{mode:'cover',zoom:100,offsetX:0,offsetY:0,cropX:undefined,cropY:undefined,cropW:undefined,cropH:undefined,bg:'transparent',borderWidth:0,borderColor:'#dddddd'};
+  editImgUrl=it?it.imgUrl||null:null;
+  if(editImgUrl){document.getElementById('img-ph').style.display='none';document.getElementById('img-prev').src=editImgUrl;document.getElementById('img-prev').style.display='block';document.getElementById('img-clr').style.display='flex';document.getElementById('img-drop').classList.add('has');showImgCtrl(editImgUrl);}
+  else clearImgPrev();
+  buildPalPicker();
+  document.getElementById('modal-fields').innerHTML=cols.map(c=>{
+    const v=esc(it?it[c.key]||'':'');
+    if(c.key==='note'){
+      return `<label>${esc(c.lbl)}</label><textarea id="mf-${c.key}" placeholder="${esc(c.lbl)}..." style="min-height:60px;resize:vertical">${v}</textarea>`;
+    }
+    return `<label>${esc(c.lbl)}</label><input id="mf-${c.key}" value="${v}" placeholder="${esc(c.lbl)}...">`;
+  }).join('');
+  document.getElementById('item-modal').classList.add('open');
+  setTimeout(()=>document.getElementById('f-num').focus(),80);
+}
+function closeItemModal(){document.getElementById('item-modal').classList.remove('open');}
+function clearImgPrev(){editImgUrl=null;document.getElementById('img-ph').style.display='block';document.getElementById('img-prev').style.display='none';document.getElementById('img-clr').style.display='none';document.getElementById('img-drop').classList.remove('has');document.getElementById('img-ctrl').classList.remove('show');}
+async function handleImgFile(i){
+  const f=i.files[0]; if(!f)return;
+  const isHeic=/\.hei[cf]$/i.test(f.name)||f.type==='image/heic'||f.type==='image/heif';
+
+  let blob = f;
+  if(isHeic && window.HeicTo){
+    try{
+      document.getElementById('img-ph').style.display='block';
+      document.getElementById('img-ph').innerHTML='<div style="font-size:18px">⏳</div><div style="font-size:10px;color:var(--teal2)">HEIC 轉換中...</div>';
+      blob = await HeicTo({blob: f, type:'image/jpeg', quality:0.88});
+    }catch(e){ console.warn('heic-to 轉換失敗：',e); blob=f; }
+  }
+
+  const r=new FileReader();
+  r.onload=async e=>{
+    editImgUrl=e.target.result;
+    document.getElementById('img-ph').style.display='none';
+    // 背景上傳到 Storage，完成後把 base64 換成網址（若已先按儲存，migrateDataUrls 會補搬）
+    const _local=editImgUrl;
+    uploadImage(_local).then(url=>{ if(editImgUrl===_local) editImgUrl=url; }).catch(err=>console.warn('圖片上傳失敗：',err.message));
+    const prev=document.getElementById('img-prev');
+    prev.src=editImgUrl;
+    prev.style.display='block';
+    document.getElementById('img-clr').style.display='flex';
+    document.getElementById('img-drop').classList.add('has');
+    showImgCtrl(editImgUrl);
+    const _ni=new Image();_ni.onload=()=>{editImgCtrl.naturalW=_ni.naturalWidth;editImgCtrl.naturalH=_ni.naturalHeight;};_ni.src=editImgUrl;
+  };
+  r.readAsDataURL(blob);
+}
+function handleImgDrop(e){e.preventDefault();const f=e.dataTransfer.files[0];if(!f||!f.type.startsWith('image/'))return;const dt=new DataTransfer();dt.items.add(f);document.getElementById('img-file').files=dt.files;handleImgFile(document.getElementById('img-file'));}
+function saveItem(){
+  const idx=document.getElementById('edit-idx').value;
+  const item={num:document.getElementById('f-num').value.trim(),imgUrl:editImgUrl,pal:editPal,imgCtrl:{...editImgCtrl}};
+  cols.forEach(c=>{const el=document.getElementById('mf-'+c.key);if(el)item[c.key]=el.value.trim();});
+  if(idx===''){items.push(item);proRows.push({type:'item',ref:items.length-1});}
+  else{items[+idx]={...items[+idx],...item};}
+  saveActiveProject(); closeItemModal(); renderItemList(); render();
+}
+function addGroup(){const l=prompt('分組標題：','');if(!l)return;proRows.push({type:'group',label:l});render();}
+
+// ════════════════════════════════════════════
+//  Render
+// ════════════════════════════════════════════
+function chk(id){const e=document.getElementById(id);return e?e.checked:false;}
+function val(id){const e=document.getElementById(id);return e?e.value:'';}
+function buildHdr(){
+  const title=val('doc-title')||'建材選色提案';
+  const metas=[[val('owner'),'業主'],[val('project-f'),'案件'],[val('spacedesc'),'空間'],[val('docdate'),'日期'],[val('version'),'版本']].filter(([v])=>v);
+  let brand='';
+  if(brandMode==='logo'&&logoUrl)brand=`<img class="brand-logo" src="${logoUrl}">`;
+  else if(brandMode==='text')brand=`<div class="brand-name">${esc(val('co-name'))}</div><div class="brand-contact">${esc(val('co-contact')).replace(/\n/g,'<br>')}</div>`;
+  return`<div class="doc-hd"><div class="dh-brand">${brand}</div><div class="dh-r"><div class="doc-title">${esc(title)}</div><div class="meta-grid">${metas.map(([v,k])=>`<span class="mk">${esc(k)}</span><span class="mv">${esc(v)}</span>`).join('')}</div></div></div>`;
+}
+function buildNotes(){if(!chk('show-notes'))return'';const n=val('notes');if(!n.trim())return'';return`<div class="doc-notes">${esc(n).replace(/\n/g,'<br>')}</div>`;}
+// 解析尺寸字串，回傳 {w, h}（cm）
+function parseSize(sizeStr){
+  if(!sizeStr) return null;
+  // 支援：60x60cm、60*60cm、4.5x19.5cm、60×60cm
+  const m = sizeStr.replace(/cm$/i,'').match(/([\d.]+)\s*[x*×xX]\s*([\d.]+)/);
+  if(!m) return null;
+  return { w: parseFloat(m[1]), h: parseFloat(m[2]) };
+}
+
+// 根據尺寸計算卡片圖片高度
+// 卡片寬度由欄數決定，高度依比例計算
+// 基準：以卡片寬度換算（A4=794px，扣邊距約730px，2欄=365px，3欄=243px）
+function calcImgH(sizeStr, nc, fallbackH){
+  const sz = parseSize(sizeStr);
+  if(!sz) return fallbackH||195;
+  const colWidths = { 1: 710, 2: 354, 3: 234 };
+  const cardW = colWidths[nc] || 365;
+  // 用尺寸比例計算高度，最小 80px，最大 500px
+  const ratio = sz.h / sz.w;
+  const h = Math.round(cardW * ratio);
+  return Math.max(80, Math.min(500, h));
+}
+
+function buildCards(){
+  const imgHDefault=+val('img-h')||195,nc=+val('ncols')||2,visCols=cols.filter(c=>c.vis);
+  const colTpl=nc===1?'1fr':nc===3?'1fr 1fr 1fr':'1fr 1fr';
+  return`<div class="card-grid" style="grid-template-columns:${colTpl}">${items.map((it,i)=>{
+    const pal=it.pal,palArr=pal||['#ccc'],g=pal===null?'transparent':`linear-gradient(135deg,${palArr.join(',')})`,lum=getLum(pal[0]||'#ccc'),codeC=lum>0.45?'rgba(0,0,0,.3)':'rgba(255,255,255,.3)';
+    const ctrl = it.imgCtrl;
+    const colWidths={1:710,2:354,3:234};
+    const cw=colWidths[nc]||365;
+    const fixedH = imgHDefault||195;
+
+    // 裁剪框的內容原封不動 contain 在容器內，不拉伸不填滿
+    // 容器固定 fixedH 高，裁剪結果用 contain 置中顯示
+    const borderStyle = (ctrl?.borderWidth>0) ? `border:${ctrl.borderWidth}px solid ${ctrl.borderColor||'#ddd'};box-sizing:border-box;` : '';
+    const imgH = fixedH;
+    let imgBlock;
+    if(it.imgUrl){
+      if(ctrl?.cropW && ctrl?.cropH && ctrl?.cropRelW > 0 && ctrl?.cropRelH > 0){
+        // 有裁剪框：先算裁剪框的原始px尺寸，再用contain縮放到容器內
+        // 裁剪框原始尺寸 cropW x cropH（px），容器 cw x fixedH
+        // contain：等比縮放讓裁剪框完整顯示在容器內
+        const cropAspect = ctrl.cropH / ctrl.cropW; // 裁剪框高寬比
+        const containerAspect = fixedH / cw;
+        let dispW, dispH;
+        if(cropAspect > containerAspect){
+          // 裁剪框較高 → 以高度為準
+          dispH = fixedH;
+          dispW = Math.round(fixedH / cropAspect);
+        } else {
+          // 裁剪框較寬 → 以寬度為準
+          dispW = cw;
+          dispH = Math.round(cw * cropAspect);
+        }
+        // 圖片在 dispW x dispH 容器內的位置
+        const imgW100 = Math.round(1 / ctrl.cropRelW * 100);
+        const imgH100 = Math.round(1 / ctrl.cropRelH * 100);
+        const imgL = Math.round(-ctrl.cropRelX / ctrl.cropRelW * 100);
+        const imgT = Math.round(-ctrl.cropRelY / ctrl.cropRelH * 100);
+        // 邊框框在裁剪圖片上，不是容器上
+        imgBlock=`<div style="width:100%;height:${imgH}px;display:flex;justify-content:center;align-items:center;${imgBgStyle(ctrl)}"><div style="width:${dispW}px;height:${dispH}px;overflow:hidden;position:relative;flex-shrink:0;${borderStyle}"><img src="${it.imgUrl}" style="position:absolute;left:${imgL}%;top:${imgT}%;width:${imgW100}%;height:${imgH100}%;object-fit:fill;display:block;"></div></div>`;
+      } else {
+        // 無裁剪框：contain 等比例縮放，邊框框在圖片上
+        imgBlock=`<div style="width:100%;height:${imgH}px;display:flex;justify-content:center;align-items:center;${imgBgStyle(ctrl)}"><img src="${it.imgUrl}" style="max-width:100%;max-height:${imgH}px;width:auto;height:auto;display:block;${borderStyle}"></div>`;
+      }
+    } else {
+      imgBlock=`<div style="width:100%;height:${imgH}px;background:${g};display:flex;align-items:center;justify-content:center"><span style="font-size:10px;font-family:'Space Mono',monospace;color:${codeC}">${esc(it.code||it.name||'')}</span></div>`;
+    }
+    const num=it.num||'TL-'+(i+1).toString().padStart(2,'0');
+    const infoRows=visCols.map(c=>`<tr><td class="mat-key">${esc(c.lbl)}</td><td class="mat-val-td" contenteditable="true" spellcheck="false" data-ph="${esc(c.lbl)}..." onkeydown="if(event.key==='Enter'){event.preventDefault();document.execCommand('insertLineBreak');}" oninput="items[${i}]['${c.key}']=this.innerText;saveActiveProject()">${esc(String(it[c.key]||''))}</td></tr>`).join('');
+    return`<div class="mat-card"><div class="mat-num-row"><input class="mat-num-input" value="${esc(num)}" oninput="items[${i}].num=this.value;saveActiveProject()" onclick="this.select()"><span style="font-size:10px;opacity:.3;cursor:pointer" onclick="openItemModal(${i})">✏️</span></div><div class="mat-img">${imgBlock}</div><table class="mat-info-table"><tbody>${infoRows}</tbody></table></div>`;
+  }).join('')}</div>`;
+}
+function buildPro(){
+  const showSub=chk('show-sub'),visCols=cols.filter(c=>c.vis),hdrs=['色票','編號',...visCols.map(c=>c.lbl)];
+  let html='',gStart=-1,gLbl='';
+  proRows.forEach((row,ri)=>{
+    if(row.type==='group'){if(showSub&&gLbl)html+=subtotRow(gStart,ri,hdrs.length);gLbl=row.label;gStart=ri;html+=`<tr class="grp-hd"><td colspan="${hdrs.length}" contenteditable="true" spellcheck="false" style="outline:none" oninput="proRows[${ri}].label=this.innerText">${esc(row.label)}</td></tr>`;}
+    else{const it=items[row.ref];if(!it)return;const pal=it.pal,g=pal===null?'transparent':`linear-gradient(135deg,${(pal||['#ccc']).join(',')})`;const sw=thumbHtml(it,40);const num=it.num||'TL-'+(row.ref+1).toString().padStart(2,'0');const tds=visCols.map(c=>`<td><div class="pro-edit" contenteditable="true" spellcheck="false" data-ph="${esc(c.lbl)}" oninput="items[${row.ref}]['${c.key}']=this.innerText;saveActiveProject()">${esc(String(it[c.key]||''))}</div></td>`).join('');html+=`<tr><td style="padding:4px 5px">${sw}</td><td><div class="pro-edit" contenteditable="true" spellcheck="false" data-ph="編號" oninput="items[${row.ref}].num=this.innerText;saveActiveProject()">${esc(num)}</div></td>${tds}</tr>`;}
+  });
+  if(showSub&&gLbl)html+=subtotRow(gStart,proRows.length,hdrs.length);
+  return`<table class="pro-tbl"><thead><tr>${hdrs.map(h=>`<th>${esc(h)}</th>`).join('')}</tr></thead><tbody>${html}</tbody></table>`;
+}
+function subtotRow(from,to,cs){const n=proRows.slice(from+1,to).filter(r=>r.type==='item').length;return`<tr class="subtot"><td colspan="${cs}">小計：${n} 項建材</td></tr>`;}
+function buildSum(){const g=proRows.filter(r=>r.type==='group').length;return`<div class="doc-sum"><div class="ds-ttl">摘要</div>${g?`<div class="ds-row"><span>分組數</span><span>${g} 組</span></div>`:''}<div class="ds-row"><span>建材項目</span><span>${items.length} 件</span></div><div class="ds-row tot"><span>合計</span><span>${items.length} 件</span></div></div>`;}
+function buildFoot(){
+  const showId=mode==='card'?'show-footer':'show-footer-p';
+  if(!chk(showId)) return '';
+  // 免責聲明單獨一行(頁碼改用瀏覽器列印對話框內建功能,最可靠)
+  return `<div class="doc-footer"><span>色差以實際樣品為準，最終規格以簽約確認文件為準。</span></div>`;
+}
+function render(){
+  // 手機版 A4 縮放
+  if(window.innerWidth<=768){
+    const a4=document.querySelector('.a4');
+    if(a4){
+      const scale=window.innerWidth/794;
+      a4.style.transform=`scale(${scale})`;
+      a4.style.transformOrigin='top left';
+      a4.style.width='794px';
+      a4.style.marginBottom=`${-(794*(1-scale))}px`;
+      document.querySelector('.preview').style.minHeight=(window.innerHeight*0.9)+'px';
+    }
+  } else {
+    const a4=document.querySelector('.a4');
+    if(a4){ a4.style.transform=''; a4.style.width=''; a4.style.marginBottom=''; }
+  }
+  const hdr=buildHdr();
+  const notes=buildNotes();
+  const body=(mode==='card'?buildCards():buildPro())+(mode==='pro'&&chk('show-sum')?buildSum():'');
+  const foot=buildFoot();
+  // 用 table 結構讓表頭每頁重複
+  document.getElementById('a4-in').innerHTML=
+    `<table style="width:100%;border-collapse:collapse">
+      <thead><tr><td>${hdr}${notes}</td></tr></thead>
+      <tbody><tr><td>${body}</td></tr></tbody>
+      <tfoot><tr><td>${foot}</td></tr></tfoot>
+    </table>`;
+}
+
+// ════════════════════════════════════════════
+//  工具
+// ════════════════════════════════════════════
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+function doPrint(){
+  const a4 = document.querySelector('.a4');
+  const preview = document.querySelector('.preview');
+  // 列印前重設 transform，確保 A4 是 794px
+  const prevTransform = a4.style.transform;
+  const prevWidth = a4.style.width;
+  const prevMarginBottom = a4.style.marginBottom;
+  a4.style.transform = '';
+  a4.style.width = '794px';
+  a4.style.marginBottom = '';
+  preview.style.background = 'white';
+  preview.style.padding = '0';
+  window.print();
+  // 還原
+  a4.style.transform = prevTransform;
+  a4.style.width = prevWidth;
+  a4.style.marginBottom = prevMarginBottom;
+  preview.style.background = '';
+  preview.style.padding = '';
+}
+function getLum(h){try{const r=parseInt(h.slice(1,3),16)/255,g=parseInt(h.slice(3,5),16)/255,b=parseInt(h.slice(5,7),16)/255;return 0.299*r+0.587*g+0.114*b;}catch{return.5;}}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+document.addEventListener('click',e=>{
+  document.querySelectorAll('.modal-bg').forEach(m=>{
+    if(e.target===m){
+      // item-modal: 點外面自動儲存(避免誤關遺失)
+      if(m.id==='item-modal' && m.classList.contains('open')){
+        saveItem();
+      } else {
+        m.classList.remove('open');
+      }
+    }
+  });
+});
+
+// ════════════════════════════════════════════
+//  手機版 抽屜 & 同步
+// ════════════════════════════════════════════
+function mobileDrawer(side){
+  const id = side==='left' ? 'mobile-drawer-left' : 'mobile-drawer-right';
+  const drawer = document.getElementById(id);
+  const overlay = drawer.querySelector('.mobile-drawer-overlay');
+  const panel = drawer.querySelector(side==='left'?'.mobile-drawer-panel':'.mobile-drawer-panel2');
+  // 同步資料到抽屜
+  if(side==='left') syncMobileLeft();
+  if(side==='right') syncMobileRight();
+  overlay.classList.add('show');
+  panel.classList.add('show');
+}
+function closeDrawer(side){
+  const id = side==='left' ? 'mobile-drawer-left' : 'mobile-drawer-right';
+  const drawer = document.getElementById(id);
+  drawer.querySelector('.mobile-drawer-overlay').classList.remove('show');
+  drawer.querySelector(side==='left'?'.mobile-drawer-panel':'.mobile-drawer-panel2').classList.remove('show');
+}
+
+function syncMobileLeft(){
+  // 同步 Finder 欄位
+  const c1 = document.getElementById('mob-col1-list');
+  const c2 = document.getElementById('mob-col2-list');
+  if(c1) c1.innerHTML = document.getElementById('col1-list').innerHTML;
+  if(c2) c2.innerHTML = document.getElementById('col2-list').innerHTML;
+  // 同步建材清單
+  const ml = document.getElementById('mob-item-list');
+  if(ml) ml.innerHTML = document.getElementById('item-list').innerHTML;
+  const mc = document.getElementById('mob-item-count');
+  if(mc) mc.textContent = '('+items.length+')';
+}
+
+function syncMobileRight(){
+  // 同步文件設定欄位
+  const fields = ['doc-title','owner','project-f','docdate','version'];
+  fields.forEach(id=>{
+    const mob = document.getElementById('mob-'+id);
+    const desk = document.getElementById(id);
+    if(mob && desk) mob.value = desk.value;
+  });
+  const ns = document.getElementById('mob-ncols');
+  const ih = document.getElementById('mob-img-h');
+  const nsd = document.getElementById('ncols');
+  const ihd = document.getElementById('img-h');
+  if(ns && nsd) ns.value = nsd.value;
+  if(ih && ihd) ih.value = ihd.value;
+}
+
+function syncField(id, val){
+  const el = document.getElementById(id);
+  if(el){ el.value=val; render(); saveActiveProject(); }
+}
+function syncSelect(id, val){
+  const el = document.getElementById(id);
+  if(el){ el.value=val; render(); }
+}
+
+// 手機版：點選建商/專案後關閉抽屜
+const _origSelectClient = selectClient;
+selectClient = function(id){
+  _origSelectClient(id);
+  setTimeout(()=>closeDrawer('left'),200);
+};
+const _origSelectProject = selectProject;
+selectProject = function(id){
+  _origSelectProject(id);
+  setTimeout(()=>closeDrawer('left'),200);
+};
+// 自動儲存：失焦時
+document.addEventListener('focusout',()=>{if(activeProjectId)saveActiveProject();});
+
+// 頁面關閉前提醒（若 localStorage 有資料就不擋）
+window.addEventListener('beforeunload', e=>{
+  saveActiveProject();
+  // 若有未匯出的資料，提醒一下
+  const hasData = db.projects.some(p=>p.items&&p.items.length>0);
+  if(hasData){
+    e.preventDefault();
+    e.returnValue='選色表尚未匯出 JSON，確定要離開？';
+  }
+});
+
+// ════════════════════════════════════════════
+//  啟動 / 登入
+// ════════════════════════════════════════════
+document.getElementById('gateForm').addEventListener('submit',async e=>{
+  e.preventDefault();
+  const btn=document.getElementById('gate-btn'), err=document.getElementById('gate-err');
+  btn.disabled=true; err.textContent='';
+  const {error}=await sb.auth.signInWithPassword({email:document.getElementById('gate-email').value.trim(),password:document.getElementById('gate-pw').value});
+  btn.disabled=false;
+  if(error){ err.textContent='登入失敗：'+(error.message.includes('Invalid')?'帳號或密碼錯誤':error.message); return; }
+  boot();
+});
+let _booted=false;
+async function boot(){
+  const {data:{session}}=await sb.auth.getSession();
+  if(!session){ document.body.classList.add('locked'); document.getElementById('gate').style.display='flex'; return; }
+  if(_booted) return; _booted=true;
+  SB_UID=session.user.id;
+  document.getElementById('gate').style.display='none'; document.body.classList.remove('locked');
+  const hadCloud=await cloudLoad();
+  initApp();
+  if(!hadCloud && db.clients.length){ cloudSave(); }   // 第一次：把本機資料推上雲端
+  migrateDataUrls();                                   // 把 base64 圖片搬到 Storage
+}
+sb.auth.onAuthStateChange((ev)=>{ if(ev==='SIGNED_OUT'){ location.reload(); } });
+boot();
+</script>
+</body>
+</html>
