@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="ATLAS 選色表">
 <meta name="theme-color" content="#141618">
-<title>ATLAS 選色表 v6.0</title>
+<title>ATLAS 選色表 v6.0.2</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Space+Mono:wght@400;700&display=swap');
 :root{
@@ -1205,7 +1205,7 @@ function importJSON(input){
   const file = input.files[0];
   if(!file) return;
   const reader = new FileReader();
-  reader.onload = e => {
+  reader.onload = async e => {
     try{
       const payload = JSON.parse(e.target.result);
       if(!payload.db) throw new Error('格式不正確，找不到 db 欄位');
@@ -1222,9 +1222,9 @@ function importJSON(input){
         input.value=''; return;
       }
 
-      // 還原資料
-      db = payload.db;
-      saveDb();
+      // 還原資料（先只存本機，圖片搬完再上雲）
+      db = payload.db; if(!db.versions) db.versions=[];
+      try{ localStorage.setItem('atlas-db-v1',JSON.stringify(db)); }catch{}
 
       // 還原 NocoDB 設定（不覆蓋 token）
       if(payload.nocoCfg){
@@ -1246,14 +1246,13 @@ function importJSON(input){
       renderItemList();
       render();
 
-      // 提示
-      const dot = document.getElementById('noco-dot');
-      dot.style.background='var(--gold2)';
-      dot.title='已匯入資料';
-      setTimeout(()=>{ dot.style.background=nocoCfg.url?'var(--teal2)':'var(--muted)'; dot.title=''; },3000);
-
-      alert(`✅ 匯入成功！
-${clientCount} 個建商、${projCount} 個專案已還原。`);
+      // 圖片搬到 Storage → 立即上傳資料到雲端
+      const nImg=await migrateDataUrls();
+      const ok=await cloudFlushNow();
+      alert(ok?`✅ 匯入成功！
+${clientCount} 個建商、${projCount} 個專案已還原，${nImg} 張圖片已上雲，資料已同步到雲端。`
+             :`⚠️ 匯入到本機成功，但上傳雲端失敗（看右上角狀態燈說明）。
+請先確認 Supabase 已執行 supabase_04_storage.sql，再點 📂 讀檔 重做一次。`);
     }catch(err){
       alert('❌ 匯入失敗：' + err.message);
     }
@@ -1728,18 +1727,30 @@ function cloudSave(){
   if(!SB_UID) return;
   _cloudDirty=true; updateNocoDot(null,'等待上傳…');
   clearTimeout(_cloudTimer);
-  _cloudTimer=setTimeout(cloudFlush,1500);
+  _cloudTimer=setTimeout(()=>{_cloudTimer=null;cloudFlush();},1500);
 }
 async function cloudFlush(){
   if(!SB_UID||_cloudBusy){ if(_cloudBusy) _cloudDirty=true; return; }
   _cloudBusy=true; _cloudDirty=false;
   try{
+    // 保險：資料裡還有 base64 圖片且超過 2MB → 先搬圖再上傳，避免把免費方案的資料庫壓垮
+    let size=JSON.stringify(db).length;
+    if(size>2*1024*1024 && JSON.stringify(db).includes('data:image')){
+      _cloudBusy=false; const n=await migrateDataUrls(); _cloudBusy=true; size=JSON.stringify(db).length;
+      if(size>8*1024*1024) throw new Error(`資料仍有 ${(size/1048576).toFixed(1)} MB（圖片搬移失敗 ${n?'部分':'全部'}），已暫停上傳。請確認 Storage finder bucket 權限後重新整理`);
+    }
     const {error}=await sb.from('finder_state').upsert({user_id:SB_UID,data:db},{onConflict:'user_id'});
     if(error) throw error;
     updateNocoDot(true,'雲端已同步 '+new Date().toLocaleTimeString('zh-TW',{hour12:false}));
-  }catch(e){ console.warn('雲端儲存失敗：',e.message); updateNocoDot(false,'雲端儲存失敗：'+e.message); _cloudDirty=true; }
+  }catch(e){ console.warn('雲端儲存失敗：',e.message); updateNocoDot(false,'雲端儲存失敗：'+e.message); _cloudDirty=true; if(!window._cloudWarned){ window._cloudWarned=true; alert('⚠️ 雲端儲存失敗：'+e.message+'\n\n資料仍在本機，修正後會自動重試。'); } }
   _cloudBusy=false;
   if(_cloudDirty) cloudSave();
+}
+async function cloudFlushNow(){
+  clearTimeout(_cloudTimer); _cloudTimer=null;
+  let tries=0; while(_cloudBusy&&tries++<100) await new Promise(r=>setTimeout(r,100));
+  await cloudFlush();
+  return !_cloudDirty;
 }
 window.addEventListener('beforeunload',e=>{ if(_cloudDirty||_cloudTimer){ clearTimeout(_cloudTimer); cloudFlush(); } });
 
@@ -1748,6 +1759,7 @@ async function cloudLoad(){
   const {data,error}=await sb.from('finder_state').select('data').eq('user_id',SB_UID).maybeSingle();
   if(error){ console.warn('雲端讀取失敗：',error.message); updateNocoDot(false,'雲端讀取失敗：'+error.message); return false; }
   if(data&&data.data&&Array.isArray(data.data.clients)&&data.data.clients.length){
+    try{ const loc=localStorage.getItem('atlas-db-v1'); if(loc) localStorage.setItem('atlas-db-backup',loc); }catch{}
     db=data.data; if(!db.versions) db.versions=[];
     try{ localStorage.setItem('atlas-db-v1',JSON.stringify(db)); }catch{}
     updateNocoDot(true,'已從雲端載入'); return true;
