@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#0e1012">
-<title>ATLAS 法規條文庫 v1.2</title>
+<title>ATLAS 法規條文庫 v2.0</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Space+Mono:wght@400;700&display=swap');
 :root{
@@ -30,8 +30,8 @@ a{color:var(--teal2)}
 .login-box p{color:var(--sub);font-size:12.5px;margin-bottom:20px}
 .field{margin-bottom:12px}
 .field label{display:block;font-size:11.5px;color:var(--sub);margin-bottom:5px;letter-spacing:.06em}
-.field input{width:100%;padding:11px 12px;background:var(--bg);border:1px solid var(--border2);border-radius:8px;color:var(--text);outline:none}
-.field input:focus{border-color:var(--gold)}
+.field input,.field select,.field textarea{width:100%;padding:10px 12px;background:var(--bg);border:1px solid var(--border2);border-radius:8px;color:var(--text);outline:none}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--gold)}
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:10px 16px;border-radius:8px;border:1px solid var(--border2);background:var(--card);color:var(--text);cursor:pointer;transition:all .15s;white-space:nowrap}
 .btn:hover{border-color:var(--gold);color:var(--gold2)}
 .btn.pri{background:var(--gold);border-color:var(--gold);color:#1a1200;font-weight:700}
@@ -50,29 +50,48 @@ a{color:var(--teal2)}
 .stat{font-size:11.5px;color:var(--sub)}
 .stat b{color:var(--gold2);font-family:'Space Mono',monospace}
 
-.toolbar{display:flex;gap:8px;padding:10px 14px;background:var(--panel);border-bottom:1px solid var(--border);flex-shrink:0;flex-wrap:wrap}
+.toolbar{display:flex;gap:8px;padding:10px 14px;background:var(--panel);border-bottom:1px solid var(--border);flex-shrink:0;flex-wrap:wrap;align-items:center}
 .toolbar input,.toolbar select{padding:8px 11px;background:var(--bg);border:1px solid var(--border2);border-radius:7px;color:var(--text);outline:none}
-.toolbar input{flex:1;min-width:160px}
+.toolbar input{flex:1;min-width:180px}
 .toolbar input:focus{border-color:var(--gold)}
-.toolbar select{min-width:120px}
+.chips{display:flex;gap:5px;flex-wrap:wrap}
+.chip{font-size:11px;padding:4px 9px;border-radius:999px;border:1px solid var(--border2);background:transparent;color:var(--sub);cursor:pointer}
+.chip:hover{border-color:var(--gold);color:var(--gold2)}
+.chip.on{background:var(--gold);border-color:var(--gold);color:#1a1200;font-weight:600}
+.chip.tg.on{background:var(--teal);border-color:var(--teal);color:#06211a}
 
 .main{flex:1;display:flex;min-height:0}
-.list{width:300px;flex-shrink:0;border-right:1px solid var(--border);overflow-y:auto;background:var(--sb)}
-.law-group{border-bottom:1px solid var(--border)}
-.law-head{display:flex;align-items:center;gap:8px;padding:10px 12px;cursor:pointer;user-select:none;font-size:12.5px;font-weight:500}
+.list{width:320px;flex-shrink:0;border-right:1px solid var(--border);overflow-y:auto;background:var(--sb)}
+
+/* 樹 */
+.dom{border-bottom:1px solid var(--border)}
+.dom-head{display:flex;align-items:center;gap:8px;padding:10px 12px;cursor:pointer;user-select:none;font-size:11.5px;letter-spacing:.14em;color:var(--gold);font-weight:700;background:var(--sb);position:sticky;top:0;z-index:2}
+.dom-head:hover{background:var(--panel)}
+.dom-head .cnt{margin-left:auto;font-size:11px;color:var(--muted);font-family:'Space Mono',monospace;letter-spacing:0}
+.dom>.body{display:none}.dom.open>.body{display:block}
+.asp-head{display:flex;align-items:center;gap:8px;padding:7px 12px 7px 20px;cursor:pointer;user-select:none;font-size:12px;color:var(--indigo);font-weight:500}
+.asp-head:hover{background:var(--panel)}
+.asp-head .cnt{margin-left:auto;font-size:11px;color:var(--muted);font-family:'Space Mono',monospace}
+.asp>.body{display:none}.asp.open>.body{display:block}
+.arrow{color:var(--muted);font-size:10px;transition:transform .15s;width:10px;flex-shrink:0}
+.open>.dom-head>.arrow,.open>.asp-head>.arrow,.law.open>.law-head>.arrow{transform:rotate(90deg)}
+.law-head{display:flex;align-items:center;gap:6px;padding:8px 10px 8px 30px;cursor:pointer;user-select:none;font-size:12.5px;font-weight:500}
+.asp .law-head{padding-left:42px}
 .law-head:hover{background:var(--panel)}
-.law-head .arrow{color:var(--muted);font-size:10px;transition:transform .15s}
-.law-group.open .law-head .arrow{transform:rotate(90deg)}
-.law-head .cnt{margin-left:auto;font-size:11px;color:var(--muted);font-family:'Space Mono',monospace}
-.law-head .pdf{font-size:10px;color:var(--gold2,#d8b35a);border:1px solid var(--gold2,#d8b35a);border-radius:4px;padding:0 5px;text-decoration:none}
-.law-head .pdf:hover{background:var(--gold2,#d8b35a);color:#111}
-.d-meta .pdf{color:var(--gold2,#d8b35a)}
-.law-head .dl{font-size:10px;color:var(--muted);border:1px dashed var(--muted);border-radius:4px;padding:0 5px;text-decoration:none}
-.law-head .dl:hover{color:var(--text);border-style:solid}
-.law-head .ab{font-size:10px;color:var(--red);border:1px solid var(--red);border-radius:4px;padding:0 4px}
-.law-body{display:none}
-.law-group.open .law-body{display:block}
-.art-row{display:flex;gap:8px;align-items:baseline;padding:7px 12px 7px 30px;cursor:pointer;font-size:12.5px;border-left:2px solid transparent}
+.law-head .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.law-head .cnt{font-size:11px;color:var(--muted);font-family:'Space Mono',monospace}
+.law-head .bd{font-size:10px;border-radius:4px;padding:0 5px;text-decoration:none;white-space:nowrap;flex-shrink:0}
+.bd.pdf{color:var(--gold2);border:1px solid var(--gold2)}
+.bd.pdf:hover{background:var(--gold2);color:#111}
+.bd.dl{color:var(--muted);border:1px dashed var(--muted)}
+.bd.dl:hover{color:var(--text);border-style:solid}
+.bd.ab{color:var(--red);border:1px solid var(--red)}
+.bd.sc{color:var(--teal2);border:1px solid var(--teal)}
+.bd.ed{color:var(--muted);border:1px solid transparent;cursor:pointer}
+.bd.ed:hover{color:var(--gold2);border-color:var(--gold2)}
+.law>.body{display:none}.law.open>.body{display:block}
+.art-row{display:flex;gap:8px;align-items:baseline;padding:6px 12px 6px 48px;cursor:pointer;font-size:12.5px;border-left:2px solid transparent}
+.asp .art-row{padding-left:60px}
 .art-row:hover{background:var(--panel)}
 .art-row.active{background:var(--card);border-left-color:var(--gold)}
 .art-row .no{font-family:'Space Mono',monospace;color:var(--gold2);min-width:46px;font-size:11.5px}
@@ -83,6 +102,7 @@ a{color:var(--teal2)}
 .detail{flex:1;overflow-y:auto;padding:22px 26px}
 .empty{color:var(--muted);text-align:center;padding:60px 20px;font-size:13px}
 .d-law{font-size:12px;color:var(--sub);letter-spacing:.06em}
+.d-law b{color:var(--gold2);font-weight:500}
 .d-title{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin:6px 0 4px}
 .d-title h2{font-size:22px;font-weight:700}
 .d-title h2 .mono{color:var(--gold2)}
@@ -91,6 +111,7 @@ a{color:var(--teal2)}
 .pill.ab{border-color:var(--red);color:var(--red)}
 .pill.asp{border-color:var(--indigo);color:var(--indigo)}
 .d-meta{font-size:11.5px;color:var(--muted);margin-bottom:16px;display:flex;gap:14px;flex-wrap:wrap}
+.d-meta .pdf{color:var(--gold2)}
 .d-content{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:18px 20px;white-space:pre-wrap;line-height:1.95;font-size:14.5px;margin-bottom:20px}
 .note-box{border:1px solid var(--gold);border-radius:10px;background:rgba(212,168,67,.05)}
 .note-head{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid rgba(212,168,67,.3);font-size:12.5px;font-weight:500;color:var(--gold2)}
@@ -101,12 +122,25 @@ a{color:var(--teal2)}
 .note-foot .st.ok{color:var(--teal2)}
 .note-foot .st.err{color:var(--red)}
 
+/* 法規屬性面板 */
+.lp{max-width:640px}
+.lp h2{font-size:18px;margin:4px 0 2px}
+.lp .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px 14px;margin:16px 0}
+.lp .grid .full{grid-column:1/-1}
+.lp .noted-list{margin-top:18px;border-top:1px solid var(--border);padding-top:12px}
+.lp .noted-list h3{font-size:12px;color:var(--sub);letter-spacing:.1em;margin-bottom:8px}
+.lp .noted-list .it{padding:6px 0;border-bottom:1px dashed var(--border);cursor:pointer;font-size:12.5px}
+.lp .noted-list .it:hover{color:var(--gold2)}
+.lp .noted-list .it .no{font-family:'Space Mono',monospace;color:var(--gold2);margin-right:8px}
+.lp .noted-list .it .pv{color:var(--sub)}
+
 @media (max-width:700px){
   .main{flex-direction:column}
-  .list{width:100%;max-height:42vh;border-right:0;border-bottom:1px solid var(--border)}
+  .list{width:100%;max-height:44vh;border-right:0;border-bottom:1px solid var(--border)}
   .detail{padding:16px}
   .d-title h2{font-size:18px}
   .stat{display:none}
+  .lp .grid{grid-template-columns:1fr}
 }
 </style>
 </head>
@@ -135,20 +169,15 @@ a{color:var(--teal2)}
     <button class="btn sm" id="logoutBtn">登出</button>
   </div>
   <div class="toolbar">
-    <input id="q" type="search" placeholder="搜尋：條文內容、法規名稱、條號（如 27-1）…">
-    <select id="fAspect">
-      <option value="">全部面向</option>
-      <option>A可行性</option><option>B容積獎勵</option><option>C權變估價</option>
-      <option>D稅務</option><option>E產權土地</option><option>F程序組織</option><option>G建築執行</option>
-    </select>
-    <select id="fNoted">
-      <option value="">全部條文</option>
-      <option value="1">只看已註記</option>
-    </select>
+    <input id="q" type="search" placeholder="搜尋：領域、面向（如 權變估價）、法規名、條號（27-1）、條文、註記…">
+    <select id="fDomain"><option value="">全部領域</option></select>
+    <div class="chips" id="aspChips"></div>
+    <button class="chip tg" id="tgCore" title="只看核心法規">核心</button>
+    <button class="chip tg" id="tgNoted" title="只看已註記的條文">已註記</button>
   </div>
   <div class="main">
     <div class="list" id="list"></div>
-    <div class="detail" id="detail"><div class="empty">左側選一條條文</div></div>
+    <div class="detail" id="detail"><div class="empty">左側選一條條文，或點法規旁的 ✎ 編輯分類</div></div>
   </div>
 </div>
 
@@ -160,9 +189,15 @@ a{color:var(--teal2)}
 const SB_URL = 'https://riiflvhbxrnmzriwngjs.supabase.co';
 const SB_KEY = 'sb_publishable_R69Hj9hcR5G4dp3Uz1J0PQ_1BabpwsN';
 const sb = supabase.createClient(SB_URL, SB_KEY);
+const ASPECTS = ['A可行性','B容積獎勵','C權變估價','D稅務','E產權土地','F程序組織','G建築執行'];
+const ASP_SORT = Object.fromEntries(ASPECTS.map((a,i)=>[a,i]));
 
 const $ = s => document.querySelector(s);
-let ROWS = [], CUR = null, openLaws = new Set(), PDFS = new Set();
+let ROWS = [], LAWS = new Map(), DOMAINS = [], CUR = null, PDFS = new Set();
+let fAspect = '', tgCore = false, tgNoted = false;
+// 展開狀態：本機記憶（每台裝置各自）
+let OPEN = new Set(JSON.parse(localStorage.getItem('atlas-law-open') || '["d:都市更新"]'));
+function saveOpen(){ try{ localStorage.setItem('atlas-law-open', JSON.stringify([...OPEN])); }catch{} }
 
 // ── 登入 ──
 $('#loginForm').addEventListener('submit', async e => {
@@ -184,13 +219,23 @@ async function boot() {
 }
 async function load() {
   $('#list').innerHTML = '<div class="empty">載入中…</div>';
-  const { data, error } = await sb.from('law_articles')
-    .select('article_id,law_name,law_code,article_no,article_sort,content,chapter,aspect,law_level,modified_date,source_url,status,my_note')
-    .order('law_code').order('article_sort').range(0, 1999);
-  if (error) { $('#list').innerHTML = `<div class="empty" style="color:var(--red)">讀取失敗：${error.message}</div>`; return; }
-  ROWS = data; render();
+  const [a, l, d] = await Promise.all([
+    sb.from('law_articles').select('article_id,law_name,law_code,article_no,article_sort,content,chapter,aspect,law_level,modified_date,source_url,status,my_note').order('law_code').order('article_sort').range(0, 4999),
+    sb.from('laws').select('*').order('sort').order('law_code'),
+    sb.from('law_domains').select('name,sort').order('sort'),
+  ]);
+  const err = a.error || l.error || d.error;
+  if (err) { $('#list').innerHTML = `<div class="empty" style="color:var(--red)">讀取失敗：${err.message}<br><br>若是 laws / law_domains 不存在，請先執行 supabase_06_laws.sql</div>`; return; }
+  ROWS = a.data; LAWS = new Map(l.data.map(x => [x.law_code, x])); DOMAINS = d.data.map(x => x.name);
+  // 條文表有、主檔沒有的法規 → 臨時補一筆（下次同步腳本會寫進 laws）
+  for (const r of ROWS) if (!LAWS.has(r.law_code)) LAWS.set(r.law_code, { law_code: r.law_code, law_name: r.law_name, domain: '都市更新', aspect: r.aspect, tags: [], scope: '中央', law_level: r.law_level, tier: '核心', sort: 100, status: r.status, _tmp: true });
+  for (const x of LAWS.values()) if (!DOMAINS.includes(x.domain)) DOMAINS.push(x.domain);
+  $('#fDomain').innerHTML = '<option value="">全部領域</option>' + DOMAINS.map(n => `<option>${esc(n)}</option>`).join('');
+  $('#aspChips').innerHTML = ASPECTS.map(a => `<button class="chip" data-asp="${a}">${a}</button>`).join('');
+  render();
   loadPdfList();
 }
+
 // ── PDF 原檔（Supabase Storage / law-pdf，私有，登入者可讀）──
 async function loadPdfList() {
   try {
@@ -205,58 +250,123 @@ async function openPdf(code) {
   if (error) { alert('開啟失敗：' + error.message); return; }
   window.open(data.signedUrl, '_blank', 'noopener');
 }
-
-// ── 篩選 + 渲染 ──
-function filtered() {
-  const q = $('#q').value.trim().toLowerCase(), asp = $('#fAspect').value, noted = $('#fNoted').value;
-  return ROWS.filter(r => {
-    if (asp && r.aspect !== asp) return false;
-    if (noted && !(r.my_note && r.my_note.trim())) return false;
-    if (!q) return true;
-    return (r.law_name + ' ' + r.article_no + ' ' + (r.content||'') + ' ' + (r.my_note||'')).toLowerCase().includes(q);
-  });
+function dlUrl(law) {
+  if (law.scope === '中央' || /^[A-Z]\d{7}$/.test(law.law_code)) return `https://law.moj.gov.tw/LawClass/FilesType.aspx?DataId=${law.law_code}&md=m`;
+  return law.source_url || '#';
 }
+
+// ── 篩選 ──
+function lawText(l) { return [l.domain, l.aspect, l.law_name, l.law_code, ...(l.tags||[]), l.my_note||''].join(' ').toLowerCase(); }
+function filtered() {
+  const q = $('#q').value.trim().toLowerCase(), dom = $('#fDomain').value;
+  const out = [];
+  for (const r of ROWS) {
+    const l = LAWS.get(r.law_code);
+    if (dom && l.domain !== dom) continue;
+    if (fAspect && l.aspect !== fAspect) continue;
+    if (tgCore && l.tier !== '核心') continue;
+    if (tgNoted && !(r.my_note && r.my_note.trim())) continue;
+    if (q) {
+      const lawHit = lawText(l).includes(q);
+      const artHit = (r.article_no + ' ' + (r.content||'') + ' ' + (r.my_note||'')).toLowerCase().includes(q);
+      if (!lawHit && !artHit) continue;
+    }
+    out.push(r);
+  }
+  return out;
+}
+
+// ── 樹渲染：領域 → 面向 → 法規 → 條文 ──
 function render() {
   const rows = filtered();
   $('#stTotal').textContent = ROWS.length;
-  $('#stLaws').textContent = new Set(ROWS.map(r => r.law_code)).size;
+  $('#stLaws').textContent = LAWS.size;
   $('#stNoted').textContent = ROWS.filter(r => r.my_note && r.my_note.trim()).length;
+  document.querySelectorAll('#aspChips .chip').forEach(c => c.classList.toggle('on', c.dataset.asp === fAspect));
+  $('#tgCore').classList.toggle('on', tgCore); $('#tgNoted').classList.toggle('on', tgNoted);
 
-  const byLaw = new Map();
-  for (const r of rows) { if (!byLaw.has(r.law_code)) byLaw.set(r.law_code, { name: r.law_name, status: r.status, arts: [] }); byLaw.get(r.law_code).arts.push(r); }
-  const searching = $('#q').value.trim() || $('#fNoted').value;
+  const searching = !!($('#q').value.trim() || tgNoted || fAspect || $('#fDomain').value);
+  // 分組
+  const tree = new Map(); // domain → Map(aspect → Map(code → arts))
+  for (const r of rows) {
+    const l = LAWS.get(r.law_code), asp = l.aspect || '';
+    if (!tree.has(l.domain)) tree.set(l.domain, new Map());
+    const A = tree.get(l.domain); if (!A.has(asp)) A.set(asp, new Map());
+    const L = A.get(asp); if (!L.has(r.law_code)) L.set(r.law_code, []);
+    L.get(r.law_code).push(r);
+  }
+  const domOrder = [...tree.keys()].sort((a, b) => (DOMAINS.indexOf(a) + 1 || 99) - (DOMAINS.indexOf(b) + 1 || 99));
   let h = '';
-  for (const [code, g] of byLaw) {
-    const open = searching || openLaws.has(code);
-    h += `<div class="law-group${open ? ' open' : ''}" data-code="${code}">
-      <div class="law-head"><span class="arrow">▶</span><span>${g.name}</span>${g.status === '已廢止' ? '<span class="ab">廢止</span>' : ''}${PDFS.has(code) ? `<a class="pdf" data-pdf="${code}" title="開啟 PDF 原檔">📄 原檔</a>` : `<a class="dl" href="https://law.moj.gov.tw/LawClass/FilesType.aspx?DataId=${code}&md=m" target="_blank" rel="noopener" onclick="event.stopPropagation()" title="到全國法規資料庫下載官方 PDF，存成 ${code}.pdf 後拖進 Supabase Storage / law-pdf">⬇ 官方</a>`}<span class="cnt">${g.arts.length}</span></div>
-      <div class="law-body">${g.arts.map(r => `
-        <div class="art-row${r.my_note && r.my_note.trim() ? ' noted' : ''}${CUR && CUR.article_id === r.article_id ? ' active' : ''}" data-id="${r.article_id}">
-          <span class="no">§${r.article_no}</span><span class="pv">${(r.content||'').slice(0, 40)}</span><span class="dot"></span>
-        </div>`).join('')}</div></div>`;
+  for (const dom of domOrder) {
+    const A = tree.get(dom);
+    const dCnt = [...A.values()].reduce((n, L) => n + L.size, 0);
+    const dOpen = searching || OPEN.has('d:' + dom);
+    h += `<div class="dom${dOpen ? ' open' : ''}" data-k="d:${esc(dom)}"><div class="dom-head"><span class="arrow">▶</span><span>${esc(dom)}</span><span class="cnt">${dCnt} 部</span></div><div class="body">`;
+    const aspOrder = [...A.keys()].sort((a, b) => (a === '' ? 99 : ASP_SORT[a] ?? 50) - (b === '' ? 99 : ASP_SORT[b] ?? 50));
+    for (const asp of aspOrder) {
+      const L = A.get(asp);
+      const laws = [...L.entries()].sort((a, b) => (LAWS.get(a[0]).sort - LAWS.get(b[0]).sort) || a[0].localeCompare(b[0]));
+      const lawsHtml = laws.map(([code, arts]) => renderLaw(LAWS.get(code), arts, searching)).join('');
+      if (asp === '') { h += lawsHtml; continue; }
+      const aOpen = searching || !OPEN.has('ac:' + dom + '/' + asp);
+      h += `<div class="asp${aOpen ? ' open' : ''}" data-k="a:${esc(dom)}/${esc(asp)}"><div class="asp-head"><span class="arrow">▶</span><span>${esc(asp)}</span><span class="cnt">${L.size}</span></div><div class="body">${lawsHtml}</div></div>`;
+    }
+    h += `</div></div>`;
   }
   $('#list').innerHTML = h || '<div class="empty">沒有符合的條文</div>';
 }
+function renderLaw(l, arts, searching) {
+  const q = $('#q').value.trim().toLowerCase();
+  // 搜尋時：命中法規名/分類但沒命中條文 → 不自動展開條文（只露出法規），避免一次攤開幾百條
+  const open = (searching && (tgNoted || (q && !lawText(l).includes(q)))) || OPEN.has('l:' + l.law_code);
+  const badges =
+    (l.scope && l.scope !== '中央' ? `<span class="bd sc">${esc(l.scope)}</span>` : '') +
+    (l.status === '已廢止' ? '<span class="bd ab">廢止</span>' : '') +
+    (PDFS.has(l.law_code) ? `<a class="bd pdf" data-pdf="${l.law_code}" title="開啟 PDF 原檔">📄</a>`
+                          : `<a class="bd dl" href="${dlUrl(l)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" title="下載官方 PDF，存成 ${l.law_code}.pdf 後拖進 Supabase Storage / law-pdf">⬇</a>`) +
+    `<span class="bd ed" data-edit="${l.law_code}" title="編輯分類／註記">✎</span>`;
+  return `<div class="law${open ? ' open' : ''}" data-k="l:${l.law_code}">
+    <div class="law-head"><span class="arrow">▶</span><span class="nm" title="${esc(l.law_name)}">${esc(l.law_name)}</span>${badges}<span class="cnt">${arts.length}</span></div>
+    <div class="body">${arts.map(r => `
+      <div class="art-row${r.my_note && r.my_note.trim() ? ' noted' : ''}${CUR && CUR.article_id === r.article_id ? ' active' : ''}" data-id="${r.article_id}">
+        <span class="no">§${r.article_no}</span><span class="pv">${esc((r.content||'').slice(0, 40))}</span><span class="dot"></span>
+      </div>`).join('')}</div></div>`;
+}
+
 $('#list').addEventListener('click', e => {
   const pdf = e.target.closest('[data-pdf]');
   if (pdf) { e.stopPropagation(); openPdf(pdf.dataset.pdf); return; }
-  const head = e.target.closest('.law-head');
-  if (head) { const g = head.parentElement, c = g.dataset.code; g.classList.toggle('open'); g.classList.contains('open') ? openLaws.add(c) : openLaws.delete(c); return; }
+  const ed = e.target.closest('[data-edit]');
+  if (ed) { e.stopPropagation(); showLaw(ed.dataset.edit); return; }
+  const head = e.target.closest('.dom-head,.asp-head,.law-head');
+  if (head) {
+    const g = head.parentElement, k = g.dataset.k;
+    g.classList.toggle('open');
+    const isOpen = g.classList.contains('open');
+    if (k.startsWith('a:')) { const ck = 'ac:' + k.slice(2); isOpen ? OPEN.delete(ck) : OPEN.add(ck); }   // 面向：預設展開，記錄收起
+    else { isOpen ? OPEN.add(k) : OPEN.delete(k); }
+    saveOpen(); return;
+  }
   const row = e.target.closest('.art-row');
   if (row) show(ROWS.find(r => r.article_id === row.dataset.id));
 });
-['#q', '#fAspect', '#fNoted'].forEach(s => $(s).addEventListener('input', render));
+$('#q').addEventListener('input', render);
+$('#fDomain').addEventListener('change', render);
+$('#aspChips').addEventListener('click', e => { const c = e.target.closest('.chip'); if (!c) return; fAspect = fAspect === c.dataset.asp ? '' : c.dataset.asp; render(); });
+$('#tgCore').addEventListener('click', () => { tgCore = !tgCore; render(); });
+$('#tgNoted').addEventListener('click', () => { tgNoted = !tgNoted; render(); });
 
 // ── 條文詳情 + 註記 ──
 function show(r) {
-  CUR = r; openLaws.add(r.law_code);
+  CUR = r; const l = LAWS.get(r.law_code);
+  OPEN.add('l:' + r.law_code); OPEN.add('d:' + l.domain); if (l.aspect) OPEN.delete('ac:' + l.domain + '/' + l.aspect); saveOpen();
   document.querySelectorAll('.art-row.active').forEach(x => x.classList.remove('active'));
   document.querySelector(`.art-row[data-id="${r.article_id}"]`)?.classList.add('active');
   const st = r.status === '已廢止' ? '<span class="pill ab">已廢止</span>' : r.status === '已修正待覆核' ? '<span class="pill">已修正待覆核</span>' : '<span class="pill ok">現行</span>';
   $('#detail').innerHTML = `
-    <div class="d-law">${r.law_name} · ${r.law_code} · ${r.law_level || ''}</div>
-    <div class="d-title"><h2>第 <span class="mono">${r.article_no}</span> 條</h2>${st}<span class="pill asp">${r.aspect || ''}</span></div>
-    <div class="d-meta"><span>${r.chapter || ''}</span><span>修正 ${r.modified_date || '—'}</span><a href="${r.source_url}" target="_blank" rel="noopener">全國法規資料庫 ↗</a>${PDFS.has(r.law_code) ? `<a class="pdf" href="#" onclick="openPdf('${r.law_code}');return false">📄 PDF 原檔</a>` : ''}</div>
+    <div class="d-law">${esc(l.domain)} › ${esc(l.aspect || '—')} › <b>${esc(r.law_name)}</b> · ${r.law_code} · ${r.law_level || ''}</div>
+    <div class="d-title"><h2>第 <span class="mono">${r.article_no}</span> 條</h2>${st}${l.scope !== '中央' ? `<span class="pill">${esc(l.scope)}</span>` : ''}</div>
+    <div class="d-meta"><span>${esc(r.chapter || '')}</span><span>修正 ${r.modified_date || '—'}</span><a href="${r.source_url}" target="_blank" rel="noopener">法規來源 ↗</a>${PDFS.has(r.law_code) ? `<a class="pdf" href="#" onclick="openPdf('${r.law_code}');return false">📄 PDF 原檔</a>` : ''}</div>
     <div class="d-content">${esc(r.content || '')}</div>
     <div class="note-box">
       <div class="note-head">★ 我的註記 <span class="hint">實務經驗、審議慣例、談判眉角 — 只有你看得到，同步永不覆蓋</span></div>
@@ -276,7 +386,55 @@ async function saveNote() {
   CUR.my_note = val; st.className = 'st ok'; st.textContent = '✓ 已儲存 ' + new Date().toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit' });
   render();
 }
-function esc(s) { return s.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
+
+// ── 法規屬性面板（分類／標籤／法規註記）──
+function showLaw(code) {
+  const l = LAWS.get(code); CUR = null;
+  const noted = ROWS.filter(r => r.law_code === code && r.my_note && r.my_note.trim());
+  const opt = (list, v) => list.map(x => `<option${x === v ? ' selected' : ''}>${esc(x)}</option>`).join('');
+  $('#detail').innerHTML = `<div class="lp">
+    <div class="d-law">法規屬性 · ${code}${l._tmp ? ' · <span style="color:var(--red)">主檔尚無此筆，儲存後建立</span>' : ''}</div>
+    <h2>${esc(l.law_name)}</h2>
+    <div class="d-meta"><span>${l.law_level || ''}</span><span>修正 ${l.modified_date || '—'}</span><span>${ROWS.filter(r => r.law_code === code).length} 條</span>${l.source_url ? `<a href="${l.source_url}" target="_blank" rel="noopener">法規來源 ↗</a>` : ''}</div>
+    <div class="grid">
+      <div class="field"><label>領域</label><input id="lpDomain" list="domList" value="${esc(l.domain)}"><datalist id="domList">${DOMAINS.map(d => `<option value="${esc(d)}">`).join('')}</datalist></div>
+      <div class="field"><label>面向（可空）</label><select id="lpAspect"><option value="">— 不分面向 —</option>${opt(ASPECTS, l.aspect)}</select></div>
+      <div class="field"><label>適用範圍</label><select id="lpScope">${opt(['中央','臺北市','新北市','其他縣市'], l.scope)}</select></div>
+      <div class="field"><label>分級</label><select id="lpTier">${opt(['核心','外圍'], l.tier)}</select></div>
+      <div class="field"><label>同層排序（小的在前）</label><input id="lpSort" type="number" value="${l.sort ?? 100}"></div>
+      <div class="field"><label>標籤（逗號分隔，搜尋用）</label><input id="lpTags" value="${esc((l.tags||[]).join(', '))}" placeholder="例：可行性, 危老"></div>
+      <div class="field full"><label>法規註記（例：主要看第 3、6、8 條）</label><textarea id="lpNote" rows="3">${esc(l.my_note || '')}</textarea></div>
+    </div>
+    <div class="note-foot" style="border:0;padding:0"><span class="st" id="lpSt"></span><button class="btn sm pri" id="lpSave">儲存</button></div>
+    ${noted.length ? `<div class="noted-list"><h3>已註記條文 · ${noted.length}</h3>${noted.map(r => `<div class="it" data-go="${r.article_id}"><span class="no">§${r.article_no}</span><span class="pv">${esc(r.my_note.slice(0, 60))}</span></div>`).join('')}</div>` : ''}
+  </div>`;
+  $('#lpSave').addEventListener('click', () => saveLaw(code));
+  document.querySelectorAll('[data-go]').forEach(el => el.addEventListener('click', () => show(ROWS.find(r => r.article_id === el.dataset.go))));
+  if (window.innerWidth <= 700) $('#detail').scrollIntoView({ behavior: 'smooth' });
+}
+async function saveLaw(code) {
+  const l = LAWS.get(code), st = $('#lpSt');
+  const upd = {
+    law_code: code, law_name: l.law_name,
+    domain: $('#lpDomain').value.trim() || '都市更新',
+    aspect: $('#lpAspect').value || null,
+    scope: $('#lpScope').value, tier: $('#lpTier').value,
+    sort: parseInt($('#lpSort').value) || 100,
+    tags: $('#lpTags').value.split(/[,，]/).map(s => s.trim()).filter(Boolean),
+    my_note: $('#lpNote').value.trim() || null,
+  };
+  if (l._tmp) Object.assign(upd, { law_level: l.law_level, source_url: l.source_url, modified_date: l.modified_date, status: l.status });
+  st.className = 'st'; st.textContent = '儲存中…'; $('#lpSave').disabled = true;
+  const { error } = await sb.from('laws').upsert(upd, { onConflict: 'law_code' });
+  $('#lpSave').disabled = false;
+  if (error) { st.className = 'st err'; st.textContent = '儲存失敗：' + error.message; return; }
+  if (!DOMAINS.includes(upd.domain)) { DOMAINS.push(upd.domain); await sb.from('law_domains').upsert({ name: upd.domain, sort: 100 }, { onConflict: 'name' }); $('#fDomain').innerHTML = '<option value="">全部領域</option>' + DOMAINS.map(n => `<option>${esc(n)}</option>`).join(''); }
+  Object.assign(l, upd); delete l._tmp;
+  OPEN.add('d:' + upd.domain); if (upd.aspect) OPEN.delete('ac:' + upd.domain + '/' + upd.aspect); saveOpen();
+  st.className = 'st ok'; st.textContent = '✓ 已儲存';
+  render();
+}
+function esc(s) { return String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
 
 boot();
 </script>
