@@ -4,14 +4,17 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#0d0f14">
-<title>ATLAS 帷幄 v6.0.1 — 指揮中心</title>
+<title>ATLAS 帷幄 v6.0.2 — 指揮中心</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Noto+Serif+TC:wght@600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
 :root[data-theme="dark"]{--bg:#0d0f14;--bg-2:#12151c;--panel:#161a22;--card:#1c2028;--card-2:#22262f;--border:#252c38;--border-2:#2e3648;--ink:#e4e8f2;--ink-2:#b2bacb;--muted:#6a7490;--dim:#434b60;--gold:#d4a843;--gold-2:#f0cc7a;--teal:#3aaa8c;--teal-2:#5dd4b0;--indigo:#5b7ec4;--red:#e07060;--amber:#e8b04a;--grid:rgba(255,255,255,.04)}
 :root[data-theme="light"]{--bg:#f4f1e8;--bg-2:#ece7d8;--panel:#fff;--card:#fff;--card-2:#faf7ee;--border:#d8d0bd;--border-2:#c4b99c;--ink:#1a1d26;--ink-2:#3d4350;--muted:#7a7161;--dim:#b4a992;--gold:#a6782a;--gold-2:#c89a40;--teal:#236b55;--teal-2:#3aaa8c;--indigo:#3e5a94;--red:#b84b38;--amber:#c8871f;--grid:rgba(0,0,0,.03)}
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{min-height:100%}
-body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--ink);font-size:14px;line-height:1.65;background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:40px 40px}
+/* 大螢幕自動放大（外接螢幕）：1600px 以上 110%、2200px 以上 125% */
+@media (min-width:1600px){html{zoom:1.1}}
+@media (min-width:2200px){html{zoom:1.25}}
+body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--ink);font-size:14px;overflow-x:hidden;line-height:1.65;background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:40px 40px}
 .mono{font-family:'Space Mono',monospace}
 .serif{font-family:'Noto Serif TC',serif}
 a{color:var(--teal-2);text-decoration:none}
@@ -31,7 +34,7 @@ body.locked>*:not(#gate){filter:blur(4px);pointer-events:none;user-select:none}
 
 /* 頂欄 */
 .top{position:sticky;top:0;z-index:50;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--border)}
-.top .in{max-width:1240px;margin:0 auto;padding:10px 20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.top .in{max-width:min(1500px,94vw);margin:0 auto;padding:10px 20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
 .brand{display:flex;align-items:baseline;gap:8px;cursor:pointer}
 .brand .mk{font-family:'Space Mono',monospace;color:var(--gold);letter-spacing:.3em;font-size:12px}
 .brand b{font-family:'Noto Serif TC',serif;font-size:17px}
@@ -48,7 +51,7 @@ body.locked>*:not(#gate){filter:blur(4px);pointer-events:none;user-select:none}
 .cloud i{width:7px;height:7px;border-radius:50%;background:var(--dim);display:inline-block}
 .cloud i.ok{background:var(--teal-2)}.cloud i.wait{background:var(--amber)}.cloud i.err{background:var(--red)}
 
-.wrap{max-width:1240px;margin:0 auto;padding:22px 20px 60px}
+.wrap{max-width:min(1500px,94vw);margin:0 auto;padding:22px 20px 60px}
 .view{display:none}.view.on{display:block}
 h2.sec{font-family:'Noto Serif TC',serif;font-size:20px;margin:30px 0 12px;display:flex;align-items:baseline;gap:10px}
 h2.sec small{font-family:'Space Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:.2em;font-weight:400}
@@ -175,7 +178,7 @@ h2.sec small{font-family:'Space Mono',monospace;font-size:10px;color:var(--muted
 </div>
 
 <div class="top"><div class="in">
-  <div class="brand" onclick="go('home')"><span class="mk">▲ ATLAS</span><b>帷幄</b><span class="v">v6.0.1</span></div>
+  <div class="brand" onclick="go('home')"><span class="mk">▲ ATLAS</span><b>帷幄</b><span class="v">v6.0.2</span></div>
   <nav class="tabs">
     <button class="tab on" data-v="home"><span class="n">01</span>首頁</button>
     <button class="tab" data-v="sched"><span class="n">02</span>工作時程</button>
