@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#0e1012">
-<title>ATLAS 法規條文庫 v2.3</title>
+<title>ATLAS 法規條文庫 v2.3.1</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Space+Mono:wght@400;700&display=swap');
 :root{
@@ -85,6 +85,9 @@ a{color:var(--teal2)}
 .scp>.body{display:none}.scp.open>.body{display:block}
 .scp.open>.scp-head>.arrow{transform:rotate(90deg)}
 .scp .law-head{padding-left:52px}.scp .art-row{padding-left:70px}
+.asp .asp>.asp-head{padding-left:32px;color:var(--sub);font-weight:400}
+.asp .asp>.body>.law>.law-head{padding-left:54px}.asp .asp>.body>.law .art-row{padding-left:72px}
+.asp .asp .scp-head{padding-left:44px}.asp .asp .scp .law-head{padding-left:64px}.asp .asp .scp .art-row{padding-left:82px}
 .dom>.body>.scp .scp-head{padding-left:20px}.dom>.body>.scp .law-head{padding-left:40px}.dom>.body>.scp .art-row{padding-left:58px}
 .arrow{color:var(--muted);font-size:10px;transition:transform .15s;width:10px;flex-shrink:0}
 .open>.dom-head>.arrow,.open>.asp-head>.arrow,.law.open>.law-head>.arrow{transform:rotate(90deg)}
@@ -312,7 +315,7 @@ function filtered() {
   const out = new Map();
   for (const l of LAWS.values()) {
     if (dom && l.domain !== dom) continue;
-    if (fAspect && (l.aspect || '') !== fAspect) continue;
+    if (fAspect && (l.aspect || '').split('/')[0].trim() !== fAspect) continue;
     if (tgCore && l.tier !== '核心') continue;
     const arts = byCode.get(l.law_code) || [];
     const lawHit = q ? lawText(l).includes(q) : true;
@@ -336,7 +339,7 @@ function render() {
   $('#stNoted').textContent = ROWS.filter(r => r.my_note && r.my_note.trim()).length;
   // 面向快速鍵：依目前領域列出該領域實際用到的第二層（都市更新固定 A–G 順序）
   const dom0 = $('#fDomain').value;
-  const aspSet = new Set(); for (const l of LAWS.values()) if ((!dom0 || l.domain === dom0) && l.aspect) aspSet.add(l.aspect);
+  const aspSet = new Set(); for (const l of LAWS.values()) if ((!dom0 || l.domain === dom0) && l.aspect) aspSet.add(l.aspect.split('/')[0].trim());
   const aspList = [...aspSet].sort((a, b) => (ASP_SORT[a] ?? 50) - (ASP_SORT[b] ?? 50) || a.localeCompare(b));
   if (fAspect && !aspSet.has(fAspect)) fAspect = '';
   $('#aspChips').innerHTML = aspList.map(a => `<button class="chip${a === fAspect ? ' on' : ''}" data-asp="${esc(a)}">${esc(a)}</button>`).join('');
@@ -358,15 +361,25 @@ function render() {
     const dCnt = [...A.values()].reduce((n, L) => n + L.size, 0);
     const dOpen = searching || OPEN.has('d:' + dom);
     h += `<div class="dom${dOpen ? ' open' : ''}" data-k="d:${esc(dom)}"><div class="dom-head"><span class="arrow">▶</span><span>${esc(dom)}</span><span class="cnt">${dCnt} 部</span></div><div class="body">`;
-    const aspOrder = [...A.keys()].sort((a, b) => (a === '' ? 99 : ASP_SORT[a] ?? 50) - (b === '' ? 99 : ASP_SORT[b] ?? 50));
-    for (const asp of aspOrder) {
-      const L = A.get(asp);
-      const laws = [...L.entries()].sort((a, b) => { const x = LAWS.get(a[0]), y = LAWS.get(b[0]);
+    const sortLaws = L => [...L.entries()].sort((a, b) => { const x = LAWS.get(a[0]), y = LAWS.get(b[0]);
         return ((SCOPE_ORDER[x.scope] ?? 9) - (SCOPE_ORDER[y.scope] ?? 9)) || (x.sort - y.sort) || a[0].localeCompare(b[0]); });
-      const lawsHtml = renderScopes(laws, dom + '/' + asp, searching);
-      if (asp === '') { h += lawsHtml; continue; }
-      const aOpen = searching || !OPEN.has('ac:' + dom + '/' + asp);
-      h += `<div class="asp${aOpen ? ' open' : ''}" data-k="a:${esc(dom)}/${esc(asp)}"><div class="asp-head"><span class="arrow">▶</span><span>${esc(asp)}</span><span class="cnt">${L.size}</span></div><div class="body">${lawsHtml}</div></div>`;
+    const aspNode = (label, key, inner, count) => { const aOpen = searching || !OPEN.has('ac:' + key);
+      return `<div class="asp${aOpen ? ' open' : ''}" data-k="a:${esc(key)}"><div class="asp-head"><span class="arrow">▶</span><span>${esc(label)}</span><span class="cnt">${count}</span></div><div class="body">${inner}</div></div>`; };
+    // 面向用「/」分層：第一段為主面向，其餘為子面向（例：裝修/09310 磁磚）
+    const tops = new Map();   // top → Map(sub → Map(code → arts))；sub '' = 直接掛在主面向下
+    for (const [asp, L] of A) { const [top, ...rest] = asp.split('/').map(x => x.trim()); const sub = rest.join('/');
+      if (!tops.has(top)) tops.set(top, new Map()); const T = tops.get(top); if (!T.has(sub)) T.set(sub, new Map());
+      for (const [c, a] of L) T.get(sub).set(c, a); }
+    const topOrder = [...tops.keys()].sort((a, b) => (a === '' ? 99 : ASP_SORT[a] ?? 50) - (b === '' ? 99 : ASP_SORT[b] ?? 50) || a.localeCompare(b, 'zh-Hant'));
+    for (const top of topOrder) {
+      const T = tops.get(top);
+      if (top === '') { h += renderScopes(sortLaws(T.get('') || new Map()), dom + '/', searching); continue; }
+      let inner = '', cnt = 0;
+      const subOrder = [...T.keys()].sort((a, b) => (a === '' ? -1 : b === '' ? 1 : a.localeCompare(b, 'zh-Hant')));
+      for (const sub of subOrder) { const L = T.get(sub); cnt += L.size; const key = dom + '/' + top + (sub ? '/' + sub : '');
+        const lawsHtml = renderScopes(sortLaws(L), key, searching);
+        inner += sub ? aspNode(sub, key, lawsHtml, L.size) : lawsHtml; }
+      h += aspNode(top, dom + '/' + top, inner, cnt);
     }
     h += `</div></div>`;
   }
@@ -437,7 +450,7 @@ $('#btnNew').addEventListener('click', () => showLaw(null));
 // ── 條文詳情 + 註記 ──
 function show(r) {
   CUR = r; const l = LAWS.get(r.law_code);
-  OPEN.add('l:' + r.law_code); OPEN.add('d:' + l.domain); if (l.aspect) OPEN.delete('ac:' + l.domain + '/' + l.aspect); { const k = 's:' + l.domain + '/' + (l.aspect || '') + '/' + (l.issuer || l.scope || '中央'); OPEN.delete(k + ':closed'); OPEN.add(k + ':open'); } saveOpen();
+  OPEN.add('l:' + r.law_code); OPEN.add('d:' + l.domain); if (l.aspect) { const segs = l.aspect.split('/').map(x => x.trim()); OPEN.delete('ac:' + l.domain + '/' + segs[0]); OPEN.delete('ac:' + l.domain + '/' + segs.join('/')); } { const k = 's:' + l.domain + '/' + (l.aspect || '').split('/').map(x => x.trim()).join('/') + '/' + (l.issuer || l.scope || '中央'); OPEN.delete(k + ':closed'); OPEN.add(k + ':open'); } saveOpen();
   document.querySelectorAll('.art-row.active').forEach(x => x.classList.remove('active'));
   document.querySelector(`.art-row[data-id="${r.article_id}"]`)?.classList.add('active');
   const st = r.status === '已廢止' ? '<span class="pill ab">已廢止</span>' : r.status === '已修正待覆核' ? '<span class="pill">已修正待覆核</span>' : '<span class="pill ok">現行</span>';
@@ -486,7 +499,7 @@ function showLaw(code) {
       <div class="field"><label>名稱</label><input id="lpName" placeholder="陶瓷面磚"></div>
       <div class="field full"><label>來源網址（選填）</label><input id="lpUrl" placeholder="https://…"></div>` : `<div class="field full"><label>名稱（樹上顯示）</label><input id="lpName" value="${esc(l.law_name)}"></div>`}
       <div class="field"><label>領域</label><input id="lpDomain" list="domList" value="${esc(l.domain)}"><datalist id="domList">${DOMAINS.map(d => `<option value="${esc(d)}">`).join('')}</datalist></div>
-      <div class="field"><label>面向／第二層（可空，可自訂）</label><input id="lpAspect" list="aspList" value="${esc(l.aspect || '')}" placeholder="都市更新用 A–G；建材可用 磁磚、石材…"><datalist id="aspList">${aspAll.map(a => `<option value="${esc(a)}">`).join('')}</datalist></div>
+      <div class="field"><label>面向／第二層（可空，可自訂）</label><input id="lpAspect" list="aspList" value="${esc(l.aspect || '')}" placeholder="A–G；或 裝修/09310 磁磚（用 / 分兩層）"><datalist id="aspList">${aspAll.map(a => `<option value="${esc(a)}">`).join('')}</datalist></div>
       <div class="field"><label>機關／單位（第四層分組；空＝用適用範圍）</label><input id="lpIssuer" list="issList" value="${esc(l.issuer || '')}" placeholder="例：工程會 (PCC)、住都中心 (HURC)"><datalist id="issList">${[...new Set([...LAWS.values()].map(x => x.issuer).filter(Boolean))].map(a => `<option value="${esc(a)}">`).join('')}</datalist></div>
       <div class="field"><label>適用範圍</label><select id="lpScope">${opt(['中央','臺北市','新北市','其他縣市'], l.scope)}</select></div>
       <div class="field"><label>分級</label><select id="lpTier">${opt(['核心','外圍'], l.tier)}</select></div>
