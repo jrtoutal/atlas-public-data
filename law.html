@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#0e1012">
-<title>ATLAS 法規條文庫 v2.2.1</title>
+<title>ATLAS 法規條文庫 v2.2.2</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Space+Mono:wght@400;700&display=swap');
 :root{
@@ -493,11 +493,12 @@ function showLaw(code) {
       <div class="field"><label>標籤（逗號分隔，搜尋用）</label><input id="lpTags" value="${esc((l.tags||[]).join(', '))}" placeholder="例：可行性, 危老"></div>
       <div class="field full"><label>法規註記（例：主要看第 3、6、8 條）</label><textarea id="lpNote" rows="3">${esc(l.my_note || '')}</textarea></div>
     </div>
-    <div class="note-foot" style="border:0;padding:0"><span class="st" id="lpSt"></span><button class="btn sm pri" id="lpSave">儲存</button></div>
+    <div class="note-foot" style="border:0;padding:0"><span class="st" id="lpSt"></span>${isNew ? '' : `<button class="btn sm" id="lpDel" style="color:var(--red);border-color:var(--red)">刪除此法規</button>`}<button class="btn sm pri" id="lpSave">儲存</button></div>
     ${vs.length ? '' : `<p style="font-size:11.5px;color:var(--muted);margin-top:14px">PDF 檔名規則：<span class="mono">${esc(isNew ? '代碼' : code)}.pdf</span>＝現行版；<span class="mono">${esc(isNew ? '代碼' : code)}_2015.pdf</span>＝舊版。拖進 Supabase Storage / law-pdf 後重新整理。</p>`}
     ${noted.length ? `<div class="noted-list"><h3>已註記條文 · ${noted.length}</h3>${noted.map(r => `<div class="it" data-go="${r.article_id}"><span class="no">§${r.article_no}</span><span class="pv">${esc(r.my_note.slice(0, 60))}</span></div>`).join('')}</div>` : ''}
   </div>`;
   $('#lpSave').addEventListener('click', () => saveLaw(isNew ? null : code));
+  $('#lpDel')?.addEventListener('click', () => deleteLaw(code));
   document.querySelectorAll('[data-go]').forEach(el => el.addEventListener('click', () => show(ROWS.find(r => r.article_id === el.dataset.go))));
   if (window.innerWidth <= 700) $('#detail').scrollIntoView({ behavior: 'smooth' });
 }
@@ -532,6 +533,18 @@ async function saveLaw(code) {
   OPEN.add('d:' + upd.domain); if (upd.aspect) OPEN.delete('ac:' + upd.domain + '/' + upd.aspect); saveOpen();
   st.className = 'st ok'; st.textContent = '✓ 已儲存';
   render(); showLaw(code);
+}
+async function deleteLaw(code) {
+  const l = LAWS.get(code), n = ROWS.filter(r => r.law_code === code).length, vs = PDFS.get(code) || [];
+  if (!confirm(`確定刪除「${l.law_name}」？\n會一併刪除：${n} 條條文（含你的註記）、${vs.length} 份 PDF。\n此動作無法復原。`)) return;
+  const st = $('#lpSt'); st.className = 'st'; st.textContent = '刪除中…';
+  try {
+    if (n) { const { error } = await sb.from('law_articles').delete().eq('law_code', code); if (error) throw error; }
+    if (vs.length) { const { error } = await sb.storage.from('law-pdf').remove(vs.map(v => v.file)); if (error) throw error; }
+    const { error } = await sb.from('laws').delete().eq('law_code', code); if (error) throw error;
+    ROWS = ROWS.filter(r => r.law_code !== code); LAWS.delete(code); PDFS.delete(code); CUR = null;
+    $('#detail').innerHTML = '<div class="empty">已刪除</div>'; render();
+  } catch (e) { st.className = 'st err'; st.textContent = '刪除失敗：' + e.message; }
 }
 function esc(s) { return String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
 
