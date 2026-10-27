@@ -2,3942 +2,319 @@
 <html lang="zh-TW" data-theme="dark">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ATLAS 帷幄 v5.6 — 建材 × 都更 × 個人 AI 作戰平台</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0d0f14">
+<title>ATLAS 帷幄 v6.0.1 — 指揮中心</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Noto+Serif+TC:wght@600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700;900&family=Noto+Serif+TC:wght@500;700;900&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap');
+:root[data-theme="dark"]{--bg:#0d0f14;--bg-2:#12151c;--panel:#161a22;--card:#1c2028;--card-2:#22262f;--border:#252c38;--border-2:#2e3648;--ink:#e4e8f2;--ink-2:#b2bacb;--muted:#6a7490;--dim:#434b60;--gold:#d4a843;--gold-2:#f0cc7a;--teal:#3aaa8c;--teal-2:#5dd4b0;--indigo:#5b7ec4;--red:#e07060;--amber:#e8b04a;--grid:rgba(255,255,255,.04)}
+:root[data-theme="light"]{--bg:#f4f1e8;--bg-2:#ece7d8;--panel:#fff;--card:#fff;--card-2:#faf7ee;--border:#d8d0bd;--border-2:#c4b99c;--ink:#1a1d26;--ink-2:#3d4350;--muted:#7a7161;--dim:#b4a992;--gold:#a6782a;--gold-2:#c89a40;--teal:#236b55;--teal-2:#3aaa8c;--indigo:#3e5a94;--red:#b84b38;--amber:#c8871f;--grid:rgba(0,0,0,.03)}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{min-height:100%}
+body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--ink);font-size:14px;line-height:1.65;background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:40px 40px}
+.mono{font-family:'Space Mono',monospace}
+.serif{font-family:'Noto Serif TC',serif}
+a{color:var(--teal-2);text-decoration:none}
+button,input,textarea{font-family:inherit;font-size:inherit}
 
-/* ───────────────────────────────
-   THEME TOKENS
-─────────────────────────────── */
-:root[data-theme="dark"] {
-  --bg:       #0d0f14;
-  --bg-2:     #12151c;
-  --panel:    #161a22;
-  --card:     #1c2028;
-  --card-2:   #22262f;
-  --border:   #252c38;
-  --border-2: #2e3648;
-  --ink:      #e4e8f2;
-  --ink-2:    #b2bacb;
-  --muted:    #6a7490;
-  --dim:      #434b60;
-  --gold:     #d4a843;
-  --gold-2:   #f0cc7a;
-  --teal:     #3aaa8c;
-  --teal-2:   #5dd4b0;
-  --indigo:   #5b7ec4;
-  --red:      #e07060;
-  --amber:    #e8b04a;
-  --grid:     rgba(255,255,255,0.04);
-  --shadow:   0 20px 60px rgba(0,0,0,0.6), 0 2px 0 rgba(255,255,255,0.02) inset;
-  --paper-tex: none;
-}
-:root[data-theme="light"] {
-  --bg:       #f4f1e8;
-  --bg-2:     #ece7d8;
-  --panel:    #ffffff;
-  --card:     #ffffff;
-  --card-2:   #faf7ee;
-  --border:   #d8d0bd;
-  --border-2: #c4b99c;
-  --ink:      #1a1d26;
-  --ink-2:    #3d4350;
-  --muted:    #7a7161;
-  --dim:      #b4a992;
-  --gold:     #a6782a;
-  --gold-2:   #c89a40;
-  --teal:     #236b55;
-  --teal-2:   #3aaa8c;
-  --indigo:   #3e5a94;
-  --red:      #b84b38;
-  --amber:    #c8871f;
-  --grid:     rgba(0,0,0,0.03);
-  --shadow:   0 4px 24px rgba(70,55,30,0.08), 0 1px 0 rgba(0,0,0,0.04) inset;
-  --paper-tex:
-    radial-gradient(circle at 20% 30%, rgba(180,160,120,0.04) 0, transparent 40%),
-    radial-gradient(circle at 80% 70%, rgba(180,160,120,0.03) 0, transparent 40%);
-}
+/* 登入 */
+#gate{position:fixed;inset:0;z-index:999;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:24px}
+#gate .box{width:100%;max-width:360px;background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:28px 26px}
+#gate h1{font-size:18px;margin:4px 0 2px}
+#gate p{color:var(--muted);font-size:12.5px;margin-bottom:18px}
+#gate label{display:block;font-size:11px;letter-spacing:.1em;color:var(--muted);margin:10px 0 4px}
+#gate input{width:100%;padding:10px 12px;background:var(--bg);border:1px solid var(--border-2);border-radius:8px;color:var(--ink);outline:none}
+#gate input:focus{border-color:var(--gold)}
+#gate button{width:100%;margin-top:16px;padding:11px;border:0;border-radius:8px;background:var(--gold);color:#1a1200;font-weight:700;cursor:pointer}
+#gate .err{color:var(--red);font-size:12px;min-height:18px;margin-top:8px}
+body.locked>*:not(#gate){filter:blur(4px);pointer-events:none;user-select:none}
 
-* { margin:0; padding:0; box-sizing:border-box; }
+/* 頂欄 */
+.top{position:sticky;top:0;z-index:50;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--border)}
+.top .in{max-width:1240px;margin:0 auto;padding:10px 20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.brand{display:flex;align-items:baseline;gap:8px;cursor:pointer}
+.brand .mk{font-family:'Space Mono',monospace;color:var(--gold);letter-spacing:.3em;font-size:12px}
+.brand b{font-family:'Noto Serif TC',serif;font-size:17px}
+.brand .v{font-size:10px;color:var(--muted);font-family:'Space Mono',monospace;margin-left:4px}
+.tabs{display:flex;gap:2px;margin-left:8px}
+.tab{padding:7px 12px;border-radius:7px;border:1px solid transparent;background:none;color:var(--muted);cursor:pointer;font-size:12.5px;white-space:nowrap}
+.tab .n{font-family:'Space Mono',monospace;font-size:10px;margin-right:5px;opacity:.7}
+.tab:hover{color:var(--ink)}
+.tab.on{color:var(--gold-2);border-color:var(--border-2);background:var(--panel)}
+.spacer{flex:1}
+.ibtn{padding:6px 10px;border-radius:6px;border:1px solid var(--border);background:var(--panel);color:var(--ink-2);cursor:pointer;font-size:11.5px}
+.ibtn:hover{border-color:var(--gold);color:var(--gold-2)}
+.cloud{font-size:11px;color:var(--muted);display:flex;align-items:center;gap:6px}
+.cloud i{width:7px;height:7px;border-radius:50%;background:var(--dim);display:inline-block}
+.cloud i.ok{background:var(--teal-2)}.cloud i.wait{background:var(--amber)}.cloud i.err{background:var(--red)}
 
-html, body {
-  background: var(--bg);
-  color: var(--ink);
-  font-family: 'Noto Sans TC','Helvetica Neue',sans-serif;
-  font-weight: 400;
-  line-height: 1.7;
-  -webkit-font-smoothing: antialiased;
-  transition: background .3s, color .3s;
-}
-body {
-  background:
-    var(--paper-tex),
-    linear-gradient(180deg, var(--bg) 0%, var(--bg-2) 100%) fixed;
-  min-height: 100vh;
-  padding-bottom: 80px;
-}
+.wrap{max-width:1240px;margin:0 auto;padding:22px 20px 60px}
+.view{display:none}.view.on{display:block}
+h2.sec{font-family:'Noto Serif TC',serif;font-size:20px;margin:30px 0 12px;display:flex;align-items:baseline;gap:10px}
+h2.sec small{font-family:'Space Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:.2em;font-weight:400}
+.hint{font-size:12px;color:var(--muted)}
 
-/* ───────────────────────────────
-   HEADER / NAV
-─────────────────────────────── */
-.top-bar {
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  background: color-mix(in srgb, var(--bg) 88%, transparent);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border-bottom: 1px solid var(--border);
-}
-.top-bar-inner {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 14px 28px;
-  display: flex;
-  align-items: center;
-  gap: 24px;
-}
-.brand {
-  display: flex;
-  align-items: baseline;
-  gap: 10px;
-  flex: 0 0 auto;
-}
-.brand-mark {
-  font-family: 'Space Mono',monospace;
-  font-weight: 700;
-  font-size: 18px;
-  letter-spacing: 0.12em;
-  color: var(--gold);
-  display: inline-flex;
-  align-items: baseline;
-  gap: 8px;
-}
-.brand-mark::before {
-  content: "▲";
-  margin-right: 6px;
-  color: var(--teal);
-  font-size: 0.85em;
-}
-.brand-mark .zh {
-  font-family: 'Noto Serif TC',serif;
-  font-weight: 900;
-  font-size: 17px;
-  letter-spacing: 0.08em;
-  color: var(--ink);
-  border-left: 1px solid var(--border-2);
-  padding-left: 10px;
-}
-.brand-sub {
-  font-size: 11px;
-  color: var(--muted);
-  letter-spacing: 0.2em;
-  font-family: 'Space Mono',monospace;
-}
-.tabs {
-  display: flex;
-  gap: 4px;
-  margin-left: 16px;
-  flex: 1;
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-.tabs::-webkit-scrollbar { display: none; }
-.tab {
-  background: none;
-  border: 1px solid transparent;
-  color: var(--ink-2);
-  font-family: 'Noto Sans TC',sans-serif;
-  font-size: 13px;
-  font-weight: 500;
-  padding: 8px 14px;
-  border-radius: 6px;
-  cursor: pointer;
-  white-space: nowrap;
-  letter-spacing: 0.04em;
-  transition: all .2s;
-}
-.tab:hover {
-  color: var(--ink);
-  background: var(--card);
-}
-.tab.active {
-  background: var(--card);
-  border-color: var(--border-2);
-  color: var(--gold);
-}
-.tab .tab-num {
-  font-family: 'Space Mono',monospace;
-  font-size: 10px;
-  color: var(--muted);
-  margin-right: 6px;
-}
-.tab.active .tab-num { color: var(--teal); }
+/* 首頁 */
+.hero{display:grid;grid-template-columns:1.4fr 1fr;gap:18px;align-items:stretch}
+.hero .lead{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:22px 24px}
+.hero .lead .kick{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.3em;color:var(--gold)}
+.hero .lead h1{font-family:'Noto Serif TC',serif;font-size:26px;line-height:1.3;margin:8px 0 10px}
+.hero .lead p{color:var(--ink-2);font-size:13px}
+.rings{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:18px 20px;display:grid;grid-template-columns:repeat(5,1fr);gap:8px;align-items:center}
+.ring{text-align:center;cursor:pointer}
+.ring svg{width:64px;height:64px}
+.ring .l{font-size:11px;color:var(--ink-2);margin-top:4px}
+.ring .p{font-family:'Space Mono',monospace;font-size:10px;color:var(--muted)}
+.ring.cur .l{color:var(--gold-2);font-weight:600}
 
-.theme-toggle {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  padding: 4px;
-  flex: 0 0 auto;
-}
-.theme-btn {
-  background: none;
-  border: none;
-  color: var(--muted);
-  padding: 6px 12px;
-  border-radius: 999px;
-  font-size: 11px;
-  font-family: 'Space Mono',monospace;
-  letter-spacing: 0.08em;
-  cursor: pointer;
-  transition: all .2s;
-}
-.theme-btn.active {
-  background: var(--bg);
-  color: var(--gold);
-  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
-}
+.stats{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-top:14px}
+.stat{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 14px}
+.stat .k{font-size:10px;letter-spacing:.15em;color:var(--muted);font-family:'Space Mono',monospace}
+.stat .v{font-family:'Space Mono',monospace;font-size:20px;color:var(--gold-2);margin:2px 0}
+.stat .s{font-size:11px;color:var(--ink-2)}
 
-/* ───────────────────────────────
-   LAYOUT
-─────────────────────────────── */
-.shell {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 40px 28px;
-}
-.view { display: none; }
-.view.active {
-  display: block;
-  animation: fadeUp .4s ease;
-}
-@keyframes fadeUp {
-  from { opacity: 0; transform: translateY(12px); }
-  to { opacity: 1; transform: translateY(0); }
-}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px 18px;position:relative}
+.card.link{cursor:pointer;transition:border-color .15s,transform .15s}
+.card.link:hover{border-color:var(--gold);transform:translateY(-2px)}
+.card .ic{font-size:22px;margin-bottom:6px}
+.card h3{font-size:15px;margin-bottom:4px}
+.card .d{font-size:12.5px;color:var(--ink-2)}
+.card .meta{font-family:'Space Mono',monospace;font-size:10px;color:var(--muted);margin-top:10px}
+.card .arrow{position:absolute;right:16px;top:16px;color:var(--muted)}
+.next .card{border-left:3px solid var(--gold)}
+.next .card .tag{display:inline-block;font-size:10px;padding:1px 7px;border-radius:999px;border:1px solid var(--border-2);color:var(--muted);margin-right:6px}
+.next .card .go{display:inline-block;margin-top:10px;font-size:12px;color:var(--teal-2);cursor:pointer}
+.dec{border-left:3px solid var(--indigo)}
+.dec .id{font-family:'Space Mono',monospace;font-size:10px;color:var(--indigo)}
+.ops .row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px dashed var(--border);font-size:13px;gap:10px}
+.ops .row:last-child{border:0}
+.ops .row .k{color:var(--ink-2)}
+.ops .row input{background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:4px 8px;color:var(--ink);width:150px;font-size:12px;text-align:right}
+.ops .pill{font-size:10px;padding:1px 7px;border-radius:999px;border:1px solid}
+.pill.ok{color:var(--teal-2);border-color:var(--teal)}.pill.warn{color:var(--amber);border-color:var(--amber)}.pill.bad{color:var(--red);border-color:var(--red)}
 
-/* Section headings */
-.section-label {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  font-family: 'Space Mono',monospace;
-  font-size: 11px;
-  letter-spacing: 0.25em;
-  color: var(--teal);
-  text-transform: uppercase;
-  margin-bottom: 12px;
-}
-.section-label::before {
-  content: "";
-  display: inline-block;
-  width: 24px;
-  height: 1px;
-  background: var(--teal);
-}
-.section-title {
-  font-family: 'Noto Serif TC',serif;
-  font-size: 34px;
-  font-weight: 900;
-  line-height: 1.2;
-  letter-spacing: -0.01em;
-  margin-bottom: 10px;
-  color: var(--ink);
-}
-.section-sub {
-  color: var(--muted);
-  font-size: 14px;
-  max-width: 720px;
-  line-height: 1.7;
-}
-.section-head {
-  margin-bottom: 36px;
-  padding-bottom: 24px;
-  border-bottom: 1px solid var(--border);
-}
+/* 時程 */
+.stage{background:var(--panel);border:1px solid var(--border);border-radius:12px;margin-bottom:12px;overflow:hidden}
+.stage summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:12px;padding:12px 16px}
+.stage summary::-webkit-details-marker{display:none}
+.stage summary h3{font-size:15px;flex:1}
+.stage summary .d{font-size:11px;color:var(--muted);font-family:'Space Mono',monospace}
+.stage summary .pct{font-family:'Space Mono',monospace;font-size:11px;padding:2px 9px;border-radius:999px;border:1px solid var(--border-2);color:var(--ink-2)}
+.stage[open] summary{border-bottom:1px solid var(--border)}
+.stage.done summary h3{color:var(--muted)}
+.stage.cur summary .pct{border-color:var(--gold);color:var(--gold-2)}
+.stage .body{padding:10px 16px 14px}
+.stage .goal{font-size:12.5px;color:var(--ink-2);margin:4px 0 10px}
+.task{display:flex;gap:10px;padding:8px 6px;border-radius:8px;cursor:pointer;align-items:flex-start}
+.task:hover{background:var(--card)}
+.task .cb{width:16px;height:16px;border:1px solid var(--border-2);border-radius:4px;flex-shrink:0;margin-top:3px;position:relative}
+.task.on .cb{background:var(--teal);border-color:var(--teal)}
+.task.on .cb::after{content:'✓';color:#fff;font-size:11px;position:absolute;left:3px;top:-2px}
+.task.on .n{color:var(--muted);text-decoration:line-through}
+.task .n{font-size:13px}
+.task .w{font-size:11.5px;color:var(--muted);margin-top:2px}
+.task .tg{display:inline-block;font-family:'Space Mono',monospace;font-size:9px;padding:0 5px;border:1px solid var(--border-2);border-radius:4px;color:var(--muted);margin-right:4px}
 
-/* cards */
-.card {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 22px 24px;
-  transition: border-color .2s, transform .2s;
-}
-.card:hover { border-color: var(--border-2); }
+/* 架構圖 */
+.arch{display:grid;grid-template-columns:260px 1fr;gap:16px}
+.arch .canvas{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:18px;position:relative;overflow:auto}
+.arch .layer{display:grid;grid-template-columns:120px 1fr;gap:12px;align-items:center;padding:10px 0;border-bottom:1px dashed var(--border)}
+.arch .layer:last-child{border:0}
+.arch .layer .lt{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.2em;color:var(--gold)}
+.arch .layer .lt small{display:block;color:var(--muted);letter-spacing:0;font-family:'Noto Sans TC',sans-serif;font-size:11px;margin-top:2px}
+.arch .nodes{display:flex;flex-wrap:wrap;gap:8px}
+.node{padding:7px 11px;border:1px solid var(--border-2);border-radius:8px;background:var(--card);font-size:12px;cursor:pointer;display:flex;align-items:center;gap:6px}
+.node:hover,.node.sel{border-color:var(--gold);color:var(--gold-2)}
+.node.hot{border-style:solid}.node.dim{opacity:.4}
+.node i{width:6px;height:6px;border-radius:50%;background:var(--teal-2);display:inline-block}
+.node.retired{border-style:dashed;color:var(--muted)}.node.retired i{background:var(--dim)}
+.node.plan i{background:var(--amber)}
+.arch .side{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;align-self:start;position:sticky;top:70px}
+.arch .side h3{font-size:15px;margin-bottom:4px}
+.arch .side .t{font-family:'Space Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:.15em}
+.arch .side p{font-size:12.5px;color:var(--ink-2);margin:10px 0}
+.arch .side .rel{font-size:12px}.arch .side .rel b{color:var(--muted);font-weight:400;display:block;margin-top:8px}
+.arch .side .rel span{display:inline-block;margin:3px 4px 0 0;padding:1px 7px;border:1px solid var(--border-2);border-radius:5px;cursor:pointer}
+.arch .side .rel span:hover{border-color:var(--gold);color:var(--gold-2)}
+.legend{display:flex;gap:14px;font-size:11px;color:var(--muted);margin-top:10px}
+.legend i{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:4px}
 
-.grid {
-  display: grid;
-  gap: 16px;
-}
-.g-2 { grid-template-columns: repeat(2, minmax(0,1fr)); }
-.g-3 { grid-template-columns: repeat(3, minmax(0,1fr)); }
-.g-4 { grid-template-columns: repeat(4, minmax(0,1fr)); }
-@media (max-width: 900px) {
-  .g-3, .g-4 { grid-template-columns: repeat(2, minmax(0,1fr)); }
-}
-@media (max-width: 600px) {
-  .g-2, .g-3, .g-4 { grid-template-columns: 1fr; }
-}
+/* 決策 */
+.dlist .card{margin-bottom:10px;display:grid;grid-template-columns:70px 1fr;gap:12px}
+.dlist .card .id{font-family:'Space Mono',monospace;color:var(--indigo);font-size:12px}
+.dlist .card .id small{display:block;color:var(--muted);font-size:9px}
+.dlist .card h3{font-size:14px}
+.dlist .card .why{font-size:12.5px;color:var(--ink-2);margin-top:3px}
 
-h2.block-title {
-  font-family: 'Noto Serif TC',serif;
-  font-size: 22px;
-  font-weight: 700;
-  color: var(--ink);
-  margin: 48px 0 18px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-h2.block-title .idx {
-  font-family: 'Space Mono',monospace;
-  color: var(--gold);
-  font-size: 14px;
-  font-weight: 400;
-  letter-spacing: 0.1em;
-}
-h3.sub-title {
-  font-size: 15px;
-  font-weight: 700;
-  color: var(--ink);
-  margin-bottom: 8px;
-  letter-spacing: 0.02em;
-}
+/* 交接 */
+.hand pre{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px;font-size:11.5px;overflow:auto;white-space:pre-wrap}
 
-/* pills and badges */
-.pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  font-family: 'Space Mono',monospace;
-  font-size: 10px;
-  padding: 3px 9px;
-  border-radius: 999px;
-  letter-spacing: 0.08em;
-  border: 1px solid;
+@media (max-width:900px){
+  .hero,.grid3,.grid2,.arch,.dlist .card{grid-template-columns:1fr}
+  .stats{grid-template-columns:repeat(3,1fr)}
+  .rings{grid-template-columns:repeat(5,1fr);padding:12px}
+  .ring svg{width:48px;height:48px}
+  .tabs{order:10;width:100%;overflow-x:auto}
+  .arch .side{position:static}
 }
-.pill-done { color: var(--teal); border-color: color-mix(in srgb,var(--teal) 45%,transparent); background: color-mix(in srgb,var(--teal) 10%,transparent); }
-.pill-wip  { color: var(--amber); border-color: color-mix(in srgb,var(--amber) 45%,transparent); background: color-mix(in srgb,var(--amber) 10%,transparent); }
-.pill-todo { color: var(--muted); border-color: var(--border-2); }
-.pill-hot  { color: var(--red); border-color: color-mix(in srgb,var(--red) 50%,transparent); background: color-mix(in srgb,var(--red) 10%,transparent); }
-.pill-gold { color: var(--gold); border-color: color-mix(in srgb,var(--gold) 50%,transparent); background: color-mix(in srgb,var(--gold) 10%,transparent); }
-
-/* code blocks */
-pre, .code {
-  font-family: 'Space Mono',monospace;
-  font-size: 12.5px;
-  background: var(--bg-2);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 14px 16px;
-  color: var(--ink-2);
-  overflow-x: auto;
-  line-height: 1.7;
-  position: relative;
-}
-:root[data-theme="light"] pre,
-:root[data-theme="light"] .code {
-  background: #2b2823;
-  color: #e8dfc5;
-  border-color: #2b2823;
-}
-pre .kw { color: var(--teal-2); }
-pre .cm { color: var(--muted); font-style: italic; }
-pre .str { color: var(--gold-2); }
-pre .var { color: var(--indigo); }
-
-code.inline {
-  font-family: 'Space Mono',monospace;
-  font-size: 0.88em;
-  padding: 2px 6px;
-  background: var(--bg-2);
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  color: var(--gold);
-}
-:root[data-theme="light"] code.inline {
-  background: #f0ead8;
-  color: #8a5a15;
-  border-color: #d8d0bd;
-}
-
-/* ───────────────────────────────
-   DASHBOARD (VIEW 1) — hero
-─────────────────────────────── */
-.hero {
-  position: relative;
-  padding: 56px 44px;
-  margin-bottom: 36px;
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  background:
-    radial-gradient(circle at 85% 20%, color-mix(in srgb,var(--gold) 12%,transparent) 0, transparent 50%),
-    radial-gradient(circle at 10% 90%, color-mix(in srgb,var(--teal) 10%,transparent) 0, transparent 50%),
-    var(--panel);
-  overflow: hidden;
-}
-.hero::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background-image:
-    linear-gradient(var(--grid) 1px, transparent 1px),
-    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
-  background-size: 40px 40px;
-  pointer-events: none;
-  opacity: 0.6;
-}
-.hero > * { position: relative; z-index: 1; }
-.hero-tag {
-  font-family: 'Space Mono',monospace;
-  font-size: 11px;
-  color: var(--teal);
-  letter-spacing: 0.3em;
-  margin-bottom: 18px;
-}
-.hero-title {
-  font-family: 'Noto Serif TC',serif;
-  font-size: 52px;
-  font-weight: 900;
-  line-height: 1.05;
-  letter-spacing: -0.02em;
-  margin-bottom: 20px;
-}
-.hero-title .x {
-  color: var(--gold);
-  font-style: italic;
-  font-family: 'Noto Serif TC',serif;
-  font-weight: 500;
-  padding: 0 6px;
-}
-.hero-desc {
-  font-size: 16px;
-  color: var(--ink-2);
-  max-width: 640px;
-  line-height: 1.8;
-  margin-bottom: 28px;
-}
-.hero-meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 24px;
-  padding-top: 24px;
-  border-top: 1px dashed var(--border-2);
-}
-.hero-meta-item {
-  min-width: 120px;
-}
-.hero-meta-k {
-  font-family: 'Space Mono',monospace;
-  font-size: 10px;
-  color: var(--muted);
-  letter-spacing: 0.2em;
-  margin-bottom: 4px;
-}
-.hero-meta-v {
-  font-size: 15px;
-  color: var(--ink);
-  font-weight: 500;
-}
-.hero-meta-v .dot {
-  display: inline-block;
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--teal);
-  margin-right: 6px;
-  vertical-align: middle;
-  animation: pulse 2s infinite;
-}
-@keyframes pulse {
-  0%,100% { opacity: 1; box-shadow: 0 0 0 0 var(--teal); }
-  50% { opacity: 0.6; box-shadow: 0 0 0 8px transparent; }
-}
-@media (max-width: 720px) {
-  .hero { padding: 36px 24px; }
-  .hero-title { font-size: 36px; }
-  .hero-desc { font-size: 14px; }
-}
-
-/* stat cards */
-.stat {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding: 20px 22px;
-  border-left: 3px solid var(--border-2);
-  background: var(--card);
-  border-radius: 0 8px 8px 0;
-}
-.stat.teal { border-left-color: var(--teal); }
-.stat.gold { border-left-color: var(--gold); }
-.stat.indigo { border-left-color: var(--indigo); }
-.stat.red { border-left-color: var(--red); }
-.stat-k {
-  font-family: 'Space Mono',monospace;
-  font-size: 10px;
-  letter-spacing: 0.2em;
-  color: var(--muted);
-}
-.stat-v {
-  font-family: 'Noto Serif TC',serif;
-  font-size: 26px;
-  font-weight: 700;
-  color: var(--ink);
-  line-height: 1.2;
-}
-.stat-v .unit {
-  font-family: 'Space Mono',monospace;
-  font-size: 12px;
-  color: var(--muted);
-  margin-left: 4px;
-  font-weight: 400;
-}
-.stat-note {
-  font-size: 12px;
-  color: var(--ink-2);
-}
-
-/* quick nav cards */
-.nav-card {
-  cursor: pointer;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding: 24px;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  background: var(--card);
-  transition: all .25s;
-  text-decoration: none;
-  color: inherit;
-  position: relative;
-  overflow: hidden;
-}
-.nav-card:hover {
-  border-color: var(--gold);
-  transform: translateY(-2px);
-}
-.nav-card::after {
-  content: "→";
-  position: absolute;
-  top: 20px;
-  right: 22px;
-  font-size: 18px;
-  color: var(--muted);
-  transition: all .25s;
-}
-.nav-card:hover::after {
-  color: var(--gold);
-  transform: translateX(4px);
-}
-.nav-card-num {
-  font-family: 'Space Mono',monospace;
-  font-size: 11px;
-  color: var(--teal);
-  letter-spacing: 0.2em;
-}
-.nav-card-title {
-  font-family: 'Noto Serif TC',serif;
-  font-size: 19px;
-  font-weight: 700;
-  color: var(--ink);
-}
-.nav-card-desc {
-  font-size: 13px;
-  color: var(--ink-2);
-  line-height: 1.7;
-}
-.nav-card-list {
-  list-style: none;
-  margin-top: 6px;
-}
-.nav-card-list li {
-  font-size: 12px;
-  color: var(--muted);
-  padding: 3px 0;
-  padding-left: 12px;
-  position: relative;
-}
-.nav-card-list li::before {
-  content: "▸";
-  position: absolute;
-  left: 0;
-  color: var(--dim);
-}
-
-/* progress bar */
-.progress-wrap {
-  margin-top: 22px;
-}
-.progress-label {
-  display: flex;
-  justify-content: space-between;
-  font-size: 12px;
-  margin-bottom: 8px;
-  color: var(--ink-2);
-}
-.progress-label b {
-  font-family: 'Space Mono',monospace;
-  color: var(--gold);
-  font-weight: 700;
-}
-.progress-track {
-  height: 6px;
-  background: var(--bg-2);
-  border-radius: 999px;
-  overflow: hidden;
-  border: 1px solid var(--border);
-}
-.progress-fill {
-  height: 100%;
-  background: linear-gradient(90deg, var(--teal) 0%, var(--gold) 100%);
-  border-radius: 999px;
-  transition: width .6s cubic-bezier(.4,0,.2,1);
-}
-
-/* ───────────────────────────────
-   SPEC (VIEW 2)
-─────────────────────────────── */
-.spec-block { margin-bottom: 48px; }
-
-table.data {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 13px;
-  margin: 16px 0;
-}
-table.data th, table.data td {
-  padding: 10px 14px;
-  text-align: left;
-  border-bottom: 1px solid var(--border);
-  vertical-align: top;
-}
-table.data th {
-  background: var(--card-2);
-  color: var(--ink-2);
-  font-weight: 600;
-  font-size: 11px;
-  letter-spacing: 0.15em;
-  text-transform: uppercase;
-  border-bottom: 1px solid var(--border-2);
-}
-table.data td code {
-  font-family: 'Space Mono',monospace;
-  font-size: 0.9em;
-  color: var(--gold);
-}
-table.data tr:hover td { background: color-mix(in srgb,var(--gold) 4%,transparent); }
-
-.col-info {
-  font-family: 'Space Mono',monospace;
-  font-size: 11px;
-  color: var(--indigo);
-  letter-spacing: 0.05em;
-}
-.col-protect {
-  color: var(--red);
-  font-weight: 600;
-}
-
-/* brand architecture */
-.brand-group {
-  margin-bottom: 28px;
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  overflow: hidden;
-}
-.brand-group-head {
-  padding: 14px 20px;
-  background: var(--card-2);
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 12px;
-}
-.brand-group-head .num {
-  font-family: 'Space Mono',monospace;
-  color: var(--gold);
-  font-size: 13px;
-  letter-spacing: 0.15em;
-  margin-right: 10px;
-}
-.brand-group-head h4 {
-  font-family: 'Noto Serif TC',serif;
-  font-size: 17px;
-  font-weight: 700;
-  color: var(--ink);
-  flex: 1;
-}
-.brand-item {
-  display: grid;
-  grid-template-columns: 40px 1fr 110px 100px 100px;
-  gap: 12px;
-  padding: 12px 20px;
-  align-items: center;
-  border-top: 1px solid var(--border);
-  font-size: 13px;
-}
-.brand-item:first-child { border-top: none; }
-.brand-item .b-icon {
-  width: 34px;
-  height: 34px;
-  border-radius: 8px;
-  background: var(--card-2);
-  display: grid;
-  place-items: center;
-  font-size: 16px;
-  border: 1px solid var(--border);
-}
-.brand-item .b-name { font-weight: 600; color: var(--ink); }
-.brand-item .b-url {
-  font-family: 'Space Mono',monospace;
-  font-size: 11px;
-  color: var(--muted);
-  display: block;
-  margin-top: 2px;
-  word-break: break-all;
-}
-.brand-item .b-type {
-  font-family: 'Space Mono',monospace;
-  font-size: 11px;
-  color: var(--ink-2);
-}
-.brand-item .b-cat {
-  font-size: 11px;
-  color: var(--ink-2);
-}
-@media (max-width: 720px) {
-  .brand-item {
-    grid-template-columns: 40px 1fr;
-    row-gap: 4px;
-  }
-  .brand-item > *:nth-child(3),
-  .brand-item > *:nth-child(4),
-  .brand-item > *:nth-child(5) {
-    grid-column: 2;
-    padding-left: 0;
-  }
-}
-
-/* trigger cards */
-.trigger {
-  padding: 24px;
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  border-top: 3px solid;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-.trigger.home { border-top-color: var(--teal); }
-.trigger.law  { border-top-color: var(--indigo); }
-.trigger.audit { border-top-color: var(--amber); }
-.trigger-icon {
-  font-size: 28px;
-  margin-bottom: 6px;
-}
-.trigger-name {
-  font-family: 'Noto Serif TC',serif;
-  font-size: 18px;
-  font-weight: 700;
-}
-.trigger-key {
-  font-family: 'Space Mono',monospace;
-  font-size: 11px;
-  padding: 3px 9px;
-  background: var(--bg-2);
-  border: 1px dashed var(--border-2);
-  color: var(--gold);
-  display: inline-block;
-  border-radius: 4px;
-  width: fit-content;
-}
-.trigger-desc {
-  font-size: 13px;
-  color: var(--ink-2);
-  line-height: 1.7;
-}
-.trigger ol {
-  margin-top: 6px;
-  padding-left: 0;
-  list-style: none;
-  counter-reset: t;
-}
-.trigger ol li {
-  counter-increment: t;
-  font-size: 12px;
-  color: var(--ink-2);
-  padding: 6px 0 6px 28px;
-  position: relative;
-  border-top: 1px dashed var(--border);
-}
-.trigger ol li::before {
-  content: counter(t,decimal-leading-zero);
-  position: absolute;
-  left: 0;
-  top: 6px;
-  font-family: 'Space Mono',monospace;
-  font-size: 10px;
-  color: var(--muted);
-  letter-spacing: 0.1em;
-}
-
-/* callout */
-.callout {
-  border-left: 3px solid var(--gold);
-  background: color-mix(in srgb,var(--gold) 6%,var(--card));
-  padding: 14px 18px;
-  border-radius: 0 8px 8px 0;
-  margin: 16px 0;
-  font-size: 13.5px;
-  line-height: 1.8;
-  color: var(--ink-2);
-}
-.callout.red { border-color: var(--red); background: color-mix(in srgb,var(--red) 6%,var(--card)); }
-.callout.teal { border-color: var(--teal); background: color-mix(in srgb,var(--teal) 6%,var(--card)); }
-.callout strong { color: var(--ink); }
-
-/* guard-rail list */
-.guard-item {
-  padding: 14px 18px;
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-left: 3px solid var(--red);
-  border-radius: 0 8px 8px 0;
-  margin-bottom: 10px;
-}
-.guard-item.amber { border-left-color: var(--amber); }
-.guard-item h5 {
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--red);
-  margin-bottom: 6px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-.guard-item.amber h5 { color: var(--amber); }
-.guard-item ul {
-  list-style: none;
-  padding: 0;
-}
-.guard-item ul li {
-  font-size: 12.5px;
-  color: var(--ink-2);
-  padding: 3px 0 3px 16px;
-  position: relative;
-  line-height: 1.7;
-}
-.guard-item ul li::before {
-  content: "—";
-  position: absolute;
-  left: 0;
-  color: var(--dim);
-}
-
-/* ───────────────────────────────
-   ROADMAP (VIEW 3)
-─────────────────────────────── */
-.phase {
-  display: grid;
-  grid-template-columns: 70px 1fr;
-  gap: 24px;
-  margin-bottom: 28px;
-  padding-bottom: 28px;
-  position: relative;
-}
-.phase::after {
-  content: "";
-  position: absolute;
-  left: 34px;
-  top: 50px;
-  bottom: -28px;
-  width: 1px;
-  background: var(--border-2);
-  z-index: 0;
-}
-.phase:last-child::after { display: none; }
-
-.phase-num {
-  width: 70px;
-  position: relative;
-  z-index: 1;
-}
-.phase-num .circle {
-  width: 54px;
-  height: 54px;
-  border-radius: 50%;
-  background: var(--card);
-  border: 1px solid var(--border-2);
-  color: var(--muted);
-  display: grid;
-  place-items: center;
-  font-family: 'Space Mono',monospace;
-  font-size: 13px;
-  font-weight: 700;
-  margin-bottom: 6px;
-  transition: all .2s;
-}
-.phase[data-status="ref"] .circle {
-  background: color-mix(in srgb,var(--indigo) 14%,var(--card));
-  border-color: color-mix(in srgb,var(--indigo) 45%,var(--border-2));
-  color: #8aa8e0;
-}
-@keyframes breathe {
-  0%,100% { box-shadow: 0 0 0 0 color-mix(in srgb,var(--amber) 30%,transparent); }
-  50% { box-shadow: 0 0 0 6px transparent; }
-}
-.phase-box {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  overflow: hidden;
-  transition: border-color .2s;
-}
-.phase-box:hover { border-color: var(--border-2); }
-.phase-head {
-  padding: 18px 22px;
-  cursor: pointer;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 16px;
-  user-select: none;
-  background: var(--card-2);
-  border-bottom: 1px solid var(--border);
-}
-.phase-head h3 {
-  font-family: 'Noto Serif TC',serif;
-  font-size: 17px;
-  font-weight: 700;
-  color: var(--ink);
-}
-.phase-head .right {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-}
-.phase-head .chev {
-  color: var(--muted);
-  transition: transform .3s;
-}
-.phase-box[open] .phase-head .chev { transform: rotate(180deg); }
-.phase-body {
-  padding: 20px 22px;
-  display: none;
-}
-.phase-box[open] .phase-body { display: block; }
-.phase-body > h4 {
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--gold);
-  margin: 14px 0 8px;
-  letter-spacing: 0.05em;
-}
-.phase-body > h4:first-child { margin-top: 0; }
-.phase-body p { font-size: 13.5px; color: var(--ink-2); line-height: 1.8; }
-.phase-body ul { padding-left: 20px; margin: 8px 0; }
-.phase-body ul li {
-  font-size: 13px;
-  color: var(--ink-2);
-  padding: 4px 0;
-  line-height: 1.7;
-}
-
-.step {
-  margin: 14px 0;
-  padding: 14px 18px;
-  background: var(--bg-2);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-}
-.step-head {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 8px;
-}
-.step-n {
-  width: 22px;
-  height: 22px;
-  border-radius: 4px;
-  background: var(--gold);
-  color: #0d0f14;
-  display: grid;
-  place-items: center;
-  font-family: 'Space Mono',monospace;
-  font-size: 11px;
-  font-weight: 700;
-}
-.step-title {
-  font-weight: 600;
-  color: var(--ink);
-  font-size: 14px;
-}
-.step-tag {
-  font-family: 'Space Mono',monospace;
-  font-size: 10px;
-  padding: 2px 8px;
-  background: var(--card);
-  border: 1px solid var(--border);
-  color: var(--muted);
-  border-radius: 4px;
-  margin-left: auto;
-}
-.step-body {
-  font-size: 13px;
-  color: var(--ink-2);
-  line-height: 1.8;
-}
-
-/* checklist */
-.checklist {
-  margin: 16px 0;
-}
-.checklist-item {
-  display: flex;
-  gap: 10px;
-  align-items: flex-start;
-  padding: 8px 6px;
-  font-size: 13.5px;
-  color: var(--ink-2);
-  line-height: 1.7;
-  cursor: pointer;
-  user-select: none;
-  border-radius: 6px;
-  transition: background .15s;
-}
-.checklist-item:hover {
-  background: rgba(255,255,255,.04);
-}
-.checklist-item:hover .checkbox {
-  border-color: var(--gold);
-}
-.checkbox {
-  width: 18px;
-  height: 18px;
-  border: 1.5px solid var(--border-2);
-  border-radius: 4px;
-  flex: 0 0 auto;
-  margin-top: 3px;
-  cursor: pointer;
-  position: relative;
-  transition: all .2s;
-}
-.checkbox:hover { border-color: var(--gold); }
-.checkbox.checked {
-  background: var(--teal);
-  border-color: var(--teal);
-}
-.checkbox.checked::after {
-  content: "✓";
-  position: absolute;
-  inset: 0;
-  display: grid;
-  place-items: center;
-  color: #0d0f14;
-  font-size: 12px;
-  font-weight: 700;
-}
-.checklist-item.checked {
-  color: var(--muted);
-  text-decoration: line-through;
-  text-decoration-color: var(--dim);
-}
-
-/* table of contents (spec view) */
-.toc {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 18px 22px;
-  margin-bottom: 36px;
-}
-.toc h4 {
-  font-family: 'Space Mono',monospace;
-  font-size: 11px;
-  color: var(--muted);
-  letter-spacing: 0.2em;
-  margin-bottom: 10px;
-}
-.toc ol {
-  list-style: none;
-  columns: 2;
-  column-gap: 32px;
-}
-@media (max-width: 700px) { .toc ol { columns: 1; } }
-.toc ol li {
-  padding: 5px 0;
-  font-size: 13px;
-  break-inside: avoid;
-}
-.toc ol li a {
-  color: var(--ink-2);
-  text-decoration: none;
-  display: flex;
-  gap: 10px;
-  align-items: baseline;
-}
-.toc ol li a:hover { color: var(--gold); }
-.toc ol li .n {
-  font-family: 'Space Mono',monospace;
-  font-size: 11px;
-  color: var(--gold);
-  flex: 0 0 28px;
-}
-
-/* architecture diagram */
-.arch {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 12px;
-  margin: 24px 0;
-}
-@media (max-width: 900px) { .arch { grid-template-columns: repeat(2, 1fr); } }
-.arch-layer {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 18px;
-  border-top: 3px solid;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-.arch-layer.a-storage { border-top-color: var(--teal); }
-.arch-layer.a-crawl   { border-top-color: var(--indigo); }
-.arch-layer.a-api     { border-top-color: var(--gold); }
-.arch-layer.a-ai      { border-top-color: var(--red); }
-.arch-layer.a-ui      { border-top-color: var(--amber); }
-.arch-layer h5 {
-  font-family: 'Noto Serif TC',serif;
-  font-size: 15px;
-  color: var(--ink);
-}
-.arch-layer .a-tag {
-  font-family: 'Space Mono',monospace;
-  font-size: 10px;
-  letter-spacing: 0.15em;
-  color: var(--muted);
-  margin-bottom: 4px;
-}
-.arch-layer ul {
-  list-style: none;
-  margin-top: 6px;
-}
-.arch-layer li {
-  font-size: 11.5px;
-  color: var(--ink-2);
-  padding: 4px 0;
-  padding-left: 10px;
-  position: relative;
-  border-bottom: 1px dashed var(--border);
-  line-height: 1.5;
-}
-.arch-layer li:last-child { border-bottom: none; }
-.arch-layer li::before {
-  content: "›";
-  position: absolute;
-  left: 0;
-  color: var(--dim);
-}
-
-/* footer */
-.footer {
-  margin-top: 80px;
-  padding: 28px 0;
-  border-top: 1px solid var(--border);
-  text-align: center;
-  color: var(--muted);
-  font-family: 'Space Mono',monospace;
-  font-size: 11px;
-  letter-spacing: 0.15em;
-}
-.footer .line {
-  display: inline-block;
-  width: 40px;
-  height: 1px;
-  background: var(--border-2);
-  vertical-align: middle;
-  margin: 0 12px;
-}
-
-/* mini phase blocks on progress card */
-.phase-mini .mini-box {
-  height: 24px;
-  border-radius: 4px;
-  background: var(--bg-2);
-  border: 1px solid var(--border);
-  display: grid;
-  place-items: center;
-  font-family: 'Space Mono',monospace;
-  font-size: 9px;
-  color: var(--muted);
-  letter-spacing: 0.05em;
-  cursor: pointer;
-  transition: all .2s;
-  position: relative;
-}
-.phase-mini .mini-box:hover {
-  border-color: var(--gold);
-  color: var(--ink);
-}
-.phase-mini .mini-box[data-state="done"] {
-  background: color-mix(in srgb,var(--teal) 30%,transparent);
-  border-color: var(--teal);
-  color: var(--teal-2);
-}
-.phase-mini .mini-box[data-state="partial"] {
-  background: color-mix(in srgb,var(--amber) 20%,transparent);
-  border-color: var(--amber);
-  color: var(--amber);
-}
-.phase-mini .mini-box .mini-tip {
-  position: absolute;
-  bottom: calc(100% + 6px);
-  left: 50%;
-  transform: translateX(-50%);
-  background: var(--card);
-  border: 1px solid var(--border-2);
-  color: var(--ink);
-  font-size: 11px;
-  padding: 4px 8px;
-  border-radius: 4px;
-  white-space: nowrap;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity .15s;
-  z-index: 20;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-}
-.phase-mini .mini-box:hover .mini-tip { opacity: 1; }
-
-/* data entries grid */
-.data-entry {
-  display: grid;
-  grid-template-columns: 44px 1fr auto;
-  gap: 14px;
-  align-items: center;
-  padding: 14px 18px;
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  text-decoration: none;
-  color: inherit;
-  cursor: pointer;
-  transition: all .2s;
-  position: relative;
-}
-.data-entry:hover {
-  border-color: var(--gold);
-  transform: translateX(2px);
-}
-.data-entry .de-icon {
-  width: 44px;
-  height: 44px;
-  border-radius: 8px;
-  background: var(--bg-2);
-  display: grid;
-  place-items: center;
-  font-size: 20px;
-  border: 1px solid var(--border);
-}
-.data-entry .de-title {
-  font-weight: 600;
-  color: var(--ink);
-  font-size: 14px;
-  margin-bottom: 2px;
-}
-.data-entry .de-sub {
-  font-size: 11px;
-  color: var(--muted);
-  font-family: 'Space Mono',monospace;
-  letter-spacing: 0.03em;
-}
-.data-entry .de-arrow {
-  color: var(--muted);
-  font-size: 16px;
-  transition: all .2s;
-}
-.data-entry:hover .de-arrow {
-  color: var(--gold);
-  transform: translateX(3px);
-}
-.data-entry .de-pill {
-  font-family: 'Space Mono',monospace;
-  font-size: 9px;
-  padding: 2px 6px;
-  border-radius: 3px;
-  background: color-mix(in srgb,var(--muted) 20%,transparent);
-  color: var(--muted);
-  letter-spacing: 0.1em;
-  margin-left: 6px;
-  vertical-align: middle;
-}
-.data-entry.pending { opacity: 0.55; }
-.data-entry.pending:hover { border-color: var(--amber); transform: none; }
-.data-entry.pending .de-arrow { content: "◷"; }
-
-/* printing */
-@media print {
-  .top-bar, .theme-toggle, .tabs { display: none; }
-  .view { display: block !important; }
-  .phase-body { display: block !important; }
-  body { background: white !important; color: black !important; }
-}
-
-/* ── 04 工作時程 ── */
-.sch-task{display:flex;gap:11px;align-items:flex-start;padding:11px 6px;
-  border-bottom:1px solid var(--border);cursor:pointer;user-select:none;
-  border-radius:6px;transition:background .15s;}
-.sch-task:last-child{border-bottom:none;}
-.sch-task:hover{background:var(--card-2);}
-.sch-task:hover .sch-cb{border-color:var(--gold);}
-.sch-cb{width:19px;height:19px;border:1.5px solid var(--border-2);border-radius:5px;
-  flex-shrink:0;margin-top:2px;display:flex;align-items:center;justify-content:center;
-  transition:all .18s;}
-.sch-cb.on{background:var(--teal);border-color:var(--teal);}
-.sch-cb.on::after{content:'✓';color:#0d0f14;font-size:13px;font-weight:700;}
-.sch-n{font-size:13.5px;color:var(--ink);line-height:1.6;}
-.sch-task.done .sch-n{text-decoration:line-through;color:var(--dim);}
-.sch-m{display:flex;gap:7px;flex-wrap:wrap;margin-top:5px;}
-.sch-tag{padding:1px 8px;border-radius:20px;font-size:9.5px;
-  font-family:'Space Mono',monospace;flex-shrink:0;}
-.sch-tag.sat{background:rgba(58,170,140,.16);color:var(--teal-2);}
-.sch-tag.sun{background:rgba(224,112,96,.18);color:#f08a78;}
-.sch-tag.hol{background:rgba(232,176,74,.16);color:var(--gold-2);}
-.sch-tag.any{background:rgba(91,126,196,.16);color:#8aa8e0;}
-.sch-tag.hr{background:var(--card-2);color:var(--muted);}
-.sch-w{font-size:11.5px;color:var(--muted);margin-top:6px;
-  border-left:2px solid var(--border-2);padding-left:9px;line-height:1.75;}
-
-/* 03 執行路線圖：P1-P9 統一為「操作教學」色系 */
-.pill-ref{background:rgba(91,126,196,.14);color:#8aa8e0;border:1px solid rgba(91,126,196,.3);}
-
-/* data-entry 雙連結變體 */
-.data-entry.dual { cursor: default; }
-.data-entry.dual:hover { transform: none; border-color: var(--border-2); }
-.de-links { display: flex; gap: 8px; flex-shrink: 0; margin-left: auto; }
-.de-link {
-  display: inline-flex; align-items: center; gap: 5px;
-  padding: 6px 11px; border-radius: 7px; font-size: 11.5px;
-  border: 1px solid var(--border-2); color: var(--ink-2);
-  text-decoration: none; white-space: nowrap; transition: all .16s;
-}
-.de-link:hover { border-color: var(--gold); color: var(--gold); background: rgba(212,168,67,.08); }
-.de-link .ic { font-size: 13px; }
-@media (max-width: 640px) {
-  .de-links { flex-direction: column; gap: 5px; }
-  .de-link { font-size: 11px; padding: 5px 9px; }
-}
-
-/* ── 登入閘門 ── */
-#gate{position:fixed;inset:0;z-index:9999;background:var(--bg,#0e1012);display:flex;align-items:center;justify-content:center;padding:24px}
-#gate .gbox{width:100%;max-width:360px;background:#141618;border:1px solid #2a2f36;border-radius:14px;padding:28px 26px;font-family:'Noto Sans TC',sans-serif;color:#dde2ee}
-#gate .gbrand{display:flex;align-items:baseline;gap:10px;margin-bottom:6px}
-#gate .gbrand .gm{font-family:'Space Mono',monospace;letter-spacing:.3em;color:#d4a843;font-size:12px}
-#gate .gbrand h1{font-size:20px;font-weight:700;margin:0}
-#gate p{color:#8a94a6;font-size:12.5px;margin:0 0 20px}
-#gate label{display:block;font-size:11.5px;color:#8a94a6;margin:12px 0 5px;letter-spacing:.06em}
-#gate input{width:100%;padding:11px 12px;background:#0e1012;border:1px solid #353b44;border-radius:8px;color:#dde2ee;outline:none;font-size:14px;box-sizing:border-box}
-#gate input:focus{border-color:#d4a843}
-#gate button{width:100%;margin-top:16px;padding:11px;border-radius:8px;border:0;background:#d4a843;color:#1a1200;font-weight:700;font-size:14px;cursor:pointer}
-#gate button:disabled{opacity:.5}
-#gate .gerr{color:#e06c6c;font-size:12.5px;margin-top:10px;min-height:18px}
-body.locked > *:not(#gate){visibility:hidden}
-#logoutBtn{position:fixed;right:14px;bottom:14px;z-index:999;padding:6px 11px;border-radius:6px;border:1px solid #353b44;background:#1a1d21;color:#8a94a6;font-size:11.5px;cursor:pointer;font-family:inherit}
-#logoutBtn:hover{border-color:#d4a843;color:#d4a843}
 </style>
 </head>
 <body class="locked">
-<div id="gate"><div class="gbox">
-  <div class="gbrand"><span class="gm">▲ ATLAS</span><h1>帷幄</h1></div>
-  <p>Strategic HQ · 僅限本人登入</p>
-  <form id="gateForm">
-    <label>EMAIL</label><input id="gEmail" type="email" autocomplete="username" required>
-    <label>PASSWORD</label><input id="gPw" type="password" autocomplete="current-password" required>
-    <button id="gBtn" type="submit">登入</button>
-    <div class="gerr" id="gErr"></div>
+<div id="gate">
+  <form class="box" id="gateForm">
+    <div class="mono" style="font-size:11px;letter-spacing:.3em;color:var(--gold)">▲ ATLAS</div>
+    <h1 class="serif">帷幄 · 指揮中心</h1>
+    <p>僅限本人登入</p>
+    <label>EMAIL</label><input id="g-email" type="email" autocomplete="username" required>
+    <label>PASSWORD</label><input id="g-pw" type="password" autocomplete="current-password" required>
+    <button id="g-btn" type="submit">登入</button>
+    <div class="err" id="g-err"></div>
   </form>
+</div>
+
+<div class="top"><div class="in">
+  <div class="brand" onclick="go('home')"><span class="mk">▲ ATLAS</span><b>帷幄</b><span class="v">v6.0.1</span></div>
+  <nav class="tabs">
+    <button class="tab on" data-v="home"><span class="n">01</span>首頁</button>
+    <button class="tab" data-v="sched"><span class="n">02</span>工作時程</button>
+    <button class="tab" data-v="arch"><span class="n">03</span>架構圖</button>
+    <button class="tab" data-v="dec"><span class="n">04</span>決策紀錄</button>
+    <button class="tab" data-v="hand"><span class="n">05</span>交接</button>
+  </nav>
+  <span class="spacer"></span>
+  <span class="cloud"><i id="cloudDot"></i><span id="cloudTxt">—</span></span>
+  <button class="ibtn" id="themeBtn">LIGHT</button>
+  <button class="ibtn" id="logoutBtn">登出</button>
 </div></div>
-<button id="logoutBtn" style="display:none">登出</button>
 
+<div class="wrap">
 
-<!-- ═══════════════════════════════════════════════
-     TOP BAR
-═══════════════════════════════════════════════ -->
-<div class="top-bar">
-  <div class="top-bar-inner">
-    <div class="brand">
-      <span class="brand-mark">ATLAS<span class="zh">帷幄</span></span>
-      <span class="brand-sub">v5.6 · STRATEGIC HQ</span>
-    </div>
-    <nav class="tabs">
-      <button class="tab active" data-view="dashboard"><span class="tab-num">01</span>總覽</button>
-      <button class="tab" data-view="spec"><span class="tab-num">02</span>完整規格書</button>
-      <button class="tab" data-view="roadmap"><span class="tab-num">03</span>執行路線圖</button>
-      <button class="tab" data-view="schedule"><span class="tab-num">04</span>工作時程</button>
-    </nav>
-    <div class="theme-toggle">
-      <button class="theme-btn active" data-theme="dark">DARK</button>
-      <button class="theme-btn" data-theme="light">LIGHT</button>
-    </div>
-  </div>
-</div>
-
-<div class="shell">
-
-<!-- ═══════════════════════════════════════════════
-     VIEW 1 ─ DASHBOARD
-═══════════════════════════════════════════════ -->
-<section class="view active" id="view-dashboard">
-
+<!-- ═══ 01 首頁 ═══ -->
+<section class="view on" id="v-home">
   <div class="hero">
-    <div class="hero-tag">◉ STRATEGIC HQ · 運籌帷幄之中 · EST. 2025</div>
-    <h1 class="hero-title">
-      建材 <span class="x">×</span> 都更 <span class="x">×</span><br>
-      個人 AI 作戰參謀
-    </h1>
-    <p class="hero-desc">
-      把 30 年行業經驗數位化、讓 AI 繼承與擴充。<br>
-      DS920+ NAS 為核心、NocoDB 為資料主幹、Claude 為推理引擎，<br>
-      建立一套「說人話就能操作一切」的個人智識系統。
-    </p>
-
-    <div class="hero-meta">
-      <div class="hero-meta-item">
-        <div class="hero-meta-k">STATUS</div>
-        <div class="hero-meta-v"><span class="dot"></span>選色表 v5 上線</div>
-      </div>
-      <div class="hero-meta-item">
-        <div class="hero-meta-k">NAS</div>
-        <div class="hero-meta-v">DS920+ · 14TB</div>
-      </div>
-      <div class="hero-meta-item">
-        <div class="hero-meta-k">AI ENGINE</div>
-        <div class="hero-meta-v">claude-sonnet-4-5</div>
-      </div>
-      <div class="hero-meta-item">
-        <div class="hero-meta-k">REMOTE</div>
-        <div class="hero-meta-v">100.94.31.19 : 8081</div>
+    <div class="lead">
+      <div class="kick">STRATEGIC HQ · 運籌帷幄之中</div>
+      <h1>建材 × 都更 × 個人 AI 作戰參謀</h1>
+      <p>把 30 年行業經驗數位化，讓 AI 繼承與擴充。<b>Vercel</b> 前端、<b>Supabase</b> 資料庫與登入、<b>Mac mini</b>（年底）幕後工作、NAS 退回純儲存——手機、公司、家裡開同一個網址即可。</p>
+      <div class="stats" id="stats">
+        <div class="stat"><div class="k">LAW</div><div class="v" id="st-arts">–</div><div class="s">條文 · <span id="st-laws">–</span> 部</div></div>
+        <div class="stat"><div class="k">LOCAL</div><div class="v" id="st-local">–</div><div class="s">地方法規（北／新北）</div></div>
+        <div class="stat"><div class="k">PDF</div><div class="v" id="st-pdf">–</div><div class="s">原檔在 Storage</div></div>
+        <div class="stat"><div class="k">NOTED</div><div class="v" id="st-noted">–</div><div class="s">已寫實務註記</div></div>
+        <div class="stat"><div class="k">FINDER</div><div class="v" id="st-finder">–</div><div class="s">選色版本（雲端）</div></div>
+        <div class="stat"><div class="k">PRODUCTS</div><div class="v" id="st-prod">–</div><div class="s">產品庫（等爬蟲）</div></div>
       </div>
     </div>
+    <div class="rings" id="rings"></div>
   </div>
 
-  <!-- STATS -->
-  <div class="grid g-4" style="margin-bottom:36px;">
-    <div class="stat teal">
-      <div class="stat-k">Q4 上線衝刺</div>
-      <div class="stat-v">起步中<span class="unit">0%</span></div>
-      <div class="stat-note">法規庫 → 經驗層 → 導航中樞 → 選色表寫回</div>
-    </div>
-    <div class="stat gold">
-      <div class="stat-k">爬蟲廠牌</div>
-      <div class="stat-v">6 <span class="unit">家待跑</span></div>
-      <div class="stat-note">冠軍 / 三洋 / 白馬 / 昇元 / 瑪摩 / 國信 · pip 待解</div>
-    </div>
-    <div class="stat indigo">
-      <div class="stat-k">法規條文庫</div>
-      <div class="stat-v">505 <span class="unit">條入庫</span></div>
-      <div class="stat-note">16 部核心法規 · 2026-09-12 上線</div>
-    </div>
-    <div class="stat red">
-      <div class="stat-k">NocoDB</div>
-      <div class="stat-v">12<span class="unit">張表</span></div>
-      <div class="stat-note">九表 + 個案明細 + 任務進度 + 法規條文庫</div>
-    </div>
+  <h2 class="sec">三個入口 <small>ENTRY</small></h2>
+  <div class="grid3">
+    <a class="card link" href="law.html"><div class="ic">📜</div><h3>法規條文庫</h3><div class="d">領域 → 面向 → 法規 三層樹、全文搜尋、實務註記、PDF 原檔。</div><div class="meta" id="m-law">–</div><span class="arrow">→</span></a>
+    <a class="card link" href="finder.html"><div class="ic">🎨</div><h3>選色表</h3><div class="d">建商／專案／版本、產品搜尋、圖片裁剪、PDF 輸出。資料自動同步雲端。</div><div class="meta">v6.0.2 · Supabase 同步</div><span class="arrow">→</span></a>
+    <a class="card link" href="https://supabase.com/dashboard/project/riiflvhbxrnmzriwngjs/editor" target="_blank" rel="noopener"><div class="ic">🗄</div><h3>資料表</h3><div class="d">案件、聯絡人、工地日誌、帳務、任務……直接在 Supabase 表編輯器輸入。</div><div class="meta">13 張表 · 輸入頁之後再做</div><span class="arrow">↗</span></a>
   </div>
 
-  <!-- PROGRESS -->
-  <div class="card" style="margin-bottom:36px;">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
-      <h3 class="sub-title" style="margin-bottom:0;">當期工作進度 · Q4 上線衝刺</h3>
-      <button id="resetProgressBtn" title="重設所有勾選" style="background:none;border:1px solid var(--border);color:var(--muted);font-family:'Space Mono',monospace;font-size:10px;padding:4px 10px;border-radius:4px;cursor:pointer;letter-spacing:0.1em;">RESET</button>
+  <h2 class="sec">現在可以開始的三件事 <small>NEXT · 由時程表自動抓</small></h2>
+  <div class="grid3 next" id="next3"></div>
+
+  <div class="grid2" style="margin-top:28px">
+    <div>
+      <h2 class="sec" style="margin-top:0">最近的架構決策 <small>DECISIONS</small></h2>
+      <div id="dec3"></div>
+      <div class="hint" style="margin-top:8px"><a href="#" onclick="go('dec');return false">全部決策 →</a></div>
     </div>
-    <div class="progress-wrap">
-      <div class="progress-label">
-        <span id="progressCaption">Q4 TASKS</span>
-        <b><span id="progressPct">0%</span> · <span id="progressDone">0</span>/<span id="progressTotal">0</span> 項完成 · <span id="progressHrs">剩 0 hr</span></b>
-      </div>
-      <div class="progress-track"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
-    </div>
-    <div class="phase-mini" id="stageMini" style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:14px;">
-      <!-- 由 JS 動態產生 5 個階段方塊 -->
-    </div>
-    <p style="font-size:12px;color:var(--muted);margin-top:12px;line-height:1.8;">
-      進度連動「<b>04 工作時程</b>」。點階段方塊可直接跳過去。<br>
-      （原「Phase 10 建置清單」已移為歷史紀錄，見 03 執行路線圖）
-    </p>
-  </div>
-
-  <!-- QUICK NAV -->
-  <div style="margin-bottom:20px;">
-    <div class="section-label">ENTRY POINTS</div>
-    <h2 class="section-title" style="font-size:26px;margin:0;">三個入口</h2>
-  </div>
-
-  <div class="grid g-3" style="margin-bottom:40px;">
-    <a class="nav-card" onclick="goView('spec')">
-      <div class="nav-card-num">02 · DEEP DIVE</div>
-      <div class="nav-card-title">完整規格書</div>
-      <div class="nav-card-desc">全系統詳盡設計、AI 人設、NocoDB 欄位、爬蟲品牌架構、安全紅線。</div>
-      <ul class="nav-card-list">
-        <li>法規條文庫 · 結構化資料層（已上線）</li>
-        <li>AI System Prompt 完整版</li>
-        <li>三個觸發指令詳細設計</li>
-        <li>NocoDB 三層欄位架構</li>
-      </ul>
-    </a>
-    <a class="nav-card" onclick="goView('roadmap')">
-      <div class="nav-card-num">03 · EXECUTION</div>
-      <div class="nav-card-title">執行路線圖</div>
-      <div class="nav-card-desc">從零到全部跑起來的 10 個 Phase，每個指令都可以直接複製貼上。</div>
-      <ul class="nav-card-list">
-        <li>NocoDB 建表完整指引</li>
-        <li>SMB 掛載 / Python 爬蟲</li>
-        <li>Qdrant 法規向量化</li>
-        <li>Tailscale 遠端存取</li>
-      </ul>
-    </a>
-    <a class="nav-card" href="finder.html" target="_blank">
-      <div class="nav-card-num">LIVE · ATLAS v6 雲端版</div>
-      <div class="nav-card-title">選色表（現役）</div>
-      <div class="nav-card-desc">三欄 Finder、版本管理、Supabase 產品庫搜尋、Office 風格圖片裁剪、PDF 輸出。登入後自動雲端同步，換裝置資料相同。</div>
-      <ul class="nav-card-list">
-        <li>建商 / 專案 / V1-V3 版本</li>
-        <li>自動儲存 Supabase（finder_state）</li>
-        <li>圖片存 Storage，手機可開</li>
-        <li>匯出/匯入 JSON 當備份</li>
-      </ul>
-    </a>
-  </div>
-
-  <!-- DATA ENTRIES -->
-  <div style="margin-bottom:20px;">
-    <div class="section-label">DATA ENTRIES</div>
-    <h2 class="section-title" style="font-size:26px;margin:0;">資料入口</h2>
-    <p style="font-size:13px;color:var(--muted);margin-top:8px;">
-      每一類資料各有歸屬，從這裡進到對應的 NocoDB 表或工具。未建表的項目先顯示為灰階，Phase 2 完成後自動開啟。
-    </p>
-  </div>
-
-  <div class="grid g-2" style="margin-bottom:40px;gap:10px;">
-
-    <!-- 法規資料 -->
-    <div class="data-entry dual">
-      <div class="de-icon">📚</div>
-      <div>
-        <div class="de-title">法規文件庫<span class="de-pill">505 條</span></div>
-        <div class="de-sub">16 部核心法規 · 都更 · 危老 · 估價技術規則</div>
-      </div>
-      <div class="de-links">
-        <a class="de-link" href="https://100.94.31.19:5001/" target="_blank"
-           title="NAS File Station → SynologyDrive/Ted/ATLAS 帷幄/01法規文件庫（PDF 原檔）">
-          <span class="ic">📁</span>PDF 原檔
-        </a>
-        <a class="de-link" href="law.html" target="_blank"
-           title="法規條文庫 · Supabase · 查條文、寫我的註記">
-          <span class="ic">🗄</span>條文庫
-        </a>
-      </div>
-    </div>
-
-    <!-- 都更案件庫（表一） -->
-    <a class="data-entry pending" href="https://supabase.com/dashboard/project/riiflvhbxrnmzriwngjs/editor" target="_blank" title="Supabase 表一：都更危老專案總表（待擴充）">
-      <div class="de-icon">🏢</div>
-      <div>
-        <div class="de-title">都更危老案件庫<span class="de-pill">表一</span></div>
-        <div class="de-sub">案件基本資料 · 基地面積 · 進度 · 同意率</div>
-      </div>
-      <span class="de-arrow">◷</span>
-    </a>
-
-    <!-- 建材專案（表二） -->
-    <a class="data-entry" href="https://supabase.com/dashboard/project/riiflvhbxrnmzriwngjs/editor" target="_blank" title="Supabase 表二：建材專案管理總表">
-      <div class="de-icon">🧱</div>
-      <div>
-        <div class="de-title">建材專案管理<span class="de-pill">表二</span></div>
-        <div class="de-sub">建設/營造 · 建築師 · 設計單位 · 窗口</div>
-      </div>
-      <span class="de-arrow">→</span>
-    </a>
-
-    <!-- 選色資料庫（表三） -->
-    <a class="data-entry" href="finder.html" target="_blank" title="選色表 v6 · 雲端同步">
-      <div class="de-icon">🎨</div>
-      <div>
-        <div class="de-title">專案選色資料庫<span class="de-pill">表三 + 選色表</span></div>
-        <div class="de-sub">V1 草稿 · V2 送審 · V3 確認版</div>
-      </div>
-      <span class="de-arrow">→</span>
-    </a>
-
-    <!-- 聯絡人（表四） -->
-    <a class="data-entry pending" href="https://supabase.com/dashboard/project/riiflvhbxrnmzriwngjs/editor" target="_blank" title="Supabase 表四：共同聯絡人名冊（待擴充）">
-      <div class="de-icon">👥</div>
-      <div>
-        <div class="de-title">共同聯絡人名冊<span class="de-pill">表四</span></div>
-        <div class="de-sub">建商 · 建築師 · 設計師 · 窗口</div>
-      </div>
-      <span class="de-arrow">◷</span>
-    </a>
-
-    <!-- 產品廠牌總庫（表五） -->
-    <a class="data-entry" href="https://supabase.com/dashboard/project/riiflvhbxrnmzriwngjs/editor" target="_blank" title="Supabase 表五：產品與廠牌總庫">
-      <div class="de-icon">🏭</div>
-      <div>
-        <div class="de-title">產品與廠牌總庫<span class="de-pill">表五 · 51 系列</span></div>
-        <div class="de-sub">冠軍 ✓ · 白馬/三洋/瑪摩/昇元（待爬）</div>
-      </div>
-      <span class="de-arrow">→</span>
-    </a>
-
-    <!-- 工地日誌（表六） -->
-    <a class="data-entry pending" href="https://supabase.com/dashboard/project/riiflvhbxrnmzriwngjs/editor" target="_blank" title="Supabase 表六：行動工地日誌（待擴充）">
-      <div class="de-icon">📷</div>
-      <div>
-        <div class="de-title">行動工地日誌<span class="de-pill">表六</span></div>
-        <div class="de-sub">拍照 · 缺失追蹤 · 驗收記錄</div>
-      </div>
-      <span class="de-arrow">◷</span>
-    </a>
-
-    <!-- 收支預算（表七） -->
-    <a class="data-entry pending" href="https://supabase.com/dashboard/project/riiflvhbxrnmzriwngjs/editor" target="_blank" title="Supabase 表七：專案收支與預算記錄（待擴充）">
-      <div class="de-icon">💰</div>
-      <div>
-        <div class="de-title">專案收支與預算<span class="de-pill">表七</span></div>
-        <div class="de-sub">估算 · 實支 · 差異分析</div>
-      </div>
-      <span class="de-arrow">◷</span>
-    </a>
-
-    <!-- 試燒記錄（表八） -->
-    <a class="data-entry pending" href="https://supabase.com/dashboard/project/riiflvhbxrnmzriwngjs/editor" target="_blank" title="Supabase 表八:客訂試燒記錄表(待擴充)">
-      <div class="de-icon">🔥</div>
-      <div>
-        <div class="de-title">客訂試燒記錄<span class="de-pill">表八</span></div>
-        <div class="de-sub">色號 · 試燒結果 · 客戶確認</div>
-      </div>
-      <span class="de-arrow">◷</span>
-    </a>
-
-    <!-- 行程代辦（表九） -->
-    <a class="data-entry pending" href="https://supabase.com/dashboard/project/riiflvhbxrnmzriwngjs/editor" target="_blank" title="Supabase 表九：推動專案行程與代辦（待擴充）">
-      <div class="de-icon">📅</div>
-      <div>
-        <div class="de-title">行程與代辦<span class="de-pill">表九</span></div>
-        <div class="de-sub">會議 · 截止日 · AI 代提醒</div>
-      </div>
-      <span class="de-arrow">◷</span>
-    </a>
-
-    <!-- 都更推動師（新表） -->
-    <a class="data-entry pending" title="待 Phase 2 完成後建立">
-      <div class="de-icon">🏛</div>
-      <div>
-        <div class="de-title">都更推動師名冊<span class="de-pill">新表 · P2</span></div>
-        <div class="de-sub">資格 · 完成案件 · 評分 · 關聯案件</div>
-      </div>
-      <span class="de-arrow">◷</span>
-    </a>
-
-    <!-- 同意書追蹤（未來） -->
-    <a class="data-entry pending" title="規劃中：同意書統計專屬檢視頁">
-      <div class="de-icon">📋</div>
-      <div>
-        <div class="de-title">同意書統計追蹤<span class="de-pill">規劃中</span></div>
-        <div class="de-sub">各案同意率進度條 · 名冊比對 · 聚合顯示</div>
-      </div>
-      <span class="de-arrow">◷</span>
-    </a>
-
-  </div>
-
-  <!-- KEY DECISIONS -->
-  <div class="section-label">CTO DECISIONS</div>
-  <h2 class="section-title" style="font-size:26px;margin:0 0 24px;">重要架構決策</h2>
-
-  <div class="grid g-2" style="margin-bottom:40px;">
-    <div class="card">
-      <h3 class="sub-title" style="color:var(--gold);">◆ Eagle 已從藍圖移除</h3>
-      <p style="font-size:13px;color:var(--ink-2);line-height:1.8;">
-        NocoDB 的 Gallery View 取代 Eagle 視覺瀏覽、Multi-Select 標籤取代 Eagle 標籤、Python ColorThief 補足顏色分析。
-        相似圖搜尋延後到 Phase 4（需 Qdrant + CLIP）。
-      </p>
-    </div>
-    <div class="card">
-      <h3 class="sub-title" style="color:var(--teal);">◆ 兩個 AI 入口並行</h3>
-      <p style="font-size:13px;color:var(--ink-2);line-height:1.8;">
-        <strong style="color:var(--ink);">作戰台（對話型）</strong>— 地主簡報、法規辯護、數據對齊、日常思考。<br>
-        <strong style="color:var(--ink);">工程台（指令型）</strong>— 觸發爬蟲、操作 NocoDB、產生 PDF、批次處理。
-      </p>
-    </div>
-    <div class="card">
-      <h3 class="sub-title" style="color:var(--indigo);">◆ 選色表優先串 NocoDB 表三</h3>
-      <p style="font-size:13px;color:var(--ink-2);line-height:1.8;">
-        最優先：把已完成的選色表資料真正存進「專案選色資料庫」，
-        配合 System Prompt 存進 Claude Project Knowledge，再把 8 份法規整理進去。
-      </p>
-    </div>
-    <div class="card">
-      <h3 class="sub-title" style="color:var(--red);">◆ 三層廠牌架構</h3>
-      <p style="font-size:13px;color:var(--ink-2);line-height:1.8;">
-        <strong style="color:var(--ink);">工廠 · 品牌 · 代理</strong>三層：冠軍集團包含「冠軍 / 馬可貝里 / 安心居」、
-        白馬集團包含「白馬 / Devanno / Classen / SPC」…爬蟲以工廠為單位、半年 1 月 / 7 月自動同步。
-      </p>
+    <div>
+      <h2 class="sec" style="margin-top:0">備份與交接 <small>OPS · 可直接改</small></h2>
+      <div class="card ops" id="ops"></div>
     </div>
   </div>
-
-  <!-- NOW -->
-  <div class="section-label" style="color:var(--red);">IMMEDIATE NEXT</div>
-  <h2 class="section-title" style="font-size:26px;margin:0 0 24px;">現在立即可以開始的三件事</h2>
-
-  <div class="grid g-3" style="margin-bottom:20px;">
-    <div class="card" style="border-top:3px solid var(--gold);">
-      <h3 class="sub-title">🤖 Step 1 · 測試 System Prompt</h3>
-      <p style="font-size:13px;color:var(--ink-2);line-height:1.8;">
-        把規格書 Section 02 的 Prompt 複製貼入 Claude.ai 的 Project Instructions，
-        測試三個觸發指令（地主簡報 / 法規辯護 / 數據對齊）。
-      </p>
-      <div class="pill pill-gold" style="margin-top:10px;">成本：$0 · 現有 Claude Pro 即可</div>
-    </div>
-    <div class="card" style="border-top:3px solid var(--teal);">
-      <h3 class="sub-title">🕷 Step 2 · 白馬爬蟲開發</h3>
-      <p style="font-size:13px;color:var(--ink-2);line-height:1.8;">
-        手動查看 <code class="inline">whitehorse.com.tw</code> 產品頁結構、
-        提供 URL 格式與 DOM 結構、直接在現有 Python 腳本擴充。
-      </p>
-      <div class="pill pill-gold" style="margin-top:10px;">成本：$0 · 擴充現有腳本</div>
-    </div>
-    <div class="card" style="border-top:3px solid var(--indigo);">
-      <h3 class="sub-title">📚 Step 3 · 法規向量化</h3>
-      <p style="font-size:13px;color:var(--ink-2);line-height:1.8;">
-        DS920+ 安裝 Qdrant Docker、執行 PDF 切段向量化腳本、
-        測試「危老容積獎勵最高幾%？」→ 應引用條文回答。
-      </p>
-      <div class="pill pill-gold" style="margin-top:10px;">成本：$0 · 本機運行</div>
-    </div>
-  </div>
-
-  <!-- BACKUP STATUS -->
-  <div class="section-label" style="color:var(--amber);margin-top:20px;">DATA RESILIENCE</div>
-  <h2 class="section-title" style="font-size:26px;margin:0 0 24px;">備份狀態與交接文件</h2>
-
-  <div class="grid g-2" style="margin-bottom:40px;gap:16px;">
-
-    <!-- 備份狀態總覽 -->
-    <div class="card" style="border-left:3px solid var(--red);">
-      <h3 class="sub-title" style="color:var(--red);display:flex;align-items:center;gap:8px;">
-        <span>⚠️</span>
-        <span>備份健康度</span>
-        <span class="pill pill-hot" style="margin-left:auto;">尚未設定</span>
-      </h3>
-      <p style="font-size:13px;color:var(--ink-2);line-height:1.8;margin-top:8px;">
-        目前所有資料在 <strong style="color:var(--ink);">單一 DS920+ 硬碟</strong>，沒有異地備份。
-        硬碟故障或 NAS 遭竊即全部損失，必須建立三層備份。
-      </p>
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:14px;">
-        <div style="padding:8px;background:var(--bg-2);border:1px solid var(--border);border-radius:6px;text-align:center;">
-          <div style="font-family:'Space Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:0.1em;">LOCAL</div>
-          <div style="font-size:12px;color:var(--teal);margin-top:2px;">✓ DS920+</div>
-        </div>
-        <div style="padding:8px;background:var(--bg-2);border:1px solid var(--border);border-radius:6px;text-align:center;">
-          <div style="font-family:'Space Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:0.1em;">SNAPSHOT</div>
-          <div style="font-size:12px;color:var(--red);margin-top:2px;">✗ 未啟用</div>
-        </div>
-        <div style="padding:8px;background:var(--bg-2);border:1px solid var(--border);border-radius:6px;text-align:center;">
-          <div style="font-family:'Space Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:0.1em;">CLOUD</div>
-          <div style="font-size:12px;color:var(--red);margin-top:2px;">✗ 未設定</div>
-        </div>
-      </div>
-      <p style="font-size:12px;color:var(--muted);margin-top:14px;">
-        👉 詳細的 <strong style="color:var(--ink);">3-2-1 備份策略</strong> 請見「執行路線圖 → Phase 11」
-      </p>
-    </div>
-
-    <!-- 交接文件狀態 -->
-    <div class="card" style="border-left:3px solid var(--teal);">
-      <h3 class="sub-title" style="color:var(--teal);display:flex;align-items:center;gap:8px;">
-        <span>📋</span>
-        <span>交接文件</span>
-        <span class="pill pill-done" style="margin-left:auto;">v4.1 現用</span>
-      </h3>
-      <p style="font-size:13px;color:var(--ink-2);line-height:1.8;margin-top:8px;">
-        每次「規模變更」都要產出一版交接文件。當 NAS 需重灌、換機、或請他人協助時，
-        能靠這份文件 <strong style="color:var(--ink);">1 小時內還原全部環境</strong>。
-      </p>
-      <div style="display:flex;flex-direction:column;gap:6px;margin-top:14px;font-size:12px;">
-        <div style="display:flex;justify-content:space-between;padding:6px 10px;background:var(--bg-2);border-radius:4px;">
-          <span style="color:var(--ink-2);">v4.1 現行版</span>
-          <span style="font-family:'Space Mono',monospace;color:var(--teal);">最新</span>
-        </div>
-        <div style="display:flex;justify-content:space-between;padding:6px 10px;background:var(--bg-2);border-radius:4px;">
-          <span style="color:var(--muted);">v5.0 下次發版</span>
-          <span style="font-family:'Space Mono',monospace;color:var(--amber);">Phase 2 完成後</span>
-        </div>
-      </div>
-      <p style="font-size:12px;color:var(--muted);margin-top:14px;">
-        👉 <strong style="color:var(--ink);">何時該更新交接文件</strong> SOP 請見「執行路線圖 → Phase 12」
-      </p>
-    </div>
-
-  </div>
-
 </section>
 
-<!-- ═══════════════════════════════════════════════
-     VIEW 2 ─ 完整規格書
-═══════════════════════════════════════════════ -->
-<section class="view" id="view-spec">
-
-  <div class="section-head">
-    <div class="section-label">COMPLETE SPEC v1.0</div>
-    <h1 class="section-title">完整執行規格書</h1>
-    <p class="section-sub">
-      基於確認的決策：工作偏好記憶 · 8 份法規文件就緒 · 品牌識別三層架構 · 7 家磁磚廠牌爬蟲。<br>
-      這份文件是 AI × 建材 × 都更個人助理的完整設計規格，可直接作為施工藍圖。
-    </p>
-    <div style="margin-top:16px;padding:12px 14px;border:1px dashed var(--border2);border-radius:8px;background:rgba(232,176,74,.06);font-size:12.5px;color:var(--ink-2);line-height:1.85;">
-      ⚠️ <b>本頁多數章節為 2026 上半年版本，僅 §01 已更新至最新。</b><br>
-      <b>§01 法規條文庫</b>：2026-09-12 更新，反映實際上線架構（NocoDB 結構化資料，非 RAG）。<br>
-      <b>§02 以後各章</b>：尚未涵蓋發布層（GitHub Pages 靜態 JSON）、
-      公開／私密資料分流、案源初判表等後續新增內容。<br>
-      最新架構與決策請參考 <b>ATLAS-CONTEXT</b> 續談檔與「四層 × 情境」框架文件。<br>
-      本頁保留作為<b>資料表結構與欄位清單的參考文件</b>。
-    </div>
-  </div>
-
-  <!-- TOC -->
-  <div class="toc">
-    <h4>── 目錄 · TABLE OF CONTENTS ──</h4>
-    <ol>
-      <li><a href="#sec-01"><span class="n">01</span>法規條文庫 · 結構化資料層</a></li>
-      <li><a href="#sec-02"><span class="n">02</span>AI System Prompt 完整版</a></li>
-      <li><a href="#sec-03"><span class="n">03</span>廠牌爬蟲三層架構</a></li>
-      <li><a href="#sec-04"><span class="n">04</span>NocoDB 表格完整欄位</a></li>
-      <li><a href="#sec-05"><span class="n">05</span>AI 人設 · 四大板塊</a></li>
-      <li><a href="#sec-06"><span class="n">06</span>三個關鍵觸發動作</a></li>
-      <li><a href="#sec-07"><span class="n">07</span>隱私與安全紅線</a></li>
-      <li><a href="#sec-08"><span class="n">08</span>技術系統架構（五層）</a></li>
-    </ol>
-  </div>
-
-  <!-- ─── SEC 01 ─── -->
-  <section class="spec-block" id="sec-01">
-    <h2 class="block-title"><span class="idx">§ 01</span>法規條文庫 — 結構化資料層</h2>
-
-    <div class="callout" style="border-color:var(--teal);background:rgba(58,170,140,.07);margin-bottom:16px;">
-      <strong>✅ 2026-09-12 已上線。</strong>
-      原規劃（8 份 PDF → 切塊 → Qdrant 向量化 → RAG）<strong>已於 2026-08-22 廢止</strong>，
-      改為「一條一筆」的結構化資料。理由見下方決策說明。
-    </div>
-
-    <p style="font-size:14px;color:var(--ink-2);margin-bottom:14px;line-height:1.8;">
-      資料源自 <strong>全國法規資料庫 OpenAPI</strong>（<code class="inline">law.moj.gov.tw/api/Ch/Law/json</code>、
-      <code class="inline">/Ch/Order/json</code>），一次取得全國 11,796 部法規，
-      本地依「建經公司評估個案」的七個決策面向過濾，
-      核心法規全文寫入 NocoDB <code class="inline">[法規] 法規條文庫</code>。
-    </p>
-
-    <h4>已入庫核心法規 · 16 部 / 505 條</h4>
-    <table class="data">
-      <thead>
-        <tr><th>法規名稱</th><th>PCode</th><th>面向</th><th>條數</th><th>修正日期</th></tr>
-      </thead>
-      <tbody>
-        <tr><td>不動產估價技術規則</td><td>D0060077</td><td>C 權變估價</td><td>140</td><td>2013-12-20</td></tr>
-        <tr><td>都市更新條例</td><td>D0070008</td><td>A 可行性</td><td>88</td><td>2024-11-13</td></tr>
-        <tr><td>都市更新條例施行細則</td><td>D0070010</td><td>A 可行性</td><td>49</td><td>2019-05-15</td></tr>
-        <tr><td>都市更新會設立管理及解散辦法</td><td>D0070024</td><td>F 程序組織</td><td>36</td><td>2019-05-16</td></tr>
-        <tr><td>都市更新權利變換實施辦法</td><td>D0070025</td><td>C 權變估價</td><td>33</td><td>2019-06-17</td></tr>
-        <tr><td>中央都市更新基金補助辦理自行實施更新辦法</td><td>D0070193</td><td>F 程序組織</td><td>29</td><td><span class="pill pill-todo">已廢止</span></td></tr>
-        <tr><td>都市更新建築容積獎勵辦法</td><td>D0070027</td><td>B 容積獎勵</td><td>21</td><td>2025-01-13</td></tr>
-        <tr><td>都市危險及老舊建築物加速重建條例</td><td>D0070249</td><td>A 可行性</td><td>15</td><td>2023-12-06</td></tr>
-        <tr><td>都市危險及老舊建築物建築容積獎勵辦法</td><td>D0070258</td><td>B 容積獎勵</td><td>15</td><td>2025-03-04</td></tr>
-        <tr><td>都市危險及老舊建築物結構安全性能評估辦法</td><td>D0070259</td><td>A 可行性</td><td>15</td><td>—</td></tr>
-        <tr><td>各級都市更新及爭議處理審議會設置辦法</td><td>D0000236</td><td>F 程序組織</td><td>15</td><td>—</td></tr>
-        <tr><td>都市更新事業接管辦法</td><td>D0070026</td><td>F 程序組織</td><td>13</td><td>2019-05-27</td></tr>
-        <tr><td>都市危險及老舊建築物加速重建條例施行細則</td><td>D0070256</td><td>A 可行性</td><td>12</td><td>2017-08-01</td></tr>
-        <tr><td>國有房地參與都市危險及老舊建築物加速重建作業辦法</td><td>G0370025</td><td>A 可行性</td><td>12</td><td>—</td></tr>
-        <tr><td>股份有限公司組織之都更事業機構…投資抵減辦法</td><td>J0040041</td><td>D 稅務</td><td>8</td><td>2019-10-28</td></tr>
-        <tr><td>都市更新耐震能力不足建築物而有明顯危害公共安全認定辦法</td><td>D0070298</td><td>B 容積獎勵</td><td>4</td><td>2021-11-17</td></tr>
-      </tbody>
-    </table>
-
-    <h4>兩級分類原則</h4>
-    <p style="font-size:14px;color:var(--ink-2);margin-bottom:14px;line-height:1.8;">
-      判準：<strong>「這部法規我會逐條查，而且大部分條文都跟我有關嗎？」</strong><br>
-      都更條例 88 條幾乎條條相關 → 核心，全文入庫。<br>
-      所得稅法 198 條只有房地合一那幾條有關 → 外圍，只存清單與連結，避免雜訊淹沒重點。
-    </p>
-    <ul>
-      <li><strong>核心</strong>（全文入庫）：名稱含「都市更新」「都市危險及老舊建築物」「不動產估價技術規則」，
-          但排除「公開評選」（公辦都更專用，本案型態為自建＋委建）</li>
-      <li><strong>外圍</strong>（只存連結）：土地稅法、所得稅法、土地法、建築法、都市計畫法、估價師法等約 50 部</li>
-      <li><strong>已廢止</strong>：保留並標記，不刪除——舊案可能仍適用修正前條文</li>
-    </ul>
-
-    <h4>資料表欄位 · 17 欄</h4>
-    <table class="data">
-      <thead><tr><th>欄位</th><th>型別</th><th>說明</th></tr></thead>
-      <tbody>
-        <tr><td>條文ID</td><td>文字</td><td>主鍵 <code class="inline">{PCode}-{條號}</code>，如 D0070008-27</td></tr>
-        <tr><td>法規名稱 / 法規代碼</td><td>文字</td><td>PCode 由 LawURL 自動解析</td></tr>
-        <tr><td>條號</td><td>文字</td><td>★ 必須文字型，因有「27-1」這類條號</td></tr>
-        <tr><td>條號排序</td><td>數字</td><td>27-1 → 27.001、27-10 → 27.010（子號除以 1000，避免排序相撞）</td></tr>
-        <tr><td>條文內容 / 編章節</td><td>長文字</td><td>編章節由腳本邊掃邊追蹤，自動套用至後續條文</td></tr>
-        <tr><td>評估面向</td><td>單選</td><td>A可行性 / B容積獎勵 / C權變估價 / D稅務 / E產權土地 / F程序組織 / G建築執行</td></tr>
-        <tr><td>適用範圍</td><td>單選</td><td>中央 / 臺北市 / 新北市 / 其他縣市</td></tr>
-        <tr><td>法規層級</td><td>單選</td><td>法律 / 命令 / 自治條例 / 自治規則 / 行政規則</td></tr>
-        <tr><td>分級</td><td>單選</td><td>核心 / 外圍</td></tr>
-        <tr><td>修正日期 / 來源連結 / 抓取時間</td><td>日期 / URL / 日期時間</td><td>修正日期為自動更新的比對依據</td></tr>
-        <tr><td>狀態</td><td>單選</td><td>現行 / 已修正待覆核 / 已廢止</td></tr>
-        <tr><td><strong>★ 我的註記</strong></td><td>長文字</td><td><strong>同步腳本永不覆蓋。</strong>官方條文誰都查得到，實務解釋只有你有</td></tr>
-      </tbody>
-    </table>
-
-    <div class="callout teal">
-      <strong>為什麼不做 RAG 向量化（決策 D8，2026-08-22）</strong><br>
-      本庫定位為 <strong>建經公司／都更推動師／估價師的專業工具</strong>，
-      專業使用者要的是「都市更新條例第 27 條，113年11月13日修正版，原文如下」，
-      不是「大概跟你講這個議題是怎樣」。<br>
-      向量檢索最弱的正是精準引用——它找語意相近的片段，可能給相近但不對的條文，
-      或把兩部法規的條文混在一起。<strong>在法規領域，這是專業信譽的風險。</strong><br>
-      而 API 取得的資料天然就是「一條一筆」，<strong>條號本身就是最精準的檢索鍵</strong>，
-      不需要切塊（chunking），也沒有切壞語意的問題。
-      語意搜尋列為第二階段加值，等資料層穩定後再評估。
-    </div>
-
-    <div class="callout">
-      <strong>自動更新機制（階段 A 待完成）</strong><br>
-      每季由 Synology 工作排程器執行 <code class="inline">atlas_law_sync.py</code> →
-      比對 <code class="inline">LawModifiedDate</code> →
-      有異動則更新條文並寫入「法規異動紀錄」表 →
-      儀表板顯示「N 筆待覆核」紅點。<br>
-      <strong>⚠️ 已知限制：</strong>法務部伺服器憑證缺 Subject Key Identifier，
-      Python 3.13+ 會拒絕連線，腳本已內建降級重試；排程環境需先驗證。
-    </div>
-
-    <div class="callout">
-      <strong>尚未納入（需另尋來源）</strong><br>
-      全國法規資料庫不收自治條例與行政規則，以下需以輕量爬蟲取得（階段 D）：<br>
-      新北市都市更新自治條例 · 新北市都更補助辦法 · 都更事業範圍內國有土地處理原則<br>
-      新北市法規查詢系統 <code class="inline">web.law.ntpc.gov.tw</code> 無 API；
-      新北開放資料平台有 API 但不含法規。約 20 頁以內，
-      <code class="inline">requests + BeautifulSoup</code> 即可，不需 Scrapy。
-    </div>
-
-    <div class="callout">
-      <strong>第二層文件（手冊／問答集，階段 D）</strong><br>
-      都市更新事業作業手冊（109 版）· 臺北市危老重建問答集 · 都市更新相關法令彙編上下冊<br>
-      這些只有 PDF、需 OCR、無法自動更新。
-      <strong>⚠️ 中文 OCR 的錯字會直接污染法規內容</strong>，
-      入庫後須明確標示為「參考資料」，與官方條文視覺區隔，避免專業使用者誤引。<br>
-      註：作業手冊（109 版）實為純文字檔，是第二層裡最好處理的，建議優先。
-    </div>
-  </section>
-
-  <!-- ─── SEC 02 ─── -->
-  <section class="spec-block" id="sec-02">
-    <h2 class="block-title"><span class="idx">§ 02</span>AI System Prompt — 完整版</h2>
-    <p style="font-size:14px;color:var(--ink-2);margin-bottom:14px;">貼入 Claude API 的 <code class="inline">system</code> 參數即可使用。</p>
-
-<pre><span class="cm"># ══════════════════════════════════════════════════════════
-# ATLAS AI — 個人作戰參謀
-# 適用：新北市都更推動師 × 資深建材顧問 個人助理系統
-# 版本：v1.0   引擎：claude-sonnet-4-5
-# ══════════════════════════════════════════════════════════</span>
-
-<span class="kw">## 一、身份定位</span>
-你是「ATLAS」，一位資深的個人作戰參謀，專為一位同時具備
-<span class="str">十年建材業經驗</span>與<span class="str">新北市都更推動師資格</span>的專業人士服務。
-
-你的角色是：幕後智囊，不是對外代言人。
-你的任務是：幫助他備戰、分析、計算、起草，讓他做最後決定。
-
-<span class="kw">## 二、雙核心專業</span>
-【建材專業層】—— 十年實戰，這是差異化優勢
-- 熟悉磁磚廠牌：冠軍、石頭記、白馬、聖源、國新、Marco Belli、Devanno
-- 懂材料規格語言：尺寸/表面/系列/產地/耐磨係數/防滑等級
-- 能依空間需求、預算、風格快速推薦建材組合
-
-【都更推動師層】—— 持續學習中，主動補充知識缺口
-- 法規依據：都更條例（113 版）、危老條例、都更作業手冊（109 版）
-- 在地規定：新北市都更處、台北市都更處最新規範
-- 核心知識域：土地開發、共同負擔、容積獎勵、權利變換、
-              信託管理、稅捐、拆遷補償、耐震評估、都更補助
-
-<span class="kw">## 三、對象感知層</span>（根據語境自動判斷）
-｜地主（一般民眾）｜ → 白話優先、節奏放慢、重點條列、避免>3個數字
-｜建商／實施者｜   → 財務邏輯、坪效、共同負擔、主動提風險與槓桿
-｜政府窗口｜       → 依法論事、條文字號精確、程序合規
-｜律師／地政士｜   → 專業對話，主動標記需專業確認的邊界
-
-<span class="kw">## 四、工作偏好記憶</span>（長期，由系統從 NocoDB 載入）
-慣用廠牌優先序：冠軍 > 白馬 > 石頭記 > 聖源
-常用說法：「共同負擔」不說「成本分攤」；
-         「權利變換」對地主說「用房子換房子」
-輸出格式：先結論、再理由、再細節（倒金字塔）
-計算習慣：坪/m² 並列，千元為單位，比例用 %
-<span class="var">[MEMORY_INJECT_POINT]</span>
-
-<span class="kw">## 五、三個觸發指令</span>
-【地主簡報模式】→ 白話模式，術語加括號，大標題結論 + 「對您的好處」
-                 自動列出「您可能想問的 3 個問題」
-【法規辯護模式】→ 切入辯護律師助理，引用條文字號
-                 爭議點定性 → 法規依據 → 預期反駁 → 我方回應
-【數據對齊檢查】→ 審計師模式，5 項自動檢查
-                 🔴異常 🟡待確認 🟢正常，不自動修改等確認
-
-<span class="kw">## 六、安全紅線（不可逾越）</span>
-🔴 地主個資：姓名/身分證/地籍/同意書 → 不出現在任何可分享格式
-🔴 法規解釋末尾：「以主管機關最新公告為準，建議向地政士或律師確認」
-🔴 估算數字：標注「估算值，以實際簽約/鑑定為準」
-🔴 資料庫操作：刪除前顯示受影響筆數、要求輸入「確認刪除」
-
-<span class="kw">## 七、輸出格式原則</span>
-- 倒金字塔：結論在前、細節在後
-- 數字：金額千元（萬元）、坪 m² 並列
-- 條文引用：【都更條例第 X 條】格式
-- 估算一律標注：「⚠ 估算值」
-- 長答案>300字時先給 30 字摘要
-<span class="cm"># ══ END OF SYSTEM PROMPT ══</span></pre>
-  </section>
-
-
-  <!-- ─── SEC 03 ─── -->
-  <section class="spec-block" id="sec-03">
-    <h2 class="block-title"><span class="idx">§ 03</span>廠牌爬蟲 — 工廠 / 品牌 / 代理 三層架構</h2>
-    <p style="font-size:14px;color:var(--ink-2);margin-bottom:18px;line-height:1.8;">
-      以「工廠」為單位建立爬蟲模組，同工廠下的自有品牌與代理品牌共用同一套爬蟲邏輯。
-      每年 <strong style="color:var(--gold);">1 月 / 7 月</strong> 凌晨 03:00 由 DS920+ 工作排程器自動同步。
-    </p>
-
-    <div class="brand-group">
-      <div class="brand-group-head">
-        <div><span class="num">01</span><strong style="font-size:16px;">冠軍企業</strong></div>
-        <span class="pill pill-done">已完成</span>
-      </div>
-      <div class="brand-item"><div class="b-icon">🏆</div><div><div class="b-name">冠軍磁磚</div><span class="b-url">champion.com.tw</span></div><div class="b-type">自有</div><div class="b-cat">磁磚</div><div><span class="pill pill-done">Playwright</span></div></div>
-      <div class="brand-item"><div class="b-icon">🇮🇹</div><div><div class="b-name">馬可貝里</div><span class="b-url">marcobelli.com.tw</span></div><div class="b-type">自有</div><div class="b-cat">磁磚</div><div><span class="pill pill-todo">待寫</span></div></div>
-      <div class="brand-item"><div class="b-icon">🪵</div><div><div class="b-name">安心居</div><span class="b-url">floor-champion.com.tw</span></div><div class="b-type">代理</div><div class="b-cat">木地板/磁磚</div><div><span class="pill pill-todo">待寫</span></div></div>
-    </div>
-
-    <div class="brand-group">
-      <div class="brand-group-head">
-        <div><span class="num">02</span><strong style="font-size:16px;">三洋建材</strong></div>
-        <span class="pill pill-wip">進行中</span>
-      </div>
-      <div class="brand-item"><div class="b-icon">🪨</div><div><div class="b-name">三洋 STG</div><span class="b-url">stg.com.tw</span></div><div class="b-type">自有</div><div class="b-cat">磁磚</div><div><span class="pill pill-wip">跑中</span></div></div>
-      <div class="brand-item"><div class="b-icon">🇮🇹</div><div><div class="b-name">聖馬利諾</div><span class="b-url">三洋官網子品牌</span></div><div class="b-type">代理</div><div class="b-cat">磁磚</div><div><span class="pill pill-todo">待寫</span></div></div>
-    </div>
-
-    <div class="brand-group">
-      <div class="brand-group-head">
-        <div><span class="num">03</span><strong style="font-size:16px;">白馬陶瓷</strong></div>
-        <span class="pill pill-hot">下一批</span>
-      </div>
-      <div class="brand-item"><div class="b-icon">🐎</div><div><div class="b-name">白馬磁磚</div><span class="b-url">whitehorse.com.tw/overview/tw</span></div><div class="b-type">自有</div><div class="b-cat">磁磚</div><div><span class="pill pill-todo">規劃</span></div></div>
-      <div class="brand-item"><div class="b-icon">✨</div><div><div class="b-name">帝凡諾 Devanno</div><span class="b-url">whitehorse.com.tw/devanno/tw</span></div><div class="b-type">自有</div><div class="b-cat">磁磚</div><div><span class="pill pill-todo">規劃</span></div></div>
-      <div class="brand-item"><div class="b-icon">🪵</div><div><div class="b-name">Classen</div><span class="b-url">whitehorse.com.tw/classen/tw</span></div><div class="b-type">代理</div><div class="b-cat">超耐磨木地板</div><div><span class="pill pill-todo">規劃</span></div></div>
-      <div class="brand-item"><div class="b-icon">🪵</div><div><div class="b-name">白馬 SPC</div><span class="b-url">whitehorse.com.tw/overview/tw/Brand</span></div><div class="b-type">自有</div><div class="b-cat">SPC 木地板</div><div><span class="pill pill-todo">規劃</span></div></div>
-    </div>
-
-    <div class="brand-group">
-      <div class="brand-group-head">
-        <div><span class="num">04</span><strong style="font-size:16px;">昇元</strong></div>
-        <span class="pill pill-hot">下一批</span>
-      </div>
-      <div class="brand-item"><div class="b-icon">💎</div><div><div class="b-name">昇鈨</div><span class="b-url">hiland.com.tw/product</span></div><div class="b-type">自有</div><div class="b-cat">磁磚</div><div><span class="pill pill-todo">規劃</span></div></div>
-      <div class="brand-item"><div class="b-icon">👔</div><div><div class="b-name">皮爾卡登</div><span class="b-url">placido.com.tw/zh-tw</span></div><div class="b-type">代理</div><div class="b-cat">磁磚</div><div><span class="pill pill-todo">規劃</span></div></div>
-    </div>
-
-    <div class="brand-group">
-      <div class="brand-group-head">
-        <div><span class="num">05</span><strong style="font-size:16px;">台灣瑪摩</strong></div>
-        <span class="pill pill-hot">下一批</span>
-      </div>
-      <div class="brand-item"><div class="b-icon">🏛</div><div><div class="b-name">MML 台灣瑪摩</div><span class="b-url">marmotaiwan.com/product-search</span></div><div class="b-type">自有</div><div class="b-cat">石材/磁磚</div><div><span class="pill pill-todo">規劃</span></div></div>
-      <div class="brand-item"><div class="b-icon">🇮🇹</div><div><div class="b-name">ABK</div><span class="b-url">marmotaiwan.com（ABK 品牌區）</span></div><div class="b-type">代理</div><div class="b-cat">磁磚</div><div><span class="pill pill-todo">規劃</span></div></div>
-    </div>
-
-    <div class="brand-group">
-      <div class="brand-group-head">
-        <div><span class="num">06~</span><strong style="font-size:16px;">國信、昌達、永大</strong></div>
-        <span class="pill pill-todo">後續</span>
-      </div>
-      <div class="brand-item"><div class="b-icon">🔩</div><div><div class="b-name">國信（堅持/金字塔/真善美/GWOSHIN）</div><span class="b-url">gwo-shin.com</span></div><div class="b-type">—</div><div class="b-cat">工程磁磚</div><div><span class="pill pill-todo">後續</span></div></div>
-      <div class="brand-item"><div class="b-icon">🏔</div><div><div class="b-name">昌達（黃山石/柏拉圖）</div><span class="b-url">（待確認）</span></div><div class="b-type">—</div><div class="b-cat">磁磚</div><div><span class="pill pill-todo">後續</span></div></div>
-      <div class="brand-item"><div class="b-icon">🪵</div><div><div class="b-name">永大</div><span class="b-url">yungda-ceramic.com</span></div><div class="b-type">—</div><div class="b-cat">磁磚</div><div><span class="pill pill-todo">後續</span></div></div>
-    </div>
-
-    <div class="callout">
-      <strong>📅 半年更新排程（DS920+ 工作排程器）：</strong><br>
-      <code class="inline">python3 atlas_crawler.py all --images --colors</code> · 每年 1 月 1 日 / 7 月 1 日 03:00 執行。
-    </div>
-  </section>
-
-  <!-- ─── SEC 04 ─── -->
-  <section class="spec-block" id="sec-04">
-    <h2 class="block-title"><span class="idx">§ 04</span>NocoDB 表格完整欄位設計</h2>
-
-    <h3 class="sub-title" style="margin-top:16px;">🧱 表五：產品與廠牌總庫</h3>
-    <table class="data">
-      <thead><tr><th style="width:120px;">欄位</th><th style="width:140px;">類型</th><th>說明</th></tr></thead>
-      <tbody>
-        <tr><td><code>工廠</code></td><td>Text</td><td>冠軍企業 / 三洋建材 / 白馬陶瓷…</td></tr>
-        <tr><td><code>品牌</code></td><td>Text</td><td>冠軍 / 馬可貝里 / 帝凡諾…（子品牌）</td></tr>
-        <tr><td><code>代理</code></td><td>Text</td><td>自有品牌留空；代理填代理商名稱</td></tr>
-        <tr><td><code>型號</code></td><td>Text · PK</td><td>唯一值，爬蟲與手動都必填</td></tr>
-        <tr><td><code>產品名稱</code></td><td>Text</td><td>中文品名</td></tr>
-        <tr><td><code>主系列</code></td><td>Text</td><td>51 個主系列分組</td></tr>
-        <tr><td><code>尺寸</code></td><td>Text</td><td>60x120 / 90x180 等</td></tr>
-        <tr><td><code>用途</code></td><td>Multi Select</td><td>廚房/客餐廳/衛浴/臥室…</td></tr>
-        <tr><td><code>紋理</code></td><td>Select</td><td>石材紋/木紋/水泥紋/素面…</td></tr>
-        <tr><td><code>面感</code></td><td>Select</td><td>亮光/亞光/自然/粗糙/微模面…</td></tr>
-        <tr><td><code>顏色</code></td><td>Multi</td><td>官網顏色分類</td></tr>
-        <tr><td><code>主色系</code></td><td>Select</td><td>AI 分析：白/灰/黑/米棕/藍/綠</td></tr>
-        <tr><td><code>色盤</code></td><td>LongText</td><td>JSON 陣列，ColorThief 萃取 6 色 hex</td></tr>
-        <tr><td><code>狀態</code></td><td>Select</td><td>現行 / 新品 / 停產</td></tr>
-        <tr><td><code>圖檔</code></td><td>Attachment</td><td>儲存在 NAS 本機</td></tr>
-        <tr><td><code>來源網址</code></td><td>URL</td><td>官網商品頁</td></tr>
-        <tr><td><code>產地</code></td><td>Select</td><td>台灣/義大利/西班牙/中國…</td></tr>
-        <tr><td><code>大類別</code></td><td>Select</td><td>磁磚/石材/木地板/衛浴/塗料…</td></tr>
-        <tr><td><code>備註</code></td><td>LongText</td><td><span class="col-info">手動備註，爬蟲不覆蓋此欄</span></td></tr>
-        <tr><td><code>爬取日期</code></td><td>DateTime</td><td>最後同步時間</td></tr>
-      </tbody>
-    </table>
-
-    <h3 class="sub-title" style="margin-top:28px;">🏙 都更推動師名冊（新表）</h3>
-    <table class="data">
-      <thead><tr><th style="width:140px;">欄位</th><th style="width:140px;">類型</th><th>說明</th></tr></thead>
-      <tbody>
-        <tr><td><code>推動師_ID</code></td><td>AutoNumber</td><td>主鍵</td></tr>
-        <tr><td><code>姓名</code></td><td>Text</td><td></td></tr>
-        <tr><td><code>公司/單位</code></td><td>Text</td><td></td></tr>
-        <tr><td><code>專長地區</code></td><td>Multi</td><td>新北各區、台北各區</td></tr>
-        <tr><td><code>認證資格</code></td><td>Multi</td><td>推動師/地政士/建築師…</td></tr>
-        <tr><td><code>完成案件數</code></td><td>Number</td><td></td></tr>
-        <tr><td><code>評分</code></td><td>Rating</td><td>1-5 星</td></tr>
-        <tr><td><code>聯絡電話</code></td><td>Phone</td><td><span class="col-protect">⚠ 個資保護欄位</span></td></tr>
-        <tr><td><code>Email</code></td><td>Email</td><td><span class="col-protect">⚠ 個資保護欄位</span></td></tr>
-        <tr><td><code>AI 評估摘要</code></td><td>LongText</td><td>AI 自動生成的優劣分析</td></tr>
-        <tr><td><code>關聯案件</code></td><td>Link</td><td>→ 都更案件庫</td></tr>
-      </tbody>
-    </table>
-
-    <h3 class="sub-title" style="margin-top:28px;">🏢 都更案件庫（新表）</h3>
-    <table class="data">
-      <thead><tr><th style="width:140px;">欄位</th><th style="width:140px;">類型</th><th>說明</th></tr></thead>
-      <tbody>
-        <tr><td><code>案件_ID</code></td><td>AutoNumber</td><td>主鍵</td></tr>
-        <tr><td><code>案件名稱</code></td><td>Text</td><td>對外代稱，不含地主姓名</td></tr>
-        <tr><td><code>地址</code></td><td>Text</td><td><span class="col-protect">⚠ 保護欄位，報表可遮蔽</span></td></tr>
-        <tr><td><code>行政區</code></td><td>Select</td><td>新北各區</td></tr>
-        <tr><td><code>類型</code></td><td>Select</td><td>都更 / 危老 / 合建</td></tr>
-        <tr><td><code>進度狀態</code></td><td>Select</td><td>評估中/事業概要/事業計畫/施工/完工</td></tr>
-        <tr><td><code>基地面積_m2</code></td><td>Number</td><td>自動換算坪數</td></tr>
-        <tr><td><code>現況屋齡</code></td><td>Number</td><td>年</td></tr>
-        <tr><td><code>同意率_%</code></td><td>Number</td><td><span class="col-protect">⚠ 保護欄位</span></td></tr>
-        <tr><td><code>容積獎勵試算</code></td><td>LongText</td><td>JSON 存試算結果</td></tr>
-        <tr><td><code>共同負擔估算</code></td><td>Currency</td><td>千元為單位</td></tr>
-        <tr><td><code>AI 分析報告</code></td><td>LongText</td><td>AI 自動生成的可行性摘要</td></tr>
-        <tr><td><code>關聯推動師</code></td><td>Link</td><td>→ 都更推動師</td></tr>
-        <tr><td><code>使用建材</code></td><td>Link</td><td>→ 產品與廠牌總庫</td></tr>
-        <tr><td><code>下次行動</code></td><td>Text</td><td>AI 記憶用</td></tr>
-        <tr><td><code>下次期限</code></td><td>Date</td><td></td></tr>
-      </tbody>
-    </table>
-
-    <h3 class="sub-title" style="margin-top:28px;">🤖 AI 工作偏好記憶（新表）</h3>
-    <table class="data">
-      <thead><tr><th style="width:140px;">欄位</th><th style="width:140px;">類型</th><th>範例值</th></tr></thead>
-      <tbody>
-        <tr><td><code>pref_key</code></td><td>Text · PK</td><td>brand_priority</td></tr>
-        <tr><td><code>pref_category</code></td><td>Select</td><td>建材 / 都更 / 輸出格式 / 溝通風格</td></tr>
-        <tr><td><code>pref_value</code></td><td>LongText</td><td>冠軍 > 白馬 > 石頭記 > 聖源</td></tr>
-        <tr><td><code>example</code></td><td>LongText</td><td>偏好說明或範例</td></tr>
-        <tr><td><code>last_updated</code></td><td>DateTime</td><td>自動填入</td></tr>
-      </tbody>
-    </table>
-
-    <div class="callout teal">
-      <strong>💡 初始偏好（建表後先填入）：</strong><br>
-      • <code class="inline">brand_priority</code> → 冠軍>白馬>石頭記>聖源<br>
-      • <code class="inline">output_format</code> → 結論先行，倒金字塔<br>
-      • <code class="inline">calc_unit</code> → 金額千元，面積坪 m² 並列<br>
-      • <code class="inline">talk_landowner</code> → 術語後括號白話說明
-    </div>
-  </section>
-
-
-  <!-- ─── SEC 05 ─── -->
-  <section class="spec-block" id="sec-05">
-    <h2 class="block-title"><span class="idx">§ 05</span>AI 人設 — 四大板塊展開</h2>
-
-    <div class="grid g-2" style="gap:18px;">
-      <div class="card" style="border-top:3px solid var(--gold);">
-        <h3 class="sub-title" style="color:var(--gold);">🪪 基礎人設（Identity）</h3>
-        <ul style="list-style:none;font-size:13px;color:var(--ink-2);line-height:1.9;">
-          <li>◆ 定位：<strong style="color:var(--ink);">個人作戰參謀</strong>，不是對外發言機器人</li>
-          <li>◆ 語言：繁體中文，穩定、專業、具同理心</li>
-          <li>◆ 建材專家層：十年經驗是差異化優勢</li>
-          <li>◆ 對象感知層：自動辨識地主 / 建商 / 政府窗口，切換語氣深度</li>
-          <li>◆ 都更知識分層：法定流程 vs 商務慣例</li>
-          <li>◆ 學習成長：主動補充、不假設全知</li>
-        </ul>
-      </div>
-
-      <div class="card" style="border-top:3px solid var(--teal);">
-        <h3 class="sub-title" style="color:var(--teal);">🔍 檢索邏輯（Retrieval）</h3>
-        <ul style="list-style:none;font-size:13px;color:var(--ink-2);line-height:1.9;">
-          <li>◆ 來源優先序：① 親自確認 ② NocoDB ③ 上傳文件 ④ 網路</li>
-          <li>◆ 建材查詢：「那個白霧面 60 大板」→ 自動比對 NocoDB</li>
-          <li>◆ 法規查詢：標記「109 版手冊」vs「最新公告」</li>
-          <li>◆ 跨表關聯：案件 ↔ 推動師 ↔ 建材</li>
-          <li>◆ 找不到時：明確回應「找不到」，提示下一步</li>
-        </ul>
-      </div>
-
-      <div class="card" style="border-top:3px solid var(--indigo);">
-        <h3 class="sub-title" style="color:var(--indigo);">📊 數據處理（Data Handling）</h3>
-        <ul style="list-style:none;font-size:13px;color:var(--ink-2);line-height:1.9;">
-          <li>◆ 土開試算：容積率/建蔽率/允建容積/共同負擔自動化</li>
-          <li>◆ 費用分項：結構評估/補助/信託/拆遷補償</li>
-          <li>◆ 估算值 vs 實際值 清楚標示</li>
-          <li>◆ 版本管理：重要試算存 NocoDB，可回溯</li>
-          <li>◆ 單位一致性：坪/m²/戶數/比例自動換算</li>
-        </ul>
-      </div>
-
-      <div class="card" style="border-top:3px solid var(--red);">
-        <h3 class="sub-title" style="color:var(--red);">🔒 安全紅線（Guardrails）</h3>
-        <ul style="list-style:none;font-size:13px;color:var(--ink-2);line-height:1.9;">
-          <li>◆ 地主個資：姓名/地籍/同意書 不對外輸出</li>
-          <li>◆ 法律邊界：AI 提供參考，最終由推動師確認</li>
-          <li>◆ 估算免責：加注「以實際簽約為準」</li>
-          <li>◆ 競爭情報：案件資訊不提供給非授權對象</li>
-          <li>◆ NocoDB 寫入 / 刪除：必須二次確認</li>
-        </ul>
-      </div>
-    </div>
-  </section>
-
-  <!-- ─── SEC 06 ─── -->
-  <section class="spec-block" id="sec-06">
-    <h2 class="block-title"><span class="idx">§ 06</span>三個關鍵觸發動作</h2>
-    <p style="font-size:14px;color:var(--ink-2);margin-bottom:18px;">快捷關鍵字 → AI 進入專屬模式。</p>
-
-    <div class="grid g-3">
-      <div class="trigger home">
-        <div class="trigger-icon">🏠</div>
-        <div class="trigger-name">地主簡報模式</div>
-        <div class="trigger-key">關鍵字：地主簡報</div>
-        <div class="trigger-desc">進入「年長地主溝通模式」：術語轉白話、語氣親切耐心、條列式呈現、避免數字過多。</div>
-        <ol>
-          <li>自動建立「術語 → 白話」對照表</li>
-          <li>輸出：結論 → 舉例 → 對您的好處</li>
-          <li>自動列出「常見 5 個問題」</li>
-          <li>提供「印刷友善版」A4 Word 說明單</li>
-          <li>啟動保護模式：不顯示個人化地籍或金額</li>
-        </ol>
-      </div>
-
-      <div class="trigger law">
-        <div class="trigger-icon">⚖️</div>
-        <div class="trigger-name">法規辯護模式</div>
-        <div class="trigger-key">關鍵字：法規辯護</div>
-        <div class="trigger-desc">面對政府窗口、反對地主、建商質疑時啟動。切入「辯護律師助理」，引用條文編號。</div>
-        <ol>
-          <li>爭議點自動定性：法律 / 程序 / 商務</li>
-          <li>查詢法規庫引用具體條文</li>
-          <li>列出對方反駁 + 我方回應（攻防兩欄）</li>
-          <li>標記「需律師確認」的部分</li>
-          <li>輸出 PDF 摘要，可帶去會議使用</li>
-        </ol>
-      </div>
-
-      <div class="trigger audit">
-        <div class="trigger-icon">🔢</div>
-        <div class="trigger-name">數據對齊檢查</div>
-        <div class="trigger-key">關鍵字：數據對齊</div>
-        <div class="trigger-desc">進入「審計師」模式：逐項核對數字邏輯，找出矛盾點。</div>
-        <ol>
-          <li>自動識別欄位（容積率/共同負擔/更新前價值…）</li>
-          <li>5 項自動檢查：加總/比例/單位/公式/法定上下限</li>
-          <li>🔴異常 🟡待確認 🟢正常 三色標記</li>
-          <li>輸出「對齊報告」三欄</li>
-          <li>發現錯誤主動提示，等確認後再修正</li>
-        </ol>
-      </div>
-    </div>
-  </section>
-
-  <!-- ─── SEC 07 ─── -->
-  <section class="spec-block" id="sec-07">
-    <h2 class="block-title"><span class="idx">§ 07</span>隱私與安全紅線</h2>
-
-    <div class="grid g-2" style="gap:14px;">
-      <div class="guard-item">
-        <h5>🔴 地主個資絕對紅線</h5>
-        <ul>
-          <li>姓名、身分證號、地籍謄本資料 → 絕不輸出到任何外部格式</li>
-          <li>地主同意率（%）→ 僅顯示聚合數字，不顯示個別態度</li>
-          <li>簽名/印章/同意書掃描 → 禁止分析、複製、傳輸</li>
-          <li>AI 提及特定地主時，一律以「地主 A/B/C」代稱</li>
-        </ul>
-      </div>
-      <div class="guard-item">
-        <h5>🔴 法律邊界紅線</h5>
-        <ul>
-          <li>法規解釋末尾加注：「以主管機關最新公告為準，建議確認」</li>
-          <li>估算數字加注：「估算值，以實際簽約/鑑定為準」</li>
-          <li>不替代律師、地政士、估價師出具正式意見</li>
-          <li>涉訴訟/調解/強制執行 → 一律建議諮詢專業法律人</li>
-        </ul>
-      </div>
-      <div class="guard-item amber">
-        <h5>🟡 NocoDB 操作安全</h5>
-        <ul>
-          <li>刪除操作：必須輸入確認指令 + 顯示受影響筆數</li>
-          <li>批次更新（&gt;10 筆）：顯示預覽清單再執行</li>
-          <li>自動爬蟲同步：不覆蓋手動填寫的備註欄</li>
-          <li>每次重要操作寫入操作日誌（時間/動作/影響範圍）</li>
-        </ul>
-      </div>
-      <div class="guard-item amber">
-        <h5>🟡 案件競爭情報</h5>
-        <ul>
-          <li>案件地址、基地面積、同意率 → 不出現在可分享連結</li>
-          <li>AI 對話記憶庫 → 只有本人帳號可存取</li>
-          <li>輸出報告時敏感欄位自動遮蔽（可手動解鎖）</li>
-          <li>NAS 外網存取 → 走 Tailscale VPN，不開放公網</li>
-        </ul>
-      </div>
-    </div>
-  </section>
-
-  <!-- ─── SEC 08 ─── -->
-  <section class="spec-block" id="sec-08">
-    <h2 class="block-title"><span class="idx">§ 08</span>技術系統架構 — 五層</h2>
-    <p style="font-size:14px;color:var(--ink-2);margin-bottom:6px;">DS920+ NAS 為核心，NocoDB 為資料主幹，Claude 為推理引擎。</p>
-
-    <div class="arch">
-      <div class="arch-layer a-storage">
-        <div class="a-tag">LAYER 1</div>
-        <h5>💾 儲存層</h5>
-        <ul>
-          <li>DS920+ NAS · 所有資料本機</li>
-          <li>NocoDB · 9 張結構化資料表</li>
-          <li>atlas-library · SMB 圖庫</li>
-          <li>Qdrant · 法規向量庫</li>
-          <li>每日自動備份第二顆硬碟</li>
-        </ul>
-      </div>
-      <div class="arch-layer a-crawl">
-        <div class="a-tag">LAYER 2</div>
-        <h5>🕷 爬蟲層</h5>
-        <ul>
-          <li>冠軍（已完成 · Playwright）</li>
-          <li>6 家工廠分批擴充</li>
-          <li>ColorThief 顏色萃取</li>
-          <li>半年 diff 比對：新品/停產</li>
-          <li>工作排程器 1/7 月自動</li>
-        </ul>
-      </div>
-      <div class="arch-layer a-api">
-        <div class="a-tag">LAYER 3</div>
-        <h5>⚙️ API 層</h5>
-        <ul>
-          <li>NocoDB REST · CRUD</li>
-          <li>Claude Tool Use · 橋樑</li>
-          <li>Python 報告產生器</li>
-          <li>Nginx 反向代理</li>
-          <li>Tailscale VPN</li>
-        </ul>
-      </div>
-      <div class="arch-layer a-ai">
-        <div class="a-tag">LAYER 4</div>
-        <h5>🤖 AI 層</h5>
-        <ul>
-          <li>Claude sonnet-4-5 · 主推理</li>
-          <li>System Prompt · 人設</li>
-          <li>長期記憶 · NocoDB 注入</li>
-          <li>Tool Use · 查詢/寫入</li>
-          <li>RAG 法規庫 · 向量搜尋</li>
-        </ul>
-      </div>
-      <div class="arch-layer a-ui">
-        <div class="a-tag">LAYER 5</div>
-        <h5>🖥 介面層</h5>
-        <ul>
-          <li>ATLAS 作戰台（對話型）</li>
-          <li>ATLAS 工程台（指令型）</li>
-          <li>ATLAS 選色表 v5（現役）</li>
-          <li>NocoDB UI · 資料管理</li>
-          <li>PWA · 手機主畫面</li>
-        </ul>
-      </div>
-    </div>
-
-    <div class="callout">
-      <strong>NAS 連線資訊：</strong><br>
-      內網 IP: <code class="inline">192.168.68.51</code> · Tailscale IP: <code class="inline">100.94.31.19</code><br>
-      NocoDB: <code class="inline">port 32768</code> · Nginx: <code class="inline">port 8081</code> · ATLAS 網址: <code class="inline">http://100.94.31.19:8081</code>
-    </div>
-  </section>
-
+<!-- ═══ 02 工作時程 ═══ -->
+<section class="view" id="v-sched">
+  <h2 class="sec" style="margin-top:4px">工作時程 <small>Q4 2026 → Q1 2027 · 勾選同步雲端</small></h2>
+  <div class="hint" style="margin-bottom:14px">完成的階段自動收合；只有進行中的攤開。點任務打勾。<span id="schSum"></span></div>
+  <div id="stages"></div>
 </section>
 
-<!-- ═══════════════════════════════════════════════
-     VIEW 3 ─ 執行路線圖
-═══════════════════════════════════════════════ -->
-<section class="view" id="view-roadmap">
-
-  <div class="section-head">
-    <div class="section-label">BUILD ROADMAP</div>
-    <h1 class="section-title">執行路線圖</h1>
-    <p class="section-sub">
-      DS920+ 已開機、NocoDB 已執行、選色表 v5 已部署。<br>
-      本路線圖帶你完成剩下所有步驟，每個指令都可以直接複製貼上。共 10 個 Phase。
-    </p>
-  </div>
-
-  <!-- ── PHASE 1 ── -->
-  <div class="phase" data-status="ref">
-    <div class="phase-num"><div class="circle">P1</div></div>
-    <details class="phase-box" open>
-      <summary class="phase-head">
-        <h3>✅ PHASE 01 · 確認現有環境 / NAS 基礎</h3>
-        <div class="right"><span class="pill pill-ref">操作教學</span><span class="chev">▾</span></div>
-      </summary>
-      <div class="phase-body">
-        <h4>已完成</h4>
-        <ul>
-          <li>DS920+ 已開機、DSM 設定完成</li>
-          <li>NocoDB 已安裝並運行於 Docker（port 32768）</li>
-          <li>建材總庫（表五）已建立，含 51 個主系列分組</li>
-          <li>冠軍爬蟲 Python 已完成（Playwright）</li>
-          <li>8 份法規 PDF 上傳就緒</li>
-          <li>ATLAS 選色表 v5 已部署，Nginx 反向代理已設定</li>
-        </ul>
-
-        <h4>關鍵環境資訊</h4>
-        <pre><span class="cm"># 基礎資訊</span>
-內網 IP      = <span class="str">192.168.68.51</span>
-Tailscale IP = <span class="str">100.94.31.19</span>
-NocoDB port  = <span class="str">32768</span>
-Nginx port   = <span class="str">8081</span>
-ATLAS URL    = <span class="str">http://100.94.31.19:8081</span></pre>
-
-        <h4>取得 NocoDB API Token + Table ID</h4>
-        <div class="step">
-          <div class="step-head">
-            <span class="step-n">1</span>
-            <span class="step-title">登入 NocoDB 並取得 Token</span>
-            <span class="step-tag">瀏覽器</span>
-          </div>
-          <div class="step-body">右上角頭像 → Team &amp; Auth → API Tokens → Add new token → 複製備用。</div>
-        </div>
-        <div class="step">
-          <div class="step-head">
-            <span class="step-n">2</span>
-            <span class="step-title">取得各表的 Table ID</span>
-            <span class="step-tag">NocoDB</span>
-          </div>
-          <div class="step-body">
-            開啟表格 → 右上角「⋯」→ Copy table ID，格式類似 <code class="inline">mtbtr7a3vgjj6pv</code>。
-            目前已記錄：
-            <pre style="margin-top:8px;">建材專案管理總表（表二） = <span class="str">miogcqrct8lx0ne</span>
-專案選色資料庫（表三）   = <span class="str">mbmtdc1r0qv3yad</span>
-產品與廠牌總庫（表五）   = <span class="str">mtbtr7a3vgjj6pv</span></pre>
-          </div>
-        </div>
-
-        <div class="callout">
-          <strong>⚠️ 把 Token 和 Table ID 存到 .env 檔案，不要放在程式碼裡。</strong>
-        </div>
-      </div>
-    </details>
-  </div>
-
-  <!-- ── PHASE 2 ── -->
-  <div class="phase" data-status="ref">
-    <div class="phase-num"><div class="circle">P2</div></div>
-    <details class="phase-box" open>
-      <summary class="phase-head">
-        <h3>🏗 PHASE 02 · NocoDB 建立 3 張新表</h3>
-        <div class="right"><span class="pill pill-ref">操作教學</span><span class="chev">▾</span></div>
-      </summary>
-      <div class="phase-body">
-        <p>在 NocoDB 介面點「+ New Table」，依序建立 <strong>都更推動師</strong>、<strong>都更案件庫</strong>、<strong>AI 工作偏好記憶</strong>。欄位名稱必須完全一致（Python 爬蟲依靠這些名稱寫入）。</p>
-
-        <h4>詳細欄位清單</h4>
-        <p style="font-size:13px;">三張表的完整欄位見「完整規格書 § 04」。</p>
-
-        <h4>建立後先填入幾筆初始偏好（AI 工作偏好記憶）</h4>
-        <pre>brand_priority  → 冠軍 &gt; 白馬 &gt; 石頭記 &gt; 聖源
-output_format   → 結論先行，倒金字塔
-calc_unit       → 金額千元，面積坪 m² 並列
-talk_landowner  → 術語後括號白話說明</pre>
-      </div>
-    </details>
-  </div>
-
-  <!-- ── PHASE 3 ── -->
-  <div class="phase" data-status="ref">
-    <div class="phase-num"><div class="circle">P3</div></div>
-    <details class="phase-box">
-      <summary class="phase-head">
-        <h3>📁 PHASE 03 · SMB 共用資料夾掛載</h3>
-        <div class="right"><span class="pill pill-ref">操作教學</span><span class="chev">▾</span></div>
-      </summary>
-      <div class="phase-body">
-        <div class="step">
-          <div class="step-head"><span class="step-n">1</span><span class="step-title">DS920+ 開啟 SMB 服務</span><span class="step-tag">DSM</span></div>
-          <div class="step-body">控制台 → 檔案服務 → SMB 頁籤 → 勾選「啟用 SMB 服務」→ 套用。</div>
-        </div>
-        <div class="step">
-          <div class="step-head"><span class="step-n">2</span><span class="step-title">建立 atlas-library 共用資料夾</span><span class="step-tag">DSM</span></div>
-          <div class="step-body">
-            名稱：<code class="inline">atlas-library</code>，位置：Volume 1（14TB），權限設為讀取/寫入。
-            <pre style="margin-top:8px;">atlas-library/
-├── 磁磚/
-│   ├── 冠軍/
-│   ├── 白馬/
-│   ├── 石頭記/
-│   └── 其他/
-├── 截圖/
-├── 字體/
-├── 影片/
-└── .thumbs/      <span class="cm">← 縮圖快取</span></pre>
-          </div>
-        </div>
-        <div class="step">
-          <div class="step-head"><span class="step-n">3</span><span class="step-title">Windows 掛載為磁碟機</span><span class="step-tag">Win</span></div>
-          <div class="step-body">
-            <pre>\\192.168.68.51\atlas-library
-<span class="cm"># 勾選「登入時重新連線」、磁碟機代號選 Z:</span></pre>
-          </div>
-        </div>
-        <div class="step">
-          <div class="step-head"><span class="step-n">4</span><span class="step-title">macOS 掛載</span><span class="step-tag">macOS</span></div>
-          <div class="step-body">
-            <pre>smb://192.168.68.51/atlas-library
-<span class="cm"># Finder → 前往 → 連線伺服器（⌘K）</span></pre>
-          </div>
-        </div>
-      </div>
-    </details>
-  </div>
-
-  <!-- ── PHASE 4 ── -->
-  <div class="phase" data-status="ref">
-    <div class="phase-num"><div class="circle">P4</div></div>
-    <details class="phase-box">
-      <summary class="phase-head">
-        <h3>🐍 PHASE 04 · Python 環境 + 冠軍爬蟲</h3>
-        <div class="right"><span class="pill pill-ref">操作教學</span><span class="chev">▾</span></div>
-      </summary>
-      <div class="phase-body">
-        <div class="step">
-          <div class="step-head"><span class="step-n">1</span><span class="step-title">DS920+ 安裝 Python 3</span><span class="step-tag">DSM</span></div>
-          <div class="step-body">套件中心 → 搜尋 Python 3 → 安裝。</div>
-        </div>
-        <div class="step">
-          <div class="step-head"><span class="step-n">2</span><span class="step-title">建立專案目錄並安裝依賴</span><span class="step-tag">SSH</span></div>
-          <div class="step-body">
-            <pre><span class="cm"># SSH 連入 NAS</span>
-ssh admin@192.168.68.51
-
-mkdir -p /volume1/atlas-scripts
-cd /volume1/atlas-scripts
-
-pip3 install requests beautifulsoup4 pillow colorthief \
-             python-dotenv tqdm playwright <span class="var">--break-system-packages</span></pre>
-          </div>
-        </div>
-        <div class="step">
-          <div class="step-head"><span class="step-n">3</span><span class="step-title">建立 .env 設定檔</span><span class="step-tag">SSH</span></div>
-          <div class="step-body">
-            <pre>cat &gt; .env &lt;&lt;'EOF'
-NOCODB_URL=<span class="str">http://192.168.68.51:32768</span>
-NOCODB_TOKEN=<span class="str">你的-API-Token</span>
-TABLE_ID=<span class="str">mtbtr7a3vgjj6pv</span>
-LIBRARY_PATH=/volume1/atlas-library/磁磚/冠軍
-EOF</pre>
-          </div>
-        </div>
-        <div class="step">
-          <div class="step-head"><span class="step-n">4</span><span class="step-title">測試連線 → 小量 → 完整</span><span class="step-tag">SSH</span></div>
-          <div class="step-body">
-            <pre><span class="cm"># 三步驟</span>
-python3 champion_to_nocodb.py check
-python3 champion_to_nocodb.py crawl --limit 10
-python3 champion_to_nocodb.py crawl --upload-images --analyze-colors
-
-<span class="cm"># 背景執行（不怕 SSH 斷線）</span>
-nohup python3 champion_to_nocodb.py crawl \
-  --upload-images --analyze-colors &gt; crawl.log 2&gt;&amp;1 &amp;
-tail -f crawl.log</pre>
-          </div>
-        </div>
-        <div class="callout">
-          <strong>⏱ 完整爬取需要時間：</strong>冠軍官網數百件產品+圖片下載+顏色分析，約需 30–60 分鐘。建議在晚上跑。
-        </div>
-
-        <h4 style="margin-top:24px;">擴充其他廠牌 · 分層工具箱策略</h4>
-        <p style="font-size:13.5px;color:var(--ink-2);line-height:1.8;">
-          不要一套工具打天下。<strong style="color:var(--gold);">80% 的傳統廠牌官網是靜態頁面</strong>，
-          用 requests + BeautifulSoup 爬就好，開發快 2-3 倍、執行快 10 倍、NAS 負擔低。
-          只有 JS 動態渲染的網站（冠軍、瑪摩）才需要 Playwright。
-        </p>
-
-        <div class="grid g-2" style="gap:14px;margin-top:14px;">
-          <div class="card" style="border-top:3px solid var(--teal);">
-            <h3 class="sub-title" style="color:var(--teal);">🟢 Layer 1 · 靜態爬蟲</h3>
-            <p style="font-size:12.5px;color:var(--ink-2);line-height:1.7;">
-              <strong>requests + BeautifulSoup + lxml</strong><br>
-              適用 80% 傳統公司官網、HTML 寫死產品列表的站。
-              每秒可爬 10+ 頁、記憶體 MB 級、DS920+ 無感。
-            </p>
-            <div class="pill pill-done" style="margin-top:8px;">預計適用：白馬/三洋/昇元/國信/永大</div>
-          </div>
-          <div class="card" style="border-top:3px solid var(--amber);">
-            <h3 class="sub-title" style="color:var(--amber);">🟡 Layer 2 · 動態爬蟲</h3>
-            <p style="font-size:12.5px;color:var(--ink-2);line-height:1.7;">
-              <strong>Playwright</strong><br>
-              JS 渲染、SPA、有反爬蟲的站才需要。
-              每頁 2-5 秒、記憶體每實例 100MB+、較難被擋。
-            </p>
-            <div class="pill pill-wip" style="margin-top:8px;">預計適用：冠軍✓/瑪摩/JS-heavy</div>
-          </div>
-        </div>
-
-        <h4>爬新廠牌前：5 秒判斷法</h4>
-
-        <div class="step">
-          <div class="step-head"><span class="step-n">A</span><span class="step-title">方法 1 · curl 測試（最快）</span><span class="step-tag">SSH</span></div>
-          <div class="step-body">
-            <pre><span class="cm"># 抓下 HTML 看產品資料在不在</span>
-curl -s 'https://whitehorse.com.tw/overview/tw' | grep -i '產品\|磁磚\|tile'
-
-<span class="cm"># 如果看到產品名稱 → 靜態,用 requests 就夠</span>
-<span class="cm"># 如果只有 &lt;div id="app"&gt;&lt;/div&gt; 這種空殼 → 動態,需要 Playwright</span></pre>
-          </div>
-        </div>
-
-        <div class="step">
-          <div class="step-head"><span class="step-n">B</span><span class="step-title">方法 2 · 瀏覽器關 JS 法（最直覺）</span><span class="step-tag">瀏覽器</span></div>
-          <div class="step-body">
-            Chrome 開目標網站 → <kbd>F12</kbd> → Command Palette (Ctrl+Shift+P) → 輸入「Disable JavaScript」→ 重新整理頁面
-            <ul style="margin-top:6px;padding-left:18px;font-size:13px;">
-              <li>✅ 產品還在 → <strong style="color:var(--teal);">靜態</strong>，用 requests</li>
-              <li>❌ 頁面空白 → <strong style="color:var(--amber);">動態</strong>，用 Playwright</li>
-            </ul>
-          </div>
-        </div>
-
-        <h4>7 家廠牌預判表</h4>
-        <table class="data">
-          <thead>
-            <tr><th style="width:90px;">廠牌</th><th>網站</th><th style="width:80px;">預判</th><th style="width:100px;">工具</th><th style="width:80px;">狀態</th></tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><strong>冠軍</strong></td>
-              <td>champion.com.tw</td>
-              <td><span class="pill pill-wip">動態</span></td>
-              <td>Playwright</td>
-              <td><span class="pill pill-done">已完成</span></td>
-            </tr>
-            <tr>
-              <td><strong>白馬</strong></td>
-              <td>whitehorse.com.tw</td>
-              <td><span class="pill pill-done">靜態</span></td>
-              <td>requests</td>
-              <td><span class="pill pill-hot">下一個</span></td>
-            </tr>
-            <tr>
-              <td><strong>三洋</strong></td>
-              <td>stg.com.tw</td>
-              <td><span class="pill pill-done">靜態</span></td>
-              <td>requests</td>
-              <td><span class="pill pill-todo">後續</span></td>
-            </tr>
-            <tr>
-              <td><strong>昇元</strong></td>
-              <td>hiland.com.tw</td>
-              <td><span class="pill pill-done">靜態</span></td>
-              <td>requests</td>
-              <td><span class="pill pill-todo">後續</span></td>
-            </tr>
-            <tr>
-              <td><strong>瑪摩</strong></td>
-              <td>marmotaiwan.com</td>
-              <td><span class="pill pill-wip">動態</span></td>
-              <td>Playwright</td>
-              <td><span class="pill pill-todo">後續</span></td>
-            </tr>
-            <tr>
-              <td><strong>國信</strong></td>
-              <td>gwo-shin.com</td>
-              <td><span class="pill pill-done">靜態</span></td>
-              <td>requests</td>
-              <td><span class="pill pill-todo">後續</span></td>
-            </tr>
-            <tr>
-              <td><strong>永大</strong></td>
-              <td>yungda-ceramic.com</td>
-              <td><span class="pill pill-done">靜態</span></td>
-              <td>requests</td>
-              <td><span class="pill pill-todo">後續</span></td>
-            </tr>
-          </tbody>
-        </table>
-        <p style="font-size:12px;color:var(--muted);margin-top:8px;">
-          預判僅供參考，實際開發前請用「5 秒判斷法」確認一次。
-        </p>
-
-        <h4>📄 Template 1 · 靜態爬蟲骨架（requests + BS4）</h4>
-        <p style="font-size:13px;color:var(--ink-2);">
-          複製這份 → 改 <code class="inline">BRAND_NAME</code>、<code class="inline">BASE_URL</code>、三個 CSS selector，就能跑新廠牌。
-        </p>
-
-<pre><span class="cm">#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-# atlas_crawler_static.py · 靜態廠牌爬蟲 template
-# 使用：python3 atlas_crawler_static.py --limit 10 （測試）
-#       python3 atlas_crawler_static.py --all     （完整）</span>
-
-<span class="kw">import</span> os, sys, time, json, argparse
-<span class="kw">from</span> urllib.parse <span class="kw">import</span> urljoin
-<span class="kw">import</span> requests
-<span class="kw">from</span> bs4 <span class="kw">import</span> BeautifulSoup
-<span class="kw">from</span> dotenv <span class="kw">import</span> load_dotenv
-<span class="kw">from</span> tqdm <span class="kw">import</span> tqdm
-<span class="kw">from</span> atlas_nocodb <span class="kw">import</span> upsert_product, download_image
-
-load_dotenv()
-
-<span class="cm"># ═══ 改這區塊就能爬新廠牌 ═══</span>
-BRAND_NAME    = <span class="str">"白馬"</span>          <span class="cm"># 改這</span>
-FACTORY_NAME  = <span class="str">"白馬陶瓷"</span>       <span class="cm"># 改這</span>
-BASE_URL      = <span class="str">"https://whitehorse.com.tw"</span>
-LIST_URL      = <span class="str">f"{BASE_URL}/overview/tw"</span>   <span class="cm"># 改這:產品列表頁</span>
-LIBRARY_DIR   = <span class="str">f"/volume1/atlas-library/磁磚/{BRAND_NAME}"</span>
-
-<span class="cm"># CSS selector(從 F12 Elements 複製)</span>
-SEL_PRODUCT_CARD = <span class="str">"div.product-item"</span>       <span class="cm"># 改這</span>
-SEL_PRODUCT_NAME = <span class="str">"h3.product-title"</span>        <span class="cm"># 改這</span>
-SEL_PRODUCT_IMG  = <span class="str">"img.product-img"</span>          <span class="cm"># 改這</span>
-SEL_PRODUCT_LINK = <span class="str">"a.product-link"</span>          <span class="cm"># 改這</span>
-
-HEADERS = {
-    <span class="str">"User-Agent"</span>: <span class="str">"Mozilla/5.0 (Macintosh; ATLAS-Crawler)"</span>,
-    <span class="str">"Accept-Language"</span>: <span class="str">"zh-TW,zh;q=0.9"</span>,
-}
-
-<span class="kw">def</span> fetch(url):
-    <span class="cm">"""包裝 requests，加入 timeout、retry、rate limit"""</span>
-    <span class="kw">for</span> attempt <span class="kw">in</span> range(3):
-        <span class="kw">try</span>:
-            r = requests.get(url, headers=HEADERS, timeout=15)
-            r.raise_for_status()
-            time.sleep(0.5)  <span class="cm"># 禮貌性暫停，別太快</span>
-            <span class="kw">return</span> r.text
-        <span class="kw">except</span> Exception <span class="kw">as</span> e:
-            <span class="kw">print</span>(f<span class="str">"⚠ 第 {attempt+1} 次失敗: {e}"</span>)
-            time.sleep(2 ** attempt)
-    <span class="kw">return</span> None
-
-<span class="kw">def</span> parse_product_detail(url):
-    <span class="cm">"""進入單一產品頁，抽取完整欄位"""</span>
-    html = fetch(url)
-    <span class="kw">if</span> <span class="kw">not</span> html: <span class="kw">return</span> None
-    soup = BeautifulSoup(html, <span class="str">"lxml"</span>)
-
-    <span class="cm"># TODO: 根據網站實際 DOM 結構填入</span>
-    <span class="kw">return</span> {
-        <span class="str">"工廠"</span>: FACTORY_NAME,
-        <span class="str">"品牌"</span>: BRAND_NAME,
-        <span class="str">"代理"</span>: <span class="str">""</span>,
-        <span class="str">"型號"</span>: soup.select_one(<span class="str">".model"</span>).text.strip(),
-        <span class="str">"產品名稱"</span>: soup.select_one(<span class="str">".title"</span>).text.strip(),
-        <span class="str">"尺寸"</span>: soup.select_one(<span class="str">".size"</span>).text.strip(),
-        <span class="str">"主系列"</span>: soup.select_one(<span class="str">".series"</span>).text.strip(),
-        <span class="str">"面感"</span>: soup.select_one(<span class="str">".surface"</span>).text.strip(),
-        <span class="str">"產地"</span>: soup.select_one(<span class="str">".origin"</span>).text.strip(),
-        <span class="str">"來源網址"</span>: url,
-        <span class="cm"># ... 其他欄位</span>
-    }
-
-<span class="kw">def</span> main():
-    ap = argparse.ArgumentParser()
-    ap.add_argument(<span class="str">"--limit"</span>, type=int, default=None, help=<span class="str">"測試用"</span>)
-    ap.add_argument(<span class="str">"--images"</span>, action=<span class="str">"store_true"</span>)
-    ap.add_argument(<span class="str">"--colors"</span>, action=<span class="str">"store_true"</span>)
-    args = ap.parse_args()
-
-    os.makedirs(LIBRARY_DIR, exist_ok=True)
-    <span class="kw">print</span>(f<span class="str">"🏭 開始爬 {BRAND_NAME} · {LIST_URL}"</span>)
-
-    <span class="cm"># 1. 抓列表頁</span>
-    html = fetch(LIST_URL)
-    soup = BeautifulSoup(html, <span class="str">"lxml"</span>)
-    cards = soup.select(SEL_PRODUCT_CARD)
-    <span class="kw">if</span> args.limit:
-        cards = cards[:args.limit]
-    <span class="kw">print</span>(f<span class="str">"   找到 {len(cards)} 件產品"</span>)
-
-    <span class="cm"># 2. 逐件爬詳情 + 圖片 + 寫入 NocoDB</span>
-    <span class="kw">for</span> card <span class="kw">in</span> tqdm(cards, desc=<span class="str">"爬取中"</span>):
-        link_el = card.select_one(SEL_PRODUCT_LINK)
-        detail_url = urljoin(BASE_URL, link_el[<span class="str">"href"</span>])
-
-        product = parse_product_detail(detail_url)
-        <span class="kw">if</span> <span class="kw">not</span> product: <span class="kw">continue</span>
-
-        <span class="kw">if</span> args.images:
-            img_el = card.select_one(SEL_PRODUCT_IMG)
-            <span class="kw">if</span> img_el:
-                img_url = urljoin(BASE_URL, img_el.get(<span class="str">"src"</span>, <span class="str">""</span>))
-                img_path = download_image(img_url, LIBRARY_DIR, product[<span class="str">"型號"</span>])
-                product[<span class="str">"圖檔"</span>] = img_path
-
-        <span class="kw">if</span> args.colors <span class="kw">and</span> product.get(<span class="str">"圖檔"</span>):
-            <span class="kw">from</span> colorthief <span class="kw">import</span> ColorThief
-            ct = ColorThief(product[<span class="str">"圖檔"</span>])
-            palette = ct.get_palette(color_count=6)
-            product[<span class="str">"色盤"</span>] = json.dumps([f<span class="str">"#{r:02x}{g:02x}{b:02x}"</span> <span class="kw">for</span> r,g,b <span class="kw">in</span> palette])
-
-        upsert_product(product)
-
-    <span class="kw">print</span>(<span class="str">"✅ 完成"</span>)
-
-<span class="kw">if</span> __name__ == <span class="str">"__main__"</span>:
-    main()</pre>
-
-        <h4>📄 Template 2 · 動態爬蟲骨架（Playwright）</h4>
-        <p style="font-size:13px;color:var(--ink-2);">
-          結構跟 Template 1 幾乎一樣，只有 <code class="inline">fetch()</code> 和 <code class="inline">parse_*()</code> 換成 Playwright。
-          冠軍腳本已是這架構，複製改名即可。
-        </p>
-
-<pre><span class="cm">#!/usr/bin/env python3
-# atlas_crawler_dynamic.py · 動態廠牌爬蟲 template
-# 基於冠軍腳本延伸，適用 JS 渲染、SPA</span>
-
-<span class="kw">import</span> os, json, argparse
-<span class="kw">from</span> playwright.sync_api <span class="kw">import</span> sync_playwright
-<span class="kw">from</span> dotenv <span class="kw">import</span> load_dotenv
-<span class="kw">from</span> tqdm <span class="kw">import</span> tqdm
-<span class="kw">from</span> atlas_nocodb <span class="kw">import</span> upsert_product, download_image
-
-load_dotenv()
-
-<span class="cm"># ═══ 改這區塊就能爬新廠牌 ═══</span>
-BRAND_NAME   = <span class="str">"瑪摩"</span>
-FACTORY_NAME = <span class="str">"台灣瑪摩"</span>
-BASE_URL     = <span class="str">"https://marmotaiwan.com"</span>
-LIST_URL     = <span class="str">f"{BASE_URL}/product-search"</span>
-LIBRARY_DIR  = <span class="str">f"/volume1/atlas-library/磁磚/{BRAND_NAME}"</span>
-
-SEL_PRODUCT_CARD = <span class="str">"div.product-card"</span>
-SEL_NEXT_PAGE    = <span class="str">"a.next-page"</span>
-
-<span class="kw">def</span> main():
-    ap = argparse.ArgumentParser()
-    ap.add_argument(<span class="str">"--limit"</span>, type=int, default=None)
-    ap.add_argument(<span class="str">"--images"</span>, action=<span class="str">"store_true"</span>)
-    ap.add_argument(<span class="str">"--colors"</span>, action=<span class="str">"store_true"</span>)
-    ap.add_argument(<span class="str">"--headless"</span>, action=<span class="str">"store_true"</span>, default=True)
-    args = ap.parse_args()
-
-    os.makedirs(LIBRARY_DIR, exist_ok=True)
-
-    <span class="kw">with</span> sync_playwright() <span class="kw">as</span> p:
-        browser = p.chromium.launch(headless=args.headless)
-        context = browser.new_context(
-            user_agent=<span class="str">"Mozilla/5.0 ATLAS-Crawler"</span>,
-            locale=<span class="str">"zh-TW"</span>,
-        )
-        page = context.new_page()
-        page.goto(LIST_URL, wait_until=<span class="str">"networkidle"</span>)
-
-        <span class="cm"># 1. 自動翻頁收集所有產品連結</span>
-        all_links = []
-        <span class="kw">while</span> True:
-            page.wait_for_selector(SEL_PRODUCT_CARD, timeout=10000)
-            cards = page.query_selector_all(SEL_PRODUCT_CARD)
-            <span class="kw">for</span> c <span class="kw">in</span> cards:
-                link = c.query_selector(<span class="str">"a"</span>)
-                <span class="kw">if</span> link:
-                    all_links.append(link.get_attribute(<span class="str">"href"</span>))
-
-            next_btn = page.query_selector(SEL_NEXT_PAGE)
-            <span class="kw">if</span> <span class="kw">not</span> next_btn <span class="kw">or</span> <span class="kw">not</span> next_btn.is_enabled():
-                <span class="kw">break</span>
-            next_btn.click()
-            page.wait_for_load_state(<span class="str">"networkidle"</span>)
-
-        <span class="kw">if</span> args.limit:
-            all_links = all_links[:args.limit]
-
-        <span class="cm"># 2. 逐件爬詳情</span>
-        <span class="kw">for</span> url <span class="kw">in</span> tqdm(all_links, desc=<span class="str">"爬取中"</span>):
-            page.goto(url, wait_until=<span class="str">"networkidle"</span>)
-            product = {
-                <span class="str">"工廠"</span>: FACTORY_NAME,
-                <span class="str">"品牌"</span>: BRAND_NAME,
-                <span class="str">"型號"</span>: page.text_content(<span class="str">".model"</span>),
-                <span class="cm"># ... 其他欄位用 page.text_content(selector) 抽</span>
-                <span class="str">"來源網址"</span>: url,
-            }
-
-            <span class="kw">if</span> args.images:
-                img_url = page.get_attribute(<span class="str">".main-image img"</span>, <span class="str">"src"</span>)
-                <span class="kw">if</span> img_url:
-                    product[<span class="str">"圖檔"</span>] = download_image(img_url, LIBRARY_DIR, product[<span class="str">"型號"</span>])
-
-            upsert_product(product)
-
-        browser.close()
-    <span class="kw">print</span>(<span class="str">"✅ 完成"</span>)
-
-<span class="kw">if</span> __name__ == <span class="str">"__main__"</span>:
-    main()</pre>
-
-        <h4>📄 共用模組 · atlas_nocodb.py</h4>
-        <p style="font-size:13px;color:var(--ink-2);">
-          寫入 NocoDB 和下載圖片的共用函式。所有爬蟲 import 它，別每家重寫。
-        </p>
-
-<pre><span class="cm"># atlas_nocodb.py · 共用模組
-# 所有爬蟲 import 這個檔案，集中管理 NocoDB 寫入邏輯</span>
-
-<span class="kw">import</span> os, requests, hashlib
-<span class="kw">from</span> urllib.parse <span class="kw">import</span> urlparse
-<span class="kw">from</span> dotenv <span class="kw">import</span> load_dotenv
-
-load_dotenv()
-
-NOCODB_URL   = os.getenv(<span class="str">"NOCODB_URL"</span>)
-NOCODB_TOKEN = os.getenv(<span class="str">"NOCODB_TOKEN"</span>)
-TABLE_ID     = os.getenv(<span class="str">"TABLE_ID"</span>)  <span class="cm"># 表五 · 產品與廠牌總庫</span>
-
-HEADERS = {
-    <span class="str">"xc-token"</span>: NOCODB_TOKEN,
-    <span class="str">"Content-Type"</span>: <span class="str">"application/json"</span>,
-}
-
-<span class="kw">def</span> find_by_model(model):
-    <span class="cm">"""根據型號查詢是否已存在"""</span>
-    url = f<span class="str">"{NOCODB_URL}/api/v2/tables/{TABLE_ID}/records"</span>
-    r = requests.get(url, headers=HEADERS, params={
-        <span class="str">"where"</span>: f<span class="str">"(型號,eq,{model})"</span>,
-        <span class="str">"limit"</span>: 1,
-    })
-    records = r.json().get(<span class="str">"list"</span>, [])
-    <span class="kw">return</span> records[0] <span class="kw">if</span> records <span class="kw">else</span> None
-
-<span class="kw">def</span> upsert_product(product):
-    <span class="cm">"""有就更新、沒有就新增。保留手動備註欄位不覆蓋"""</span>
-    existing = find_by_model(product[<span class="str">"型號"</span>])
-
-    <span class="kw">if</span> existing:
-        <span class="cm"># 更新，但保留「備註」欄位</span>
-        record_id = existing[<span class="str">"Id"</span>]
-        product.pop(<span class="str">"備註"</span>, None)  <span class="cm"># 移除備註不覆蓋</span>
-        url = f<span class="str">"{NOCODB_URL}/api/v2/tables/{TABLE_ID}/records"</span>
-        r = requests.patch(url, headers=HEADERS, json={**product, <span class="str">"Id"</span>: record_id})
-        <span class="kw">return</span> <span class="str">"updated"</span>
-    <span class="kw">else</span>:
-        <span class="cm"># 新增</span>
-        url = f<span class="str">"{NOCODB_URL}/api/v2/tables/{TABLE_ID}/records"</span>
-        r = requests.post(url, headers=HEADERS, json=product)
-        <span class="kw">return</span> <span class="str">"created"</span>
-
-<span class="kw">def</span> download_image(img_url, folder, filename):
-    <span class="cm">"""下載圖片到 NAS，重複不重下"""</span>
-    <span class="kw">if</span> <span class="kw">not</span> img_url.startswith(<span class="str">"http"</span>):
-        <span class="kw">return</span> None
-    ext = os.path.splitext(urlparse(img_url).path)[1] <span class="kw">or</span> <span class="str">".jpg"</span>
-    safe_name = <span class="str">""</span>.join(c <span class="kw">for</span> c <span class="kw">in</span> filename <span class="kw">if</span> c.isalnum() <span class="kw">or</span> c <span class="kw">in</span> <span class="str">"-_"</span>)
-    filepath = os.path.join(folder, f<span class="str">"{safe_name}{ext}"</span>)
-
-    <span class="kw">if</span> os.path.exists(filepath):
-        <span class="kw">return</span> filepath
-
-    r = requests.get(img_url, timeout=30, stream=True)
-    <span class="kw">if</span> r.status_code == 200:
-        <span class="kw">with</span> open(filepath, <span class="str">"wb"</span>) <span class="kw">as</span> f:
-            <span class="kw">for</span> chunk <span class="kw">in</span> r.iter_content(8192):
-                f.write(chunk)
-        <span class="kw">return</span> filepath
-    <span class="kw">return</span> None</pre>
-
-        <h4>擴充新廠牌 · 7 步驟</h4>
-
-        <div class="step">
-          <div class="step-head"><span class="step-n">1</span><span class="step-title">用 5 秒判斷法測是靜態還動態</span></div>
-          <div class="step-body">選 Template 1 或 Template 2。</div>
-        </div>
-        <div class="step">
-          <div class="step-head"><span class="step-n">2</span><span class="step-title">複製 template 改檔名</span></div>
-          <div class="step-body"><code class="inline">cp atlas_crawler_static.py atlas_crawler_whitehorse.py</code></div>
-        </div>
-        <div class="step">
-          <div class="step-head"><span class="step-n">3</span><span class="step-title">填 BRAND_NAME / FACTORY_NAME / BASE_URL / LIST_URL</span></div>
-          <div class="step-body">5 個設定值全部在檔案最上方，2 分鐘填完。</div>
-        </div>
-        <div class="step">
-          <div class="step-head"><span class="step-n">4</span><span class="step-title">F12 找 CSS selector</span></div>
-          <div class="step-body">
-            Chrome F12 → Elements → 對著產品卡片右鍵 → Copy → Copy selector。貼到 SEL_* 常數裡。
-          </div>
-        </div>
-        <div class="step">
-          <div class="step-head"><span class="step-n">5</span><span class="step-title">先跑 --limit 5 測試</span></div>
-          <div class="step-body">
-            <pre>python3 atlas_crawler_whitehorse.py --limit 5
-<span class="cm"># 看 NocoDB 有沒有進 5 筆資料、欄位對不對</span></pre>
-          </div>
-        </div>
-        <div class="step">
-          <div class="step-head"><span class="step-n">6</span><span class="step-title">加圖片和顏色：--images --colors</span></div>
-          <div class="step-body">
-            <pre>python3 atlas_crawler_whitehorse.py --limit 5 --images --colors</pre>
-          </div>
-        </div>
-        <div class="step">
-          <div class="step-head"><span class="step-n">7</span><span class="step-title">完整跑</span></div>
-          <div class="step-body">
-            <pre>nohup python3 atlas_crawler_whitehorse.py --images --colors &gt; whitehorse.log 2&gt;&amp;1 &amp;</pre>
-          </div>
-        </div>
-
-        <div class="callout teal">
-          <strong>🎯 時間估算：</strong>
-          有了 template，從測試到完整上線 <strong>每家新廠牌約 1-2 小時</strong>（含找 selector）。
-          白馬 → 三洋 → 國信 → 永大 → 昇元 5 家靜態站，一個週末可以全數完工。
-          瑪摩（動態）另外排 2-3 小時。
-        </div>
-
-        <h4>反爬蟲常見問題處理</h4>
-        <table class="data">
-          <thead>
-            <tr><th style="width:160px;">症狀</th><th>原因</th><th>解法</th></tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>403 Forbidden</td>
-              <td>被擋 User-Agent</td>
-              <td>改 HEADERS 偽裝成真 Chrome</td>
-            </tr>
-            <tr>
-              <td>429 Too Many Requests</td>
-              <td>爬太快</td>
-              <td>加大 <code class="inline">time.sleep(2)</code></td>
-            </tr>
-            <tr>
-              <td>Cloudflare 驗證</td>
-              <td>有 CF 防護</td>
-              <td>改用 Playwright + <code class="inline">stealth</code> 插件</td>
-            </tr>
-            <tr>
-              <td>產品列表為空</td>
-              <td>以為靜態其實動態</td>
-              <td>改用 Template 2（Playwright）</td>
-            </tr>
-            <tr>
-              <td>圖片 URL 相對路徑</td>
-              <td>src="/images/xx.jpg"</td>
-              <td>用 <code class="inline">urljoin(BASE_URL, src)</code></td>
-            </tr>
-          </tbody>
-        </table>
-
-      </div>
-    </details>
-  </div>
-
-  <!-- ── PHASE 5 ── -->
-  <div class="phase" data-status="ref">
-    <div class="phase-num"><div class="circle">P5</div></div>
-    <details class="phase-box">
-      <summary class="phase-head">
-        <h3>🖼 PHASE 05 · ATLAS Gallery 部署（NAS 圖庫介面）</h3>
-        <div class="right"><span class="pill pill-ref">操作教學</span><span class="chev">▾</span></div>
-      </summary>
-      <div class="phase-body">
-        <p>替代 Eagle 的圖庫瀏覽介面，在 NAS 上跑 Node.js + SQLite。</p>
-        <div class="step">
-          <div class="step-head"><span class="step-n">1</span><span class="step-title">安裝 Node.js</span><span class="step-tag">DSM</span></div>
-          <div class="step-body">套件中心 → 搜尋 Node.js v20 → 安裝。</div>
-        </div>
-        <div class="step">
-          <div class="step-head"><span class="step-n">2</span><span class="step-title">上傳並安裝 atlas-gallery</span><span class="step-tag">SSH</span></div>
-          <div class="step-body">
-            <pre>scp atlas-gallery.zip admin@192.168.68.51:/volume1/
-cd /volume1 &amp;&amp; unzip atlas-gallery.zip
-cd atlas-gallery &amp;&amp; npm install
-
-cat &gt; .env &lt;&lt;'EOF'
-LIBRARY_PATH=/volume1/atlas-library
-THUMBS_PATH=/volume1/atlas-library/.thumbs
-DB_PATH=/volume1/atlas-gallery/atlas.db
-PORT=7788
-HOST=0.0.0.0
-EOF</pre>
-          </div>
-        </div>
-        <div class="step">
-          <div class="step-head"><span class="step-n">3</span><span class="step-title">PM2 讓服務永久運行</span><span class="step-tag">SSH</span></div>
-          <div class="step-body">
-            <pre>npm install -g pm2
-pm2 start server/index.js --name atlas-gallery
-pm2 save
-pm2 startup  <span class="cm"># 複製輸出的指令再執行一次</span></pre>
-          </div>
-        </div>
-        <div class="step">
-          <div class="step-head"><span class="step-n">4</span><span class="step-title">開啟確認</span><span class="step-tag">瀏覽器</span></div>
-          <div class="step-body">
-            <code class="inline">http://192.168.68.51:7788</code> → 看到 ATLAS Gallery → 點「重新掃描圖庫」。
-          </div>
-        </div>
-      </div>
-    </details>
-  </div>
-
-  <!-- ── PHASE 6 ── -->
-  <div class="phase" data-status="ref">
-    <div class="phase-num"><div class="circle">P6</div></div>
-    <details class="phase-box">
-      <summary class="phase-head">
-        <h3>📚 PHASE 06 · 法規 RAG（Qdrant 向量庫）</h3>
-        <div class="right"><span class="pill pill-ref">操作教學</span><span class="chev">▾</span></div>
-      </summary>
-      <div class="phase-body">
-        <p>將 8 份都更法規 PDF 向量化，讓 AI 能精準引用條文。</p>
-        <div class="step">
-          <div class="step-head"><span class="step-n">1</span><span class="step-title">安裝 Qdrant Docker</span><span class="step-tag">SSH</span></div>
-          <div class="step-body">
-            <pre>docker pull qdrant/qdrant
-
-docker run -d \
-  --name qdrant \
-  --restart unless-stopped \
-  -p 6333:6333 \
-  -v /volume1/atlas-qdrant:/qdrant/storage \
-  qdrant/qdrant
-
-<span class="cm"># 確認運行：http://192.168.68.51:6333/dashboard</span></pre>
-          </div>
-        </div>
-        <div class="step">
-          <div class="step-head"><span class="step-n">2</span><span class="step-title">安裝 PDF 處理套件</span><span class="step-tag">SSH</span></div>
-          <div class="step-body">
-            <pre>pip3 install qdrant-client anthropic pypdf <span class="var">--break-system-packages</span></pre>
-          </div>
-        </div>
-        <div class="step">
-          <div class="step-head"><span class="step-n">3</span><span class="step-title">上傳 PDF 並向量化</span><span class="step-tag">SSH</span></div>
-          <div class="step-body">
-            <pre>mkdir -p /volume1/atlas-scripts/laws
-scp *.pdf admin@192.168.68.51:/volume1/atlas-scripts/laws/
-
-python3 rag_ingest.py --pdf-dir ./laws/</pre>
-          </div>
-        </div>
-        <div class="callout teal">
-          <strong>✅ 測試：</strong>「危老容積獎勵最高幾%？」→ 應引用條文回答並標注【危老容積獎勵辦法第 X 條】。
-        </div>
-      </div>
-    </details>
-  </div>
-
-  <!-- ── PHASE 7 ── -->
-  <div class="phase" data-status="ref">
-    <div class="phase-num"><div class="circle">P7</div></div>
-    <details class="phase-box">
-      <summary class="phase-head">
-        <h3>🤖 PHASE 07 · Claude AI 助理接入</h3>
-        <div class="right"><span class="pill pill-ref">操作教學</span><span class="chev">▾</span></div>
-      </summary>
-      <div class="phase-body">
-        <div class="step">
-          <div class="step-head"><span class="step-n">1</span><span class="step-title">最快起步：Claude.ai Projects</span><span class="step-tag">現在可用</span></div>
-          <div class="step-body">
-            <ol style="padding-left:20px;">
-              <li>開啟 claude.ai → 左側 Projects → New Project</li>
-              <li>名稱：<code class="inline">ATLAS 建材都更助理</code></li>
-              <li>點「Set project instructions」→ 貼入規格書 § 02 的 System Prompt</li>
-              <li>上傳 ATLAS-CONTEXT 續談檔作為 Knowledge</li>
-            </ol>
-            <div class="callout" style="margin-top:10px;">
-              ⚠️ <strong>此段已部分過時（2026-09-12）。</strong>
-              原規劃是上傳 8 份法規 PDF 讓 Claude 做 RAG；
-              現法規已結構化入 NocoDB（16 部 505 條，見規格書 §01），
-              並透過 GitHub Pages 發布靜態 JSON，Claude 可直接 fetch 讀取最新條文。<br>
-              Project Knowledge 現在應改上傳 <code class="inline">ATLAS-CONTEXT</code> 續談檔，
-              讓新對話能快速接上脈絡。
-            </div>
-          </div>
-        </div>
-        <div class="step">
-          <div class="step-head"><span class="step-n">2</span><span class="step-title">進階：Claude API + Tool Use 串接</span><span class="step-tag">未來</span></div>
-          <div class="step-body">
-            <pre><span class="cm"># 三個 Tool 串接</span>
-Tool 1: query_materials(關鍵字)  → 查 NocoDB 建材庫
-Tool 2: query_law(問題)          → 查 Qdrant 法規向量庫
-Tool 3: update_case(ID, 欄位, 值) → 更新都更案件庫</pre>
-          </div>
-        </div>
-      </div>
-    </details>
-  </div>
-
-  <!-- ── PHASE 8 ── -->
-  <div class="phase" data-status="ref">
-    <div class="phase-num"><div class="circle">P8</div></div>
-    <details class="phase-box">
-      <summary class="phase-head">
-        <h3>🔐 PHASE 08 · Tailscale 遠端存取</h3>
-        <div class="right"><span class="pill pill-ref">操作教學</span><span class="chev">▾</span></div>
-      </summary>
-      <div class="phase-body">
-        <p>不用開放公網 IP，從任何地方安全連回 NAS。<strong style="color:var(--gold);">目前已安裝</strong>，Tailscale IP：<code class="inline">100.94.31.19</code>。</p>
-        <div class="step">
-          <div class="step-head"><span class="step-n">1</span><span class="step-title">各裝置也安裝 Tailscale</span><span class="step-tag">各平台</span></div>
-          <div class="step-body">
-            <ul>
-              <li>公司 PC（Windows）→ <code class="inline">tailscale.com/download</code></li>
-              <li>MacBook Pro → App Store 搜尋 Tailscale</li>
-              <li>手機（iOS/Android）→ App Store / Google Play</li>
-            </ul>
-            全部用同一個 Tailscale 帳號登入，裝置會自動出現在同一個虛擬內網。
-          </div>
-        </div>
-        <div class="step">
-          <div class="step-head"><span class="step-n">2</span><span class="step-title">異地存取網址</span><span class="step-tag">All</span></div>
-          <div class="step-body">
-            <pre><span class="cm"># 現役服務（D22 · 2026-10）</span>
-帷幄儀表板      https://atlas-app.vercel.app          ← 本頁
-法規條文庫      https://atlas-app.vercel.app/law.html
-Supabase 後台   https://supabase.com/dashboard/project/riiflvhbxrnmzriwngjs
-
-<span class="cm"># 退場中（搬遷完成後關閉）</span>
-選色表 (NAS)    http://100.94.31.19:8081      ← 待改接 Supabase
-NocoDB (NAS)   http://100.94.31.19:32768     ← 資料已搬，待停用</pre>
-          </div>
-        </div>
-      </div>
-    </details>
-  </div>
-
-  <!-- ── PHASE 9 ── -->
-  <div class="phase" data-status="ref">
-    <div class="phase-num"><div class="circle">P9</div></div>
-    <details class="phase-box">
-      <summary class="phase-head">
-        <h3>⏰ PHASE 09 · Synology 工作排程器</h3>
-        <div class="right"><span class="pill pill-ref">操作教學</span><span class="chev">▾</span></div>
-      </summary>
-      <div class="phase-body">
-        <div class="step">
-          <div class="step-head"><span class="step-n">1</span><span class="step-title">半年自動比對排程</span><span class="step-tag">DSM</span></div>
-          <div class="step-body">
-            控制台 → 工作排程器 → 新增 → 使用者定義的指令碼
-            <pre style="margin-top:8px;">工作名稱：ATLAS 建材庫半年比對
-執行身分：admin
-排程：每月 → 1月1日 + 7月1日 → 03:00
-指令：
-cd /volume1/atlas-scripts
-python3 atlas_crawler.py all --images --colors --apply \
-  &gt;&gt; /volume1/atlas-scripts/sync.log 2&gt;&amp;1</pre>
-          </div>
-        </div>
-        <div class="step">
-          <div class="step-head"><span class="step-n">2</span><span class="step-title">ATLAS Gallery 開機自動啟動</span><span class="step-tag">DSM</span></div>
-          <div class="step-body">
-            <pre>cd /volume1/atlas-gallery &amp;&amp; \
-pm2 start server/index.js --name atlas-gallery 2&gt;/dev/null || \
-pm2 restart atlas-gallery</pre>
-          </div>
-        </div>
-      </div>
-    </details>
-  </div>
-
-  <!-- ── PHASE 10 ── -->
-  <div class="phase" data-status="ref">
-    <div class="phase-num"><div class="circle">P10</div></div>
-    <details class="phase-box" open>
-      <summary class="phase-head">
-        <h3>🎯 PHASE 10 · 完成檢查清單</h3>
-        <div class="right"><span class="pill pill-ref">歷史紀錄</span><span class="chev">▾</span></div>
-      </summary>
-      <div class="phase-body">
-        <p>📌 <b>歷史紀錄</b>：這是 ATLAS 原始建置清單（2026 上半年）。<br>
-        當期工作進度請看「<b>04 工作時程</b>」，總覽的進度條已改為連動該頁。<br>
-        本清單仍可勾選，保留作為基礎建設的完成軌跡。</p>
-
-        <div class="checklist" id="checklist">
-          <div class="checklist-item"><div class="checkbox checked"></div>DS920+ 開機，NocoDB 可從瀏覽器存取</div>
-          <div class="checklist-item"><div class="checkbox checked"></div>表五（產品與廠牌總庫）已存在，51 個主系列分組</div>
-          <div class="checklist-item"><div class="checkbox checked"></div>NocoDB API Token 已取得並記下</div>
-          <div class="checklist-item"><div class="checkbox checked"></div>ATLAS 選色表 v5 已部署（Nginx 反向代理）</div>
-          <div class="checklist-item"><div class="checkbox checked"></div>Tailscale 已安裝（100.94.31.19）</div>
-          <div class="checklist-item"><div class="checkbox"></div>NocoDB 新增 3 張表：都更推動師 / 都更案件庫 / AI 工作偏好記憶</div>
-          <div class="checklist-item"><div class="checkbox"></div>SMB 共用資料夾 atlas-library 建立完成</div>
-          <div class="checklist-item"><div class="checkbox"></div>Windows / Mac 掛載 NAS 共用資料夾為網路磁碟</div>
-          <div class="checklist-item"><div class="checkbox"></div>Python 3 安裝於 NAS</div>
-          <div class="checklist-item"><div class="checkbox"></div>champion_to_nocodb.py 上傳，.env 設定完成</div>
-          <div class="checklist-item"><div class="checkbox"></div>爬蟲測試（10 筆）成功，NocoDB 有資料</div>
-          <div class="checklist-item"><div class="checkbox"></div>冠軍全品項進入 NocoDB</div>
-          <div class="checklist-item"><div class="checkbox"></div>Node.js 安裝於 NAS</div>
-          <div class="checklist-item"><div class="checkbox"></div>ATLAS Gallery 啟動（http://NAS:7788）</div>
-          <div class="checklist-item"><div class="checkbox"></div>圖片掃描，Gallery 看得到磁磚縮圖</div>
-          <div class="checklist-item"><div class="checkbox"></div>所有裝置都安裝 Tailscale（公司 PC / MacBook / 手機）</div>
-          <div class="checklist-item"><div class="checkbox"></div>異地測試：手機 4G 存取 NAS 服務</div>
-          <div class="checklist-item"><div class="checkbox"></div>Claude.ai Project 建立，System Prompt 貼入</div>
-          <div class="checklist-item"><div class="checkbox"></div>三個觸發指令測試（地主簡報 / 法規辯護 / 數據對齊）</div>
-          <div class="checklist-item"><div class="checkbox"></div>Qdrant 安裝（Docker），8 份 PDF 向量化</div>
-          <div class="checklist-item"><div class="checkbox"></div>半年比對排程設定完成</div>
-          <div class="checklist-item"><div class="checkbox"></div>開機自動啟動設定完成</div>
-          <div class="checklist-item"><div class="checkbox"></div>白馬 / 三洋 / 瑪摩 / 昇元爬蟲完成</div>
-          <!-- Phase 11 · 備份 -->
-          <div class="checklist-item"><div class="checkbox"></div><strong style="color:var(--red);">[P11]</strong> Snapshot Replication 啟用（每日 02:00 快照）</div>
-          <div class="checklist-item"><div class="checkbox"></div><strong style="color:var(--red);">[P11]</strong> 購買 4TB 外接硬碟並設定 Hyper Backup 每週任務</div>
-          <div class="checklist-item"><div class="checkbox"></div><strong style="color:var(--red);">[P11]</strong> 選定雲端備份商（B2 / Google / C2）並建立帳號</div>
-          <div class="checklist-item"><div class="checkbox"></div><strong style="color:var(--red);">[P11]</strong> 雲端異地備份首次完成（加密上傳）</div>
-          <div class="checklist-item"><div class="checkbox"></div><strong style="color:var(--red);">[P11]</strong> 還原演練：從雲端取回一個檔案測試</div>
-          <!-- Phase 12 · 交接文件 -->
-          <div class="checklist-item"><div class="checkbox"></div><strong style="color:var(--teal);">[P12]</strong> 建立 /volume1/atlas-docs/ 目錄放交接文件歷代版本</div>
-          <div class="checklist-item"><div class="checkbox"></div><strong style="color:var(--teal);">[P12]</strong> Phase 2 完成後發版 v4.2 交接文件</div>
-          <div class="checklist-item"><div class="checkbox"></div><strong style="color:var(--teal);">[P12]</strong> 設定每 2 個月交接文件健檢提醒（排程器）</div>
-        </div>
-
-        <div class="callout teal" style="margin-top:20px;">
-          <strong>🚀 建議執行順序：</strong><br>
-          <strong>本週</strong>：Phase 2（NocoDB 建表）→ Phase 3（SMB）→ 選色表串 NocoDB 表三<br>
-          <strong>下週</strong>：Phase 4（Python 爬蟲擴充白馬）→ Phase 5（Gallery）<br>
-          <strong>之後</strong>：Phase 6（RAG）→ Phase 7（Claude API）→ Phase 9（排程器）
-        </div>
-      </div>
-    </details>
-  </div>
-
-  <!-- ── PHASE 11 · 備份策略 ── -->
-  <div class="phase" data-status="ref">
-    <div class="phase-num"><div class="circle">P11</div></div>
-    <details class="phase-box">
-      <summary class="phase-head">
-        <h3>💾 PHASE 11 · 備份策略（3-2-1 原則）</h3>
-        <div class="right"><span class="pill pill-ref">操作教學</span><span class="chev">▾</span></div>
-      </summary>
-      <div class="phase-body">
-
-        <div class="callout red">
-          <strong>⚠️ 現況風險：</strong>所有資料只存在 DS920+ 單一 NAS。一旦硬碟故障、NAS 遭竊、中勒索病毒、甚至自己誤刪 → 
-          <strong>30 年經驗一夜歸零</strong>。這是整個 ATLAS 系統最大的單點故障。
-        </div>
-
-        <h4>3-2-1 備份原則</h4>
-        <p style="font-size:13.5px;color:var(--ink-2);line-height:1.9;">
-          <strong style="color:var(--gold);">3</strong> 份資料 ·
-          <strong style="color:var(--gold);">2</strong> 種媒體 ·
-          <strong style="color:var(--gold);">1</strong> 份離線異地 ── 業界最低安全標準。
-        </p>
-
-        <table class="data" style="margin-top:14px;">
-          <thead>
-            <tr><th style="width:60px;">層</th><th style="width:140px;">位置</th><th>備份什麼</th><th style="width:100px;">頻率</th></tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><strong style="color:var(--teal);">L1</strong></td>
-              <td>DS920+ 本機<br><span style="font-size:11px;color:var(--muted);">Snapshot Replication</span></td>
-              <td>整個 <code class="inline">/volume1</code> 快照（NocoDB / 圖庫 / 腳本 / Qdrant）</td>
-              <td>每日 02:00<br>保留 30 天</td>
-            </tr>
-            <tr>
-              <td><strong style="color:var(--amber);">L2</strong></td>
-              <td>USB 外接硬碟<br><span style="font-size:11px;color:var(--muted);">Hyper Backup</span></td>
-              <td>NocoDB 資料庫 dump + atlas-library 圖庫 + 腳本 + PDF</td>
-              <td>每週日 03:00<br>保留 12 週</td>
-            </tr>
-            <tr>
-              <td><strong style="color:var(--red);">L3</strong></td>
-              <td>雲端異地<br><span style="font-size:11px;color:var(--muted);">見下方比較</span></td>
-              <td>加密後的核心資料（NocoDB + 腳本 + 關鍵 PDF）</td>
-              <td>每週 04:00<br>保留 6 個月</td>
-            </tr>
-          </tbody>
-        </table>
-
-        <h4>雲端備份方案比較</h4>
-        <div class="grid g-3" style="gap:10px;">
-          <div class="card" style="border-top:3px solid var(--teal);">
-            <h3 class="sub-title" style="color:var(--teal);">🅰 Backblaze B2（推薦）</h3>
-            <p style="font-size:12.5px;color:var(--ink-2);line-height:1.7;">
-              <strong>最便宜</strong>：儲存 $6/TB/月、取回 $10/TB<br>
-              Synology Hyper Backup 原生支援<br>
-              可用 <strong>Cloud Sync</strong> 直接雙向<br>
-              缺：介面英文、需信用卡
-            </p>
-            <div class="pill pill-done" style="margin-top:8px;">月費約 NT$30（100GB）</div>
-          </div>
-          <div class="card" style="border-top:3px solid var(--gold);">
-            <h3 class="sub-title" style="color:var(--gold);">🅱 Google Drive</h3>
-            <p style="font-size:12.5px;color:var(--ink-2);line-height:1.7;">
-              200GB $65/月 · 2TB $330/月<br>
-              介面熟悉、有 App 可查看<br>
-              Synology Cloud Sync 支援<br>
-              缺：Google 可能掃描內容（法規 PDF 沒差、但個資敏感）
-            </p>
-            <div class="pill pill-gold" style="margin-top:8px;">月費 NT$65（200GB）</div>
-          </div>
-          <div class="card" style="border-top:3px solid var(--indigo);">
-            <h3 class="sub-title" style="color:var(--indigo);">🅲 Synology C2</h3>
-            <p style="font-size:12.5px;color:var(--ink-2);line-height:1.7;">
-              Synology 原廠雲<br>
-              300GB $69/月 · 1TB $99/月<br>
-              零設定、介面中文、隱私最佳<br>
-              缺：貴一點、生態綁定
-            </p>
-            <div class="pill pill-gold" style="margin-top:8px;">月費 NT$99（1TB）</div>
-          </div>
-        </div>
-
-        <div class="callout teal">
-          <strong>💡 我的建議：</strong>前期先選 <strong>Backblaze B2</strong>（便宜、專業），
-          或如果你已經在用 Google One 付費版，用 <strong>Google Drive</strong> 也行（最方便、介面熟）。
-          <strong>不建議</strong>免費方案（Dropbox 免費版、Google 15GB）—— 容量爆了就停，很危險。
-        </div>
-
-        <h4>該備份哪些東西？優先級清單</h4>
-
-        <div class="grid g-2" style="gap:10px;">
-          <div class="guard-item" style="border-left-color:var(--red);">
-            <h5 style="color:var(--red);">🔴 最高優先 · 遺失無法重建</h5>
-            <ul>
-              <li><code>/volume1/noco-data</code> — NocoDB 整個資料庫（所有案件 / 建材 / 選色紀錄）</li>
-              <li><code>/volume1/atlas-library</code> — 爬蟲下載的圖庫（重爬要數小時且官網可能改版）</li>
-              <li><code>/volume1/atlas-scripts</code> — Python 爬蟲 + .env 設定</li>
-              <li><code>atlas-web/</code> — ATLAS 選色表 + 帷幄 HTML</li>
-              <li>8 份法規 PDF（雖然可以重新下載，但版本號要對）</li>
-            </ul>
-          </div>
-          <div class="guard-item amber">
-            <h5>🟡 中優先 · 可重建但耗時</h5>
-            <ul>
-              <li><code>/volume1/atlas-qdrant</code> — 法規向量庫（可從 PDF 重新生成）</li>
-              <li>Docker container 設定（docker-compose.yml）</li>
-              <li>Synology 工作排程器的指令碼</li>
-              <li>Nginx 反向代理設定檔</li>
-            </ul>
-          </div>
-          <div class="guard-item amber">
-            <h5>🟢 低優先 · 系統可重裝</h5>
-            <ul>
-              <li>DSM 系統設定（Configuration Backup 檔）</li>
-              <li>Python 套件清單 <code>pip freeze &gt; requirements.txt</code></li>
-              <li>Docker images 本身（可從 Docker Hub 重拉）</li>
-            </ul>
-          </div>
-          <div class="guard-item" style="border-left-color:var(--red);">
-            <h5 style="color:var(--red);">🔐 特殊處理 · 加密後才能上雲</h5>
-            <ul>
-              <li>同意書 PDF、地主個資（強制加密，或根本不備份上雲）</li>
-              <li>API Token、密碼、.env 檔案（用 KeePass 單獨管理）</li>
-              <li>Claude API Key（存入 1Password 或 Bitwarden）</li>
-            </ul>
-          </div>
-        </div>
-
-        <h4>實作步驟（由易到難）</h4>
-
-        <div class="step">
-          <div class="step-head"><span class="step-n">1</span><span class="step-title">L1 · DSM Snapshot Replication（15 分鐘）</span><span class="step-tag">DSM</span></div>
-          <div class="step-body">
-            DSM → 套件中心 → 搜尋 <strong>Snapshot Replication</strong> → 安裝
-            <pre style="margin-top:8px;"><span class="cm"># 設定每日 02:00 快照、保留 30 天</span>
-套件 → 快照 → 新增 → 選 <span class="str">/volume1</span>
-排程：每天 02:00
-保留：30 天
-<span class="cm"># 這個層次是「誤刪還原」的保險，不需外部設備</span></pre>
-          </div>
-        </div>
-
-        <div class="step">
-          <div class="step-head"><span class="step-n">2</span><span class="step-title">L2 · USB 外接硬碟 + Hyper Backup（30 分鐘）</span><span class="step-tag">硬體</span></div>
-          <div class="step-body">
-            <ol style="padding-left:18px;font-size:13px;line-height:1.8;">
-              <li>買一顆 <strong>4TB 外接硬碟（約 NT$ 2,500）</strong>，插進 NAS USB 3.0 口</li>
-              <li>DSM → 套件中心 → 安裝 <strong>Hyper Backup</strong></li>
-              <li>新增任務 → 目的地選「本機資料夾 &amp; USB」→ 選要備份的資料夾</li>
-              <li>排程每週日 03:00、保留 12 週</li>
-              <li><strong>關鍵</strong>：平時拔下來放家裡抽屜，每週一早上再插回去讓它跑</li>
-            </ol>
-            <div class="callout">
-              <strong>為什麼要拔下來？</strong>勒索病毒會把所有「連線中」的磁碟都加密，包括 USB。
-              真正的備份一定要離線。
-            </div>
-          </div>
-        </div>
-
-        <div class="step">
-          <div class="step-head"><span class="step-n">3</span><span class="step-title">L3 · 雲端異地（45 分鐘）</span><span class="step-tag">Cloud</span></div>
-          <div class="step-body">
-            <pre><span class="cm"># 以 Backblaze B2 為例</span>
-1. 到 backblaze.com 註冊、建立一個 Bucket「atlas-backup」
-2. 取得 keyID + applicationKey
-3. DSM → Hyper Backup → 新增任務 → 選「B2 Cloud Storage」
-4. 貼入 keyID / applicationKey / bucket 名稱
-5. 選「<span class="str">啟用用戶端加密</span>」→ 設密碼（<span class="var">⚠ 密碼務必另外存 1Password</span>）
-6. 選要備份的資料夾（僅挑 🔴 最高優先那些）
-7. 排程每週一 04:00、保留 6 個月
-8. <span class="cm"># 第一次會跑很久（上傳 100GB 約 8-12 小時）</span></pre>
-          </div>
-        </div>
-
-        <h4>還原演練 · 每半年做一次</h4>
-        <div class="callout teal">
-          <strong>⚠️ 沒演練過的備份 = 沒有備份。</strong>
-          每 6 個月找個週末，挑一個檔案從雲端還原回來，確認流程通、密碼還記得、硬體還能讀。
-          排進 Phase 9 排程器的「半年提醒」工作裡。
-        </div>
-
-      </div>
-    </details>
-  </div>
-
-  <!-- ── PHASE 12 · 交接文件 SOP ── -->
-  <div class="phase" data-status="ref">
-    <div class="phase-num"><div class="circle">P12</div></div>
-    <details class="phase-box">
-      <summary class="phase-head">
-        <h3>📋 PHASE 12 · 交接文件 SOP</h3>
-        <div class="right"><span class="pill pill-ref">操作教學</span><span class="chev">▾</span></div>
-      </summary>
-      <div class="phase-body">
-
-        <p style="font-size:14px;color:var(--ink-2);line-height:1.9;">
-          交接文件不是給「別人」看的，主要是給 <strong style="color:var(--ink);">三個月後的你自己</strong> 看的。
-          當系統越複雜，你就越記不住所有細節。每次規模變更都要產出新版本。
-        </p>
-
-        <h4>什麼時候該更新交接文件？</h4>
-
-        <div class="grid g-2" style="gap:10px;">
-          <div class="card" style="border-left:3px solid var(--red);">
-            <h3 class="sub-title" style="color:var(--red);">🔴 必須更新（Major）</h3>
-            <ul style="list-style:none;font-size:12.5px;color:var(--ink-2);line-height:1.8;">
-              <li>◆ 換 NAS 硬體或升級 DSM 大版本</li>
-              <li>◆ 新增 Docker container（如 Qdrant、AI 服務）</li>
-              <li>◆ 資料庫架構變更（新增表、欄位大改）</li>
-              <li>◆ 改了反向代理或網路架構</li>
-              <li>◆ 更換雲端備份服務商</li>
-              <li>◆ API Token 或密碼重設</li>
-              <li>◆ Phase 完成（例如 Phase 2 → 升到 v4.2）</li>
-            </ul>
-          </div>
-          <div class="card" style="border-left:3px solid var(--amber);">
-            <h3 class="sub-title" style="color:var(--amber);">🟡 建議更新（Minor）</h3>
-            <ul style="list-style:none;font-size:12.5px;color:var(--ink-2);line-height:1.8;">
-              <li>◆ 新增 NocoDB 表或大量欄位</li>
-              <li>◆ 新增爬蟲目標廠牌</li>
-              <li>◆ 排程器新增或調整任務</li>
-              <li>◆ 帷幄 / 選色表 UI 大改</li>
-              <li>◆ 發現新的 bug 或 workaround</li>
-              <li>◆ 每 <strong>2 個月</strong> 沒更新 → 也該更新一次做健檢</li>
-            </ul>
-          </div>
-        </div>
-
-        <h4>版本號規則</h4>
-        <pre><span class="cm"># 採用類似軟體版本號的做法</span>
-v<span class="var">Major</span>.<span class="var">Minor</span>
-
-<span class="var">Major</span>：<span class="str">每完成一個 Phase 進位</span>
-  v4.x = Phase 1 + 選色表 v5 已部署
-  v5.x = Phase 2 + NocoDB 3 張新表建置完成
-  v6.x = Phase 4 + 多家爬蟲上線
-  v7.x = Phase 7 + Claude AI 完整接入
-
-<span class="var">Minor</span>：<span class="str">同 Phase 內的小變更</span>
-  v4.1 → v4.2：新增備份策略
-  v4.2 → v4.3：加入 Phase 12 交接 SOP
-
-<span class="cm"># 檔名範例</span>
-ATLAS-交接文件-v4.1.md   <span class="cm"># 現行</span>
-ATLAS-交接文件-v4.2.md   <span class="cm"># 新版</span>
-ATLAS-交接文件-v4.2.md.bak  <span class="cm"># 改版前備份</span></pre>
-
-        <h4>交接文件必備 12 個區塊</h4>
-
-        <table class="data">
-          <thead><tr><th style="width:30px;">#</th><th style="width:200px;">區塊</th><th>內容</th></tr></thead>
-          <tbody>
-            <tr><td>1</td><td><strong>版本與日期</strong></td><td>版本號 / 發版日期 / 上一版差異摘要</td></tr>
-            <tr><td>2</td><td><strong>系統基礎設施</strong></td><td>NAS 機型、IP、各 port、Tailscale IP、重要 URL</td></tr>
-            <tr><td>3</td><td><strong>NocoDB 表清單</strong></td><td>每張表的 Table ID、用途、欄位摘要</td></tr>
-            <tr><td>4</td><td><strong>Docker container</strong></td><td>已跑的容器：NocoDB / Qdrant / 未來新增的都要列</td></tr>
-            <tr><td>5</td><td><strong>排程任務</strong></td><td>Synology 工作排程器有什麼任務、頻率、功能</td></tr>
-            <tr><td>6</td><td><strong>爬蟲清單</strong></td><td>哪些廠牌已完成、哪些進行中、腳本放哪</td></tr>
-            <tr><td>7</td><td><strong>已部署服務</strong></td><td>ATLAS 選色表、Gallery、AI 介面…各自網址</td></tr>
-            <tr><td>8</td><td><strong>備份狀態</strong></td><td>L1/L2/L3 是否啟用、最後成功日期、還原演練日</td></tr>
-            <tr><td>9</td><td><strong>密碼 &amp; Token 位置</strong></td><td><span class="col-protect">⚠ 只寫「存在哪」，不寫內容本身</span></td></tr>
-            <tr><td>10</td><td><strong>已知問題與 workaround</strong></td><td>例如「選色表裁剪有落差待修」這類</td></tr>
-            <tr><td>11</td><td><strong>下一步待辦</strong></td><td>優先順序排列，給下次對話 Claude 的指示</td></tr>
-            <tr><td>12</td><td><strong>重灌還原 SOP</strong></td><td>如果 NAS 全毀，從零到跑起來的步驟</td></tr>
-          </tbody>
-        </table>
-
-        <h4>發版 SOP（5 分鐘可完成）</h4>
-
-        <div class="step">
-          <div class="step-head"><span class="step-n">1</span><span class="step-title">複製現行版本為新版</span></div>
-          <div class="step-body">
-            <pre>cp ATLAS-交接文件-v4.1.md ATLAS-交接文件-v4.2.md</pre>
-          </div>
-        </div>
-        <div class="step">
-          <div class="step-head"><span class="step-n">2</span><span class="step-title">更新變更的區塊</span></div>
-          <div class="step-body">只改有變動的內容，不重寫整份。</div>
-        </div>
-        <div class="step">
-          <div class="step-head"><span class="step-n">3</span><span class="step-title">在最上方加「本版變更摘要」</span></div>
-          <div class="step-body">
-            <pre><span class="cm">## 本版變更摘要（v4.1 → v4.2）</span>
-- 新增：Phase 11 備份策略章節
-- 新增：Backblaze B2 雲端備份設定
-- 更新:NocoDB 新增 3 張表(都更推動師/案件庫/偏好)
-- 修正：NocoDB port 由 8080 改為 32768</pre>
-          </div>
-        </div>
-        <div class="step">
-          <div class="step-head"><span class="step-n">4</span><span class="step-title">三處存檔</span></div>
-          <div class="step-body">
-            <ol style="padding-left:20px;font-size:13px;">
-              <li>NAS 本機：<code class="inline">/volume1/atlas-docs/</code></li>
-              <li>Google Drive / Backblaze（隨雲端備份同步）</li>
-              <li>Claude Project 的 Knowledge 上傳最新版（取代舊版）</li>
-            </ol>
-          </div>
-        </div>
-
-        <h4>自動化提醒</h4>
-        <div class="callout teal">
-          在 Phase 9 的 Synology 工作排程器裡加一個提醒任務：
-          <pre style="margin-top:8px;"><span class="cm"># 每 2 個月的第一個週日 09:00，發送提醒到你的 Email</span>
-排程：每 2 個月 → 第 1 個週日 → 09:00
-指令：echo "📋 ATLAS 交接文件健檢提醒<br>距上次更新已 2 個月<br>請檢查是否有變更需要記錄" | mail -s "ATLAS 文件健檢" 你的Email</pre>
-        </div>
-
-        <div class="callout red">
-          <strong>一個痛的教訓：</strong>沒有交接文件的系統，三個月後你自己都會忘記怎麼重建。
-          ATLAS 已經有 9 個 Docker container、6 張 NocoDB 表、數個自動排程 —— 
-          現在不記錄，之後都不會記得。
-        </div>
-
-      </div>
-    </details>
-  </div>
-
-</section>
-
-<!-- ═══════════════════════════════════════════════
-     VIEW 4 ─ 工作時程（Q4 上線衝刺）
-═══════════════════════════════════════════════ -->
-<section class="view" id="view-schedule">
-
-  <div class="section-head">
-    <div class="section-label">Q4 SPRINT · 2026-09 → 12</div>
-    <h1 class="section-title">工作時程表</h1>
-    <p class="section-sub">
-      依「四層 × 情境」框架排定。5 階段 · 31 項 · 約 57 小時。<br>
-      每項標註適合的時段：<b style="color:var(--teal)">週六</b>半天（2hr）·
-      <b style="color:var(--red)">週日</b>連續（8-10hr）·
-      <b style="color:var(--gold)">連假</b>（4-6hr）·
-      <b style="color:var(--indigo)">零碎</b>時間皆可
-    </p>
-  </div>
-
-  <div class="card" style="margin-bottom:24px;">
-    <div class="progress-wrap">
-      <div class="progress-label">
-        <span>總進度</span>
-        <b><span id="schPct">0%</span> · <span id="schDone">0</span>/<span id="schTotal">0</span> 項 · 剩約 <span id="schHrs">0</span> 小時</b>
-      </div>
-      <div class="progress-track"><div class="progress-fill" id="schFill" style="width:0%"></div></div>
+<!-- ═══ 03 架構圖 ═══ -->
+<section class="view" id="v-arch">
+  <h2 class="sec" style="margin-top:4px">架構關聯圖 <small>D22 · 點節點看說明與關聯</small></h2>
+  <div class="arch">
+    <div class="side" id="archSide"><div class="t">SELECT A NODE</div><h3>點左邊任一節點</h3><p>會顯示它是什麼、接哪些東西、目前狀態。節點說明取代原本的長篇規格書。</p></div>
+    <div class="canvas">
+      <div id="archLayers"></div>
+      <div class="legend"><span><i style="background:var(--teal-2)"></i>上線</span><span><i style="background:var(--amber)"></i>規劃中</span><span><i style="background:var(--dim)"></i>退場</span></div>
     </div>
   </div>
-
-  <div id="schStages"></div>
-
-  <div class="card" style="margin-top:24px;border-style:dashed;">
-    <h3 class="sub-title">明確排除在年底範圍外</h3>
-    <ul style="list-style:none;font-size:13px;color:var(--muted);line-height:2;">
-      <li>✕ 分回／容積獎勵試算器 — <b>不是時間不夠</b>：需先累積 15-20 筆初判記錄，
-          模式浮現後做的計算器才貼合判斷方式（見階段 B）</li>
-      <li>✕ 掃描件 OCR（危老問答集、費用提列總表）</li>
-      <li>✕ Cowork agent 導入（等 L2 累積夠再說）</li>
-      <li>✕ Scrapy（建材品牌逼近 30 家才重評估）</li>
-    </ul>
-  </div>
-
-  <div style="text-align:center;padding:20px 0;">
-    <button id="schReset" style="background:none;border:1px solid var(--border2);color:var(--muted);font-family:'Space Mono',monospace;font-size:11px;padding:7px 16px;border-radius:6px;cursor:pointer;">RESET 重置時程勾選</button>
-  </div>
-
 </section>
 
-<!-- FOOTER -->
-<footer class="footer">
-  <span class="line"></span>
-  ATLAS v5 · BUILT IN BANQIAO · DS920+ EDITION
-  <span class="line"></span>
-</footer>
+<!-- ═══ 04 決策紀錄 ═══ -->
+<section class="view" id="v-dec">
+  <h2 class="sec" style="margin-top:4px">決策紀錄 <small>一條一筆 · 新的在上</small></h2>
+  <div class="dlist" id="decAll"></div>
+</section>
+
+<!-- ═══ 05 交接 ═══ -->
+<section class="view" id="v-hand">
+  <h2 class="sec" style="margin-top:4px">交接文件 <small>給下一個接手的人（或半年後的自己）</small></h2>
+  <div class="grid2 hand">
+    <div class="card"><h3>服務與網址</h3><pre id="handSvc"></pre></div>
+    <div class="card"><h3>金鑰與密碼放哪</h3><pre>Supabase Publishable key → 寫在網頁裡，可公開
+Supabase Secret key     → 只在 Mac：~/Downloads/.atlas_env（chmod 600）
+                          從不寫進任何 html / py / 對話
+登入帳號                → Supabase Auth 唯一使用者；忘記密碼到 Auth → Users 重設
+GitHub / Vercel         → 同一個 GitHub 帳號登入
+NAS                     → DS920+ 管理員密碼（實體備忘）</pre></div>
+    <div class="card"><h3>重灌／換機要做的事</h3><pre>1. 裝 Python 3 + pip3 install requests pillow
+2. 從 GitHub atlas-public-data 取回三個 html（不含腳本）
+3. 腳本：atlas_law_push_sb_v2.py / atlas_local_laws.py（Downloads）
+4. 建 ~/Downloads/.atlas_env 放 Secret key
+5. 法規資料：到 law.moj.gov.tw/api/swagger 重抓 ChLaw.json.zip、ChOrder.json.zip
+6. Supabase 不用動；若要重建，SQL 依序 01→03→04→05→06→07</pre></div>
+    <div class="card" style="grid-column:1/-1"><h3>怎麼更新網頁與程式碼</h3><pre>三個網頁（index.html / law.html / finder.html）都放在 GitHub repo「atlas-public-data」，
+Vercel 盯著這個 repo，檔案一變就自動重新部署（約 30–60 秒）。
+
+更新任一網頁
+  1. 拿到新檔（Claude 給的，或自己改的）
+  2. GitHub → atlas-public-data → Add file → Upload files → 拖進去（同名即覆蓋）→ Commit changes
+  3. 等 Vercel 綠燈，瀏覽器 Cmd+Shift+R 強制重新整理
+  4. 看分頁標題版本號對不對（例：法規條文庫 v2.2）
+  改檔名的情況：本機先改好名字再上傳，不要在 GitHub 網頁改名
+
+新增一個網頁（例：之後的案件清單 cases.html）
+  同上上傳；網址就是 https://atlas-public-data.vercel.app/cases.html
+  記得在 index.html「三個入口」加卡片，頁面本身加「⌂ 首頁」鈕
+
+腳本（.py）不上 GitHub
+  放 Mac ~/Downloads；密鑰讀 ~/Downloads/.atlas_env
+  目前三支：atlas_law_push_sb_v2.py（中央法規季更）
+           atlas_local_laws.py（地方法規登記＋PDF 上傳）
+           atlas_crawler.py（建材爬蟲，重寫中）
+
+資料庫結構（SQL）
+  每次改結構都是一支新的 supabase_NN_xxx.sql，在 Supabase SQL Editor 跑一次
+  已跑：01 法規條文 · 03 全表 · 04 Storage · 05 law-pdf · 06 法規主檔 · 07 ui_state
+  改 SQL 不會動到資料；重建整個專案才需要從 01 依序跑
+
+版本號慣例
+  網頁 title 裡：index v6.x / law v2.x / finder v6.x；小修 +0.0.1，加功能 +0.1
+  每次上線後把版本寫進「決策紀錄」或時程表的 ✅ 備註</pre></div>
+    <div class="card"><h3>每季例行</h3><pre>法規同步   python3 atlas_law_push_sb_v2.py --zip ChLaw.json.zip,ChOrder.json.zip
+          （先 --dry-run；--add 代碼 可強制納入新法規）
+備份       Supabase Dashboard → Database → Backups 看一眼
+          （mini 到貨後改 pg_dump 週備份 → NAS）
+PDF 原檔   law.html 上「⬇」的法規＝還沒有 PDF</pre></div>
+  </div>
+</section>
 
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.106.2/dist/umd/supabase.min.js"></script>
 <script>
-// ───── VIEW SWITCHING ─────
-function goView(name) {
-  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-  document.getElementById('view-' + name).classList.add('active');
-  document.querySelectorAll('.tab').forEach(t => {
-    t.classList.toggle('active', t.dataset.view === name);
-  });
-  window.scrollTo({top: 0, behavior: 'smooth'});
-  try { localStorage.setItem('atlas-view', name); } catch(e){}
-}
-document.querySelectorAll('.tab').forEach(t => {
-  t.addEventListener('click', () => goView(t.dataset.view));
-});
-
-// ───── THEME TOGGLE ─────
-function setTheme(mode) {
-  document.documentElement.setAttribute('data-theme', mode);
-  document.querySelectorAll('.theme-btn').forEach(b => {
-    b.classList.toggle('active', b.dataset.theme === mode);
-  });
-  try { localStorage.setItem('atlas-theme', mode); } catch(e){}
-}
-document.querySelectorAll('.theme-btn').forEach(b => {
-  b.addEventListener('click', () => setTheme(b.dataset.theme));
-});
-
-// ───── CHECKLIST TOGGLE (Phase 10) + PROGRESS SYNC ─────
-
-// 把每一項 checklist 對應到哪個 phase
-// 目前共 31 項，對應的 phase 順序必須跟 HTML 一致
-const CHECKLIST_PHASE_MAP = [
-  1, 1, 1, 1, 8,        // c0-c4: 已完成 5 項 (P1 地基 + P8 Tailscale 已裝)
-  2,                    // c5:  NocoDB 建 3 張新表 (P2)
-  3, 3,                 // c6-7: SMB / 掛載 (P3)
-  4, 4, 4, 4,           // c8-11: Python / 爬蟲 (P4)
-  5, 5, 5,              // c12-14: ATLAS Gallery (P5)
-  8, 8,                 // c15-16: Tailscale 各裝置 / 異地測試 (P8)
-  7, 7,                 // c17-18: Claude.ai Project / 三觸發指令 (P7)
-  6,                    // c19: Qdrant + RAG (P6)
-  9, 9,                 // c20-21: 排程器 (P9)
-  4,                    // c22: 白馬/三洋等爬蟲完成 (P4 延伸)
-  11, 11, 11, 11, 11,   // c23-27: Phase 11 備份 5 項
-  12, 12, 12            // c28-30: Phase 12 交接文件 3 項
-];
-
-function readChecklistState() {
-  try { return JSON.parse(localStorage.getItem('atlas-checklist') || '{}'); }
-  catch(e) { return {}; }
-}
-function writeChecklistState(state) {
-  try { localStorage.setItem('atlas-checklist', JSON.stringify(state)); } catch(e){}
-}
-
-// 計算 & 更新進度條
-function updateProgress() {
-  const items = document.querySelectorAll('#checklist .checklist-item');
-  const total = items.length;
-  let done = 0;
-  // 依 phase 統計完成數（擴展到 12）
-  const phaseStats = {};
-  for (let p = 1; p <= 12; p++) phaseStats[p] = { total: 0, done: 0 };
-
-  items.forEach((item, i) => {
-    const isDone = item.classList.contains('checked');
-    if (isDone) done++;
-    const phase = CHECKLIST_PHASE_MAP[i] || 12;
-    phaseStats[phase].total++;
-    if (isDone) phaseStats[phase].done++;
-  });
-
-  const pct = total ? Math.round(done / total * 100) : 0;
-  const fill = document.getElementById('progressFill');
-  if (fill) fill.style.width = pct + '%';
-  const pctEl = document.getElementById('progressPct');
-  const doneEl = document.getElementById('progressDone');
-  const totalEl = document.getElementById('progressTotal');
-  if (pctEl) pctEl.textContent = pct + '%';
-  if (doneEl) doneEl.textContent = done;
-  if (totalEl) totalEl.textContent = total;
-
-  // 更新 10 個 mini phase 方塊
-  const mini = document.getElementById('phaseMini');
-  if (mini) {
-    mini.innerHTML = '';
-    const phaseNames = {
-      1:'地基', 2:'NocoDB 建表', 3:'SMB 掛載', 4:'Python 爬蟲', 5:'Gallery',
-      6:'法規 RAG', 7:'Claude AI', 8:'Tailscale', 9:'排程器', 10:'總檢查',
-      11:'備份策略', 12:'交接文件'
-    };
-    for (let p = 1; p <= 12; p++) {
-      const s = phaseStats[p];
-      let state = 'todo';
-      if (s.total > 0 && s.done === s.total) state = 'done';
-      else if (s.done > 0) state = 'partial';
-      const box = document.createElement('div');
-      box.className = 'mini-box';
-      box.dataset.state = state;
-      box.textContent = 'P' + p;
-      box.title = `Phase ${p} · ${phaseNames[p]} (${s.done}/${s.total})`;
-      const tip = document.createElement('span');
-      tip.className = 'mini-tip';
-      tip.textContent = `P${p} ${phaseNames[p]} · ${s.done}/${s.total}`;
-      box.appendChild(tip);
-      box.addEventListener('click', () => {
-        goView('roadmap');
-        // 展開那個 phase
-        setTimeout(() => {
-          const phaseBoxes = document.querySelectorAll('.phase');
-          if (phaseBoxes[p-1]) {
-            const det = phaseBoxes[p-1].querySelector('details');
-            if (det) det.open = true;
-            phaseBoxes[p-1].scrollIntoView({behavior:'smooth', block:'start'});
-          }
-        }, 120);
-      });
-      mini.appendChild(box);
-    }
-  }
-
-  // 頂部 Hero 的 stats 也跟著動（第一個 stat 卡片的總覽）
-  const doneFirstStat = document.querySelector('.stat.teal .stat-v');
-  if (doneFirstStat) {
-    if (pct === 100) doneFirstStat.innerHTML = '完成<span class="unit">100%</span>';
-    else if (pct >= 75) doneFirstStat.innerHTML = '接近完工<span class="unit">' + pct + '%</span>';
-    else if (pct >= 40) doneFirstStat.innerHTML = '進行中<span class="unit">' + pct + '%</span>';
-    else doneFirstStat.innerHTML = '起步中<span class="unit">' + pct + '%</span>';
-  }
-}
-
-function initChecklist() {
-  const box = document.getElementById('checklist');
-  if (!box) return;
-
-  const state = readChecklistState();
-  const isFirstRun = Object.keys(state).length === 0;
-  const items = box.querySelectorAll('.checklist-item');
-
-  items.forEach((item, i) => {
-    const key = 'c' + i;
-    const cb = item.querySelector('.checkbox');
-    // 修正：HTML 預設的 checked 是掛在 .checkbox 上，不是 .checklist-item
-    const htmlDefault = (cb && cb.classList.contains('checked')) ||
-                        item.classList.contains('checked');
-
-    if (isFirstRun && htmlDefault) state[key] = true;
-
-    const on = (state[key] !== undefined) ? state[key] : htmlDefault;
-    item.classList.toggle('checked', !!on);
-    if (cb) cb.classList.toggle('checked', !!on);
-  });
-
-  // 事件委派：綁在容器上，點整行任何位置都有效
-  box.addEventListener('click', (e) => {
-    const item = e.target.closest('.checklist-item');
-    if (!item || !box.contains(item)) return;
-    const list = Array.prototype.slice.call(box.querySelectorAll('.checklist-item'));
-    const i = list.indexOf(item);
-    if (i < 0) return;
-
-    const key = 'c' + i;
-    const now = !item.classList.contains('checked');
-    item.classList.toggle('checked', now);
-    const cb = item.querySelector('.checkbox');
-    if (cb) cb.classList.toggle('checked', now);
-
-    const st = readChecklistState();
-    st[key] = now;
-    writeChecklistState(st);
-    updateProgress();
-  });
-
-  if (isFirstRun) writeChecklistState(state);
-  updateProgress();
-}
-
-// RESET 按鈕
-document.addEventListener('DOMContentLoaded', () => {
-  const reset = document.getElementById('resetProgressBtn');
-  if (reset) {
-    reset.addEventListener('click', () => {
-      if (!confirm('確定要清除所有勾選進度？此動作不可復原。')) return;
-      localStorage.removeItem('atlas-checklist');
-      // 清掉 UI 的勾選狀態
-      document.querySelectorAll('#checklist .checklist-item').forEach(item => {
-        item.classList.remove('checked');
-        item.querySelector('.checkbox').classList.remove('checked');
-      });
-      updateProgress();
-    });
-  }
-});
-
-// 切換到 dashboard 時重新計算（避免勾選後立刻看到）
-const _goView = goView;
-goView = function(name) {
-  _goView(name);
-  if (name === 'dashboard') setTimeout(updateProgress, 50);
-};
-
-// ───── PHASE DETAILS default state (open first wip, close others except P1) ─────
-// already handled by [open] attr in HTML
-
-// ───── RESTORE LAST STATE ─────
-(function init(){
-  try {
-    const t = localStorage.getItem('atlas-theme');
-    if (t) setTheme(t);
-    const v = localStorage.getItem('atlas-view');
-    if (v) goView(v);
-  } catch(e){}
-  initChecklist();
-})();
-
-
-// ═══════════════════════════════════════════════
-//  04 工作時程（Q4 上線衝刺）
-// ═══════════════════════════════════════════════
-function esc(x){ return String(x==null?'':x).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
-const SCH_KEY = 'atlas-schedule-2026q4';
 const SCH_SLOT = {sat:'週六', sun:'週日', hol:'連假', any:'零碎'};
 const SCH = [
   { id:'A', t:'階段 A · 法規庫上線', d:'9月中 → 10月中',
@@ -3951,16 +328,16 @@ const SCH = [
        w:'✅ 2026-10-16 完成。Supabase 實際 16 部 505 條'},
       {n:'law.html 接 Supabase + 登入，部署 Vercel', s:'sat', h:2, done:true,
        w:'✅ 2026-10-17 完成。atlas-public-data.vercel.app/law.html，手機可開可寫註記'},
-      {n:'建立 PDF 原檔資料夾結構（SynologyDrive）', s:'sat', h:1, done:true,
-       w:'✅ 完成。setup_law_folders.sh：01_中央 / 02_地方 / 03_手冊 / 04_函釋 / 99_原始'},
+      {n:'Supabase Storage 建 law-pdf bucket，law.html 顯示「📄 原檔」', s:'sat', h:1, done:true,
+       w:'✅ 2026-10-17。supabase_05_law_pdf.sql；私有 bucket，登入者才能開。Mac 的 SynologyDrive 資料夾只當本機整理用'},
       {n:'Supabase 建 law_changes「法規異動紀錄」表', s:'sat', h:1,
        w:'供儀表板顯示「N 筆法規異動待覆核」紅點'},
-      {n:'★確認官方 PDF 下載網址（決定方案 A 可行性）', s:'sat', h:1,
-       w:'到 law.moj.gov.tw 點一部法規，看有無「下載 PDF」及其網址格式。這步決定能否自動化'},
-      {n:'下載 16 部核心法規 PDF 原檔並依規範命名', s:'sat', h:2,
-       w:'檔名：{面向}_{PCode}_{法規名稱}_{修正日期}.pdf。可自動化就寫腳本，否則手動'},
-      {n:'資料入口「PDF 原檔」連結改為 NAS 分享資料夾', s:'sat', h:1,
-       w:'待 Ted 設定好 NAS 分享連結後提供，再更新 index.html'},
+      {n:'★確認官方 PDF 下載網址', s:'sat', h:1, done:true,
+       w:'✅ 2026-10-17。FilesType.aspx 是互動頁，機器抓不到 → law.html 放「⬇ 官方」按鈕，人點 16 次'},
+      {n:'下載 16 部核心法規 PDF 原檔', s:'sat', h:2, done:true,
+       w:'✅ 2026-10-17。檔名 {law_code}.pdf，全部進 Storage law-pdf'},
+      {n:'法規主檔 laws + 三層樹（領域→面向→法規）', s:'sun', h:3, done:true,
+       w:'✅ 2026-10-17 law.html v2.1。分類在表裡改，純 PDF 法規與多版本都能掛'},
       {n:'法規異動排程：每季自動比對（mini 到貨前先手動跑）', s:'sat', h:2,
        w:'年底 mini 到貨後掛 launchd 排程；之前每季手動 python3 atlas_law_push_sb.py'},
     ]},
@@ -3991,8 +368,8 @@ const SCH = [
        w:'✅ 2026-10-17。資料 1.5 秒自動上雲；圖片縮 1200px 進 Storage；匯入 JSON 一次搬家'},
       {n:'supabase_04_storage.sql：finder / products 兩個 bucket', s:'sat', h:0.5, done:true,
        w:'✅ 2026-10-17。公開讀、登入者寫 finder、products 只有 service_role 寫'},
-      {n:'儀表板＋時程表勾選改存 Supabase（跨裝置同步）', s:'sat', h:2,
-       w:'目前勾選存 localStorage，換裝置會不一樣。改存 finder_state 同一張表另一個 key'},
+      {n:'儀表板 v6.0：首頁改儀表板式、勾選存 ui_state 跨裝置、架構關聯圖、決策紀錄', s:'sun', h:4, done:true,
+       w:'✅ 2026-10-27。路線圖與長篇規格書退場，改成關聯圖節點說明＋決策一條一筆'},
       {n:'儀表板「案件清單」區塊，讀 ur_projects / jc_projects', s:'sun', h:2,
        w:'先唯讀列表，新增修改走 Supabase 表編輯器'},
       {n:'finder 的建商／專案改讀 jc_projects（表二）', s:'sun', h:2,
@@ -4007,8 +384,14 @@ const SCH = [
        w:'UPSERT by (brand,model,size)；圖片縮圖進 Storage products/；note 欄永不覆蓋'},
       {n:'跑 6 家廠商型錄，驗證 finder 產品搜尋', s:'sat', h:3,
        w:'跑完 finder「↻ 載入」應看到產品與圖片牆'},
-      {n:'地方自治法規：新北市都更自治條例等（輕量爬蟲）', s:'sat', h:3,
-       w:'scope 欄填 新北市／臺北市'},
+      {n:'地方法規核心 19 部（臺北 11／新北 8）登記主檔＋PDF', s:'sat', h:3, done:true,
+       w:'✅ 2026-10-27。atlas_local_laws.py 登記；國土署擋爬蟲，PDF 手動下載後上傳'},
+      {n:'地方法規其餘 71 筆行政規則：用到再補（TPE-23～／NTPC-17～）', s:'any', h:2,
+       w:'分類表在 atlas_local_laws.py，加一行就能登記'},
+      {n:'law_rulings 函釋表：臺北 72 筆解釋函一題一筆，連到相關條文', s:'sun', h:3,
+       w:'不進法規樹；這是 L2 經驗層的料'},
+      {n:'地方法規逐條解析進 law_articles（兩市法規系統結構不同）', s:'sun', h:4,
+       w:'有 PDF 先夠用；等常翻的那幾部再做'},
       {n:'都市更新作業手冊（109版）入庫', s:'sat', h:2,
        w:'PDF 拆章節；可先只做目錄 + 關鍵表格'},
       {n:'★ Supabase 備份：每週 pg_dump → NAS（mini 到貨後排程）', s:'sat', h:2,
@@ -4033,141 +416,198 @@ const SCH = [
        w:'ur_projects / contacts 地主 / ledger 三張表改 aal2 policy；等資料真的有敏感內容再做'},
     ]},
 ];
+// ═══════════════════ 設定 ═══════════════════
+const SB_URL='https://riiflvhbxrnmzriwngjs.supabase.co';
+const SB_KEY='sb_publishable_R69Hj9hcR5G4dp3Uz1J0PQ_1BabpwsN';
+const sb=supabase.createClient(SB_URL,SB_KEY);
+const $=s=>document.querySelector(s);
+const esc=x=>String(x==null?'':x).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+let UID=null, ST={schedule:{}, ops:{}};
 
-function schRead(){ try{ return JSON.parse(localStorage.getItem(SCH_KEY)||'{}'); }catch(e){ return {}; } }
-function schWrite(o){ try{ localStorage.setItem(SCH_KEY, JSON.stringify(o)); }catch(e){} }
+// ═══════════════════ 決策紀錄（新的在上）═══════════════════
+const DECISIONS=[
+  {id:'D30',d:'2026-10-27',t:'地方法規先收核心 19 部，其餘 71 筆行政規則等用到再補',why:'臺北 54／新北 37 筆行政規則多為收費、基金、單一議題處理原則；日常會翻的已在 19 部內。解釋函 72 筆不進法規樹，等 D 段另開函釋表。'},
+  {id:'D29',d:'2026-10-17',t:'法規樹三層：領域 → 面向 → 法規；分類住在 laws 主檔，不寫死在腳本',why:'之後加綠建築、氣候變遷、CNS，面向可自由命名（建材用磁磚／石材）。純 PDF 法規（CNS、地方法規）也能掛在樹上，多版本並存。'},
+  {id:'D28',d:'2026-10-17',t:'PDF 原檔放 Supabase Storage，不放 NAS',why:'NAS 路徑需要 Tailscale（已放棄）。私有 bucket + 登入簽名連結，手機也能開；NAS 只留備份角色。'},
+  {id:'D27',d:'2026-10-17',t:'選色表圖片一律縮 1200px 進 Storage，資料列只存網址；超過 2MB 含 base64 就拒絕上傳',why:'10/17 一筆含 base64 圖片的 jsonb 把免費方案資料庫壓到 504。資料與圖片分家後資料列只剩幾十 KB。'},
+  {id:'D26',d:'2026-10-13',t:'表五（787 筆產品）不搬，等爬蟲重抓現行型錄',why:'舊資料分不出停產系列、用途與紋理欄位是空的。新表加 status／usages／texture／finish，爬蟲以 (brand, model, size) 去重。'},
+  {id:'D25',d:'2026-10-13',t:'NocoDB 12 張表 → Supabase 13 張：拆多對多過頭的連結、合併表九與任務進度、新增 finder_state',why:'關聯圖盤點出 3 條壞連結、兩張孤島、表三↔明細互指；一次建好 RLS 與授權，避免再踩 403。'},
+  {id:'D24',d:'2026-10-09',t:'Claude Max 5x 維持到 2027/06 再評估',why:'看半年內撞上限次數與 API 月費，再決定維持或降 Pro。'},
+  {id:'D23',d:'2026-10-09',t:'年底購 Mac mini M6 · 32GB · 512GB 當幕後工作機',why:'爬蟲、法規同步、備份、Claude 常駐都搬上去；NAS 退回純儲存。單一台，小孩用獨立一般帳號；優先買 UPS。'},
+  {id:'D22',d:'2026-10-09',t:'架構轉向：Vercel 前端 + Supabase（資料／登入／權限）；NocoDB、Tailscale、Nginx、GitHub Pages JSON 全部退場',why:'Tailscale 久不用就連不上；要像一般網站手機／公司都能開且要登入。公開型資料上雲，地主／案件之後加 MFA 第二道鎖。'},
+  {id:'D8',d:'2026-08-22',t:'法規不做 RAG 向量化，改「一條一筆」結構化入庫',why:'需要的是精準條號與可掛註記的結構，不是語意相似搜尋；Qdrant 從藍圖移除。'},
+];
 
-function schRender(){
-  const box = document.getElementById('schStages');
-  if(!box) return;
-  const st = schRead();
-  let seeded=false; SCH.forEach(S=>S.tasks.forEach((t,i)=>{ const k=S.id+i; if(t.done && !(k in st)){ st[k]=true; seeded=true; } }));
-  if(seeded) schWrite(st);
-  const openIds = Array.from(document.querySelectorAll('#schStages details[open]')).map(d=>d.dataset.sid);
-  box.innerHTML = SCH.map(S=>{
-    const done = S.tasks.filter((_,i)=>st[S.id+i]).length;
-    const p = Math.round(done/S.tasks.length*100);
-    const rows = S.tasks.map((t,i)=>{
-      const k = S.id+i, on = !!st[k];
-      return `<div class="sch-task${on?' done':''}" data-k="${k}">
-        <div class="sch-cb${on?' on':''}"></div>
-        <div style="flex:1;min-width:0;">
-          <div class="sch-n">${esc(t.n)}</div>
-          <div class="sch-m">
-            <span class="sch-tag ${t.s}">${SCH_SLOT[t.s]}</span>
-            <span class="sch-tag hr">${t.h?t.h+'hr':'持續'}</span>
-          </div>
-          ${t.w?`<div class="sch-w">${esc(t.w)}</div>`:''}
-        </div>
-      </div>`;
-    }).join('');
-    return `<details class="phase-box" data-sid="${S.id}" style="margin-bottom:14px;"${openIds.includes(S.id)?' open':''}>
-        <summary class="phase-head">
-          <h3>${esc(S.t)} <span style="font-size:11px;color:var(--muted);font-weight:400;">· ${esc(S.d)}</span></h3>
-          <div class="right"><span class="pill pill-wip">${p}% · ${done}/${S.tasks.length}</span><span class="chev">▾</span></div>
-        </summary>
-        <div class="phase-body">
-          <p style="font-size:12.5px;color:var(--ink-2);margin-bottom:12px;">${S.goal}</p>
-          ${rows}
-        </div>
-      </details>`;
-  }).join('');
-  schUpdate();
-}
-
-function schUpdate(){
-  const st = schRead();
-  let tot=0, done=0, hr=0;
-  const per = {};
-  SCH.forEach(S=>{
-    per[S.id] = {done:0, total:S.tasks.length};
-    S.tasks.forEach((t,i)=>{
-      tot++;
-      if(st[S.id+i]){ done++; per[S.id].done++; } else hr += (t.h||0);
-    });
-  });
-  const p = tot? Math.round(done/tot*100) : 0;
-  const set = (id,v)=>{ const e=document.getElementById(id); if(e) e.textContent=v; };
-  set('schPct', p+'%'); set('schDone', done); set('schTotal', tot); set('schHrs', hr);
-  const f = document.getElementById('schFill'); if(f) f.style.width = p+'%';
-  // 總覽同步
-  set('progressPct', p+'%'); set('progressDone', done); set('progressTotal', tot);
-  set('progressHrs', '剩 '+hr+' hr');
-  const pf = document.getElementById('progressFill'); if(pf) pf.style.width = p+'%';
-  // 總覽 5 個階段方塊
-  const mini = document.getElementById('stageMini');
-  if(mini){
-    mini.innerHTML = '';
-    SCH.forEach(S=>{
-      const s = per[S.id];
-      let state = 'todo';
-      if(s.done===s.total) state='done'; else if(s.done>0) state='partial';
-      const b = document.createElement('div');
-      b.className = 'mini-box';
-      b.dataset.state = state;
-      b.textContent = S.id;
-      b.title = `${S.t} (${s.done}/${s.total})`;
-      b.style.cursor = 'pointer';
-      b.addEventListener('click', ()=>{
-        goView('schedule');
-        setTimeout(()=>{
-          const d = document.querySelector(`#schStages details[data-sid="${S.id}"]`);
-          if(d){ d.open = true; d.scrollIntoView({behavior:'smooth', block:'start'}); }
-        }, 140);
-      });
-      mini.appendChild(b);
-    });
+// ═══════════════════ 架構圖資料 ═══════════════════
+const ARCH={
+  layers:[
+    {k:'L0',t:'使用者',s:'手機 · Mac · 公司 PC',nodes:['user']},
+    {k:'L1',t:'前端 Vercel',s:'atlas-public-data.vercel.app',nodes:['index','law','finder']},
+    {k:'L2',t:'Supabase',s:'Tokyo · Free',nodes:['auth','law_articles','laws','ui_state','finder_state','products','jc','ur','ops_tables','storage']},
+    {k:'L3',t:'幕後',s:'Mac（年底 → mini）',nodes:['push','local','crawler','backup','agent']},
+    {k:'L4',t:'儲存',s:'DS920+',nodes:['nas']},
+    {k:'X',t:'退場',s:'不再使用',nodes:['nocodb','tailscale','ghpages']},
+  ],
+  nodes:{
+    user:{n:'你',st:'live',p:'只用自己的 Mac、iPhone、公司 PC 登入；每個頁面都要帳密。',rel:['index','law','finder']},
+    index:{n:'index.html 儀表板',st:'live',p:'這一頁。進度、入口、決策、時程；勾選狀態存 ui_state。',rel:['auth','ui_state','law','finder']},
+    law:{n:'law.html 法規條文庫',st:'live',p:'v2.2：領域→面向→適用範圍→法規 四層樹、搜尋、註記、PDF 多版本、法規屬性編輯。',rel:['auth','law_articles','laws','storage']},
+    finder:{n:'finder.html 選色表',st:'live',p:'v6.0.2：資料存 finder_state，圖片進 Storage/finder，產品搜尋讀 products。',rel:['auth','finder_state','products','storage','jc']},
+    auth:{n:'Auth 登入',st:'live',p:'Email + 密碼，唯一使用者，關閉自助註冊。RLS 以 authenticated 角色放行。之後地主／案件表改 MFA（aal2）。',rel:['index','law','finder']},
+    law_articles:{n:'law_articles 條文',st:'live',p:'568 條／17 部中央法規，一條一筆；my_note 永不被腳本覆蓋。',rel:['laws','law','push']},
+    laws:{n:'laws 法規主檔',st:'live',p:'領域／面向／標籤／核心外圍／排序／法規註記。中央 17 + 地方 19 + CNS；law_domains 放領域清單。',rel:['law_articles','law','push','local']},
+    ui_state:{n:'ui_state',st:'live',p:'儀表板跨裝置狀態：時程勾選（schedule）、備份備忘（ops）。',rel:['index']},
+    finder_state:{n:'finder_state',st:'live',p:'選色表整包資料（建商／專案／版本／明細／排版），一人一列 jsonb。',rel:['finder']},
+    products:{n:'products 產品庫',st:'plan',p:'表五重建版：status／usages／texture／finish，(brand,model,size) 唯一。等爬蟲入庫。',rel:['finder','crawler','storage']},
+    jc:{n:'jc_projects · color_versions · version_items',st:'plan',p:'表二／表三／明細的正規化版。finder 之後改讀這裡，選色版本才能寫回個案明細。',rel:['finder','products']},
+    ur:{n:'ur_projects · contacts · ledger',st:'plan',p:'案件、聯絡人、帳務——加鎖區，之後改 aal2 policy。先用表編輯器輸入。',rel:['auth','ops_tables']},
+    ops_tables:{n:'site_logs · firing_tests · tasks',st:'plan',p:'工地日誌、燒製測試、任務（kind 案件／系統）。',rel:['ur']},
+    storage:{n:'Storage',st:'live',p:'law-pdf（私有，法規 PDF 多版本）· finder（公開，選色圖片）· products（公開，型錄圖，service_role 寫）。',rel:['law','finder','products','local']},
+    push:{n:'atlas_law_push_sb_v2.py',st:'live',p:'全國法規資料庫 API zip → law_articles UPSERT；同步登記 laws；--add 強制納入；每季跑。',rel:['law_articles','laws']},
+    local:{n:'atlas_local_laws.py',st:'live',p:'地方法規分類表 → laws 登記；PDF 手動下載後 --upload 進 law-pdf（國土署擋爬蟲）。',rel:['laws','storage']},
+    crawler:{n:'atlas_crawler.py 建材爬蟲',st:'plan',p:'6 家廠商型錄 → products + Storage/products。mini 到貨後排程月更。',rel:['products','storage']},
+    backup:{n:'pg_dump 週備份',st:'plan',p:'mini 排程：Supabase → NAS。到貨前每月看一次 Dashboard Backups。',rel:['nas']},
+    agent:{n:'AI Agent 層',st:'plan',p:'service key 鎖在 mini；交辦型（Claude app 連 mini）與排程型。L1／L2 有料之後才啟用。',rel:['push','crawler']},
+    nas:{n:'DS920+ NAS',st:'live',p:'退回純儲存：備份落地、原始資料。不再是任何入口。',rel:['backup']},
+    nocodb:{n:'NocoDB',st:'retired',p:'12 張表已盤點導出（noco_export/）。確認 Vercel 版穩定一週後停容器。',rel:[]},
+    tailscale:{n:'Tailscale · Web Station · Nginx',st:'retired',p:'久不用連不上，整組放棄。',rel:[]},
+    ghpages:{n:'GitHub Pages 靜態 JSON',st:'retired',p:'法規改直接讀 Supabase，不再導出 JSON。',rel:[]},
   }
+};
+
+// ═══════════════════ 登入 / 啟動 ═══════════════════
+$('#gateForm').addEventListener('submit',async e=>{
+  e.preventDefault(); const b=$('#g-btn'),er=$('#g-err'); b.disabled=true; er.textContent='';
+  const {error}=await sb.auth.signInWithPassword({email:$('#g-email').value.trim(),password:$('#g-pw').value});
+  b.disabled=false; if(error){ er.textContent='登入失敗：'+(error.message.includes('Invalid')?'帳號或密碼錯誤':error.message); return; }
+  boot();
+});
+$('#logoutBtn').addEventListener('click',async()=>{ await sb.auth.signOut(); location.reload(); });
+let _booted=false;
+async function boot(){
+  const {data:{session}}=await sb.auth.getSession();
+  if(!session){ document.body.classList.add('locked'); $('#gate').style.display='flex'; return; }
+  if(_booted) return; _booted=true; UID=session.user.id;
+  $('#gate').style.display='none'; document.body.classList.remove('locked');
+  await loadState(); if(seedDone()) saveState('schedule'); renderAll(); loadStats();
+}
+function cloud(st,txt){ $('#cloudDot').className=st; $('#cloudTxt').textContent=txt; }
+
+// ═══════════════════ 狀態（ui_state）═══════════════════
+async function loadState(){
+  const {data,error}=await sb.from('ui_state').select('key,data').eq('user_id',UID);
+  if(error){ cloud('err','ui_state 讀取失敗（先跑 supabase_07）'); console.warn(error); seedLocal(); return; }
+  for(const r of data||[]) ST[r.key]=r.data||{};
+  // 第一次：把本機舊勾選搬上去
+  if(!data||!data.find(r=>r.key==='schedule')){ seedLocal(); saveState('schedule'); }
+  cloud('ok','已同步');
+}
+function seedLocal(){ try{ const loc=JSON.parse(localStorage.getItem('atlas-schedule-2026q4')||'{}'); ST.schedule=Object.assign({},loc,ST.schedule); }catch{} }
+let _t={};
+function saveState(key){
+  clearTimeout(_t[key]); cloud('wait','上傳中…');
+  _t[key]=setTimeout(async()=>{
+    const {error}=await sb.from('ui_state').upsert({user_id:UID,key,data:ST[key]},{onConflict:'user_id,key'});
+    cloud(error?'err':'ok',error?'同步失敗：'+error.message:'已同步 '+new Date().toLocaleTimeString('zh-TW',{hour12:false,hour:'2-digit',minute:'2-digit'}));
+  },800);
 }
 
-// 事件委派
-document.addEventListener('click', e=>{
-  const t = e.target.closest('.sch-task');
-  if(!t) return;
-  const st = schRead(), k = t.dataset.k;
-  st[k] = !st[k];
-  schWrite(st);
-  schRender();
-});
-(function(){
-  const r = document.getElementById('schReset');
-  if(r) r.addEventListener('click', ()=>{
-    if(confirm('確定清除時程表所有勾選？')){ schWrite({}); schRender(); }
-  });
-  const rp = document.getElementById('resetProgressBtn');
-  if(rp) rp.addEventListener('click', ()=>{
-    if(confirm('確定清除當期工作進度所有勾選？')){ schWrite({}); schRender(); }
-  }, true);
-})();
-schRender();
+// ═══════════════════ 時程 ═══════════════════
+// done:true 的任務第一次自動打勾（在雲端狀態載入後執行）
+function seedDone(){ let n=0; ST.schedule=ST.schedule||{}; SCH.forEach(S=>S.tasks.forEach((t,i)=>{ const k=S.id+i; if(t.done&&!(k in ST.schedule)){ ST.schedule[k]=true; n++; } })); return n; }
+function stageStats(S){ const done=S.tasks.filter((_,i)=>ST.schedule[S.id+i]).length; return {done,total:S.tasks.length,pct:Math.round(done/S.tasks.length*100)}; }
+function currentStageId(){ for(const S of SCH){ if(stageStats(S).pct<100) return S.id; } return SCH[SCH.length-1].id; }
+function renderRings(){
+  const cur=currentStageId();
+  $('#rings').innerHTML=SCH.map(S=>{ const {pct}=stageStats(S); const r=26,c=2*Math.PI*r,off=c*(1-pct/100);
+    return `<div class="ring${S.id===cur?' cur':''}" onclick="go('sched');openStage('${S.id}')" title="${esc(S.t)}">
+      <svg viewBox="0 0 64 64"><circle cx="32" cy="32" r="${r}" fill="none" stroke="var(--border-2)" stroke-width="5"/>
+      <circle cx="32" cy="32" r="${r}" fill="none" stroke="${pct===100?'var(--teal-2)':'var(--gold)'}" stroke-width="5" stroke-linecap="round" stroke-dasharray="${c}" stroke-dashoffset="${off}" transform="rotate(-90 32 32)"/>
+      <text x="32" y="36" text-anchor="middle" font-family="Space Mono" font-size="12" fill="var(--ink)">${pct}%</text></svg>
+      <div class="l">${S.id} · ${esc(S.t.split('·')[1]||S.t).trim()}</div></div>`; }).join('');
+}
+function renderStages(){
+  const cur=currentStageId(); let td=0,tt=0;
+  $('#stages').innerHTML=SCH.map(S=>{ const s=stageStats(S); td+=s.done; tt+=s.total;
+    const cls=s.pct===100?'done':S.id===cur?'cur':'';
+    return `<details class="stage ${cls}" id="stage-${S.id}"${S.id===cur?' open':''}>
+      <summary><h3>${esc(S.t)}</h3><span class="d">${esc(S.d)}</span><span class="pct">${s.pct}% · ${s.done}/${s.total}</span></summary>
+      <div class="body"><div class="goal">${S.goal}</div>${S.tasks.map((t,i)=>{ const k=S.id+i,on=!!ST.schedule[k];
+        return `<div class="task${on?' on':''}" data-k="${k}"><div class="cb"></div><div><div class="n">${esc(t.n)}</div><div class="w"><span class="tg">${SCH_SLOT[t.s]}</span><span class="tg">${t.h?t.h+'hr':'持續'}</span>${esc(t.w||'')}</div></div></div>`; }).join('')}</div></details>`; }).join('');
+  $('#schSum').textContent=` 總計 ${td}/${tt} 項（${Math.round(td/tt*100)}%）`;
+}
+function openStage(id){ document.querySelectorAll('.stage').forEach(d=>d.open=d.id==='stage-'+id); $('#stage-'+id)?.scrollIntoView({behavior:'smooth',block:'start'}); }
+$('#stages').addEventListener('click',e=>{ const t=e.target.closest('.task'); if(!t) return; const k=t.dataset.k; ST.schedule[k]=!ST.schedule[k]; saveState('schedule'); renderAll(); });
 
-// ───── SMOOTH SCROLL for TOC ─────
-document.querySelectorAll('.toc a[href^="#"]').forEach(a => {
-  a.addEventListener('click', e => {
-    e.preventDefault();
-    const target = document.querySelector(a.getAttribute('href'));
-    if (target) target.scrollIntoView({behavior: 'smooth', block: 'start'});
-  });
-});
-</script>
+// ═══════════════════ 首頁：三件事、決策、營運 ═══════════════════
+function renderNext(){
+  const out=[]; for(const S of SCH){ S.tasks.forEach((t,i)=>{ if(out.length<3&&!ST.schedule[S.id+i]) out.push({S,t,i}); }); if(out.length>=3) break; }
+  $('#next3').innerHTML=out.map(({S,t,i},n)=>`<div class="card"><div class="mono" style="font-size:10px;color:var(--gold);letter-spacing:.2em">STEP ${n+1}</div><h3 style="margin-top:4px">${esc(t.n)}</h3><div class="d" style="margin-top:4px">${esc(t.w||'')}</div><div style="margin-top:8px"><span class="tag">${esc(S.id)} 段</span><span class="tag">${SCH_SLOT[t.s]}</span><span class="tag">${t.h?t.h+' hr':'持續'}</span></div><span class="go" onclick="go('sched');openStage('${S.id}')">到時程表 →</span></div>`).join('')
+    ||'<div class="card"><h3>全部完成 🎉</h3><div class="d">去開下一輪時程。</div></div>';
+}
+function renderDec(){
+  $('#dec3').innerHTML=DECISIONS.slice(0,3).map(d=>`<div class="card dec" style="margin-bottom:8px"><div class="id">${d.id} · ${d.d}</div><h3 style="font-size:13.5px;margin-top:2px">${esc(d.t)}</h3></div>`).join('');
+  $('#decAll').innerHTML=DECISIONS.map(d=>`<div class="card dec"><div class="id">${d.id}<small>${d.d}</small></div><div><h3>${esc(d.t)}</h3><div class="why">${esc(d.why)}</div></div></div>`).join('');
+}
+const OPS=[
+  {k:'last_backup',l:'最近一次確認 Supabase 備份',ph:'YYYY-MM-DD',judge:v=>{ if(!v) return ['bad','未記錄']; const d=(Date.now()-new Date(v))/864e5; return d>45?['bad',Math.round(d)+' 天前']:d>30?['warn',Math.round(d)+' 天前']:['ok',Math.round(d)+' 天前']; }},
+  {k:'last_law_sync',l:'最近一次法規同步',ph:'YYYY-MM-DD',judge:v=>{ if(!v) return ['bad','未記錄']; const d=(Date.now()-new Date(v))/864e5; return d>100?['warn',Math.round(d)+' 天前']:['ok',Math.round(d)+' 天前']; }},
+  {k:'handover_ver',l:'交接文件版本',ph:'例：v5 · 2026-10',judge:v=>v?['ok',v]:['warn','未填']},
+  {k:'nocodb',l:'NocoDB 容器',ph:'運行中 / 已停用',judge:v=>v&&v.includes('停')?['ok',v]:['warn',v||'運行中（待停用）']},
+];
+function renderOps(){
+  $('#ops').innerHTML=OPS.map(o=>{ const v=ST.ops[o.k]||''; const [c,txt]=o.judge(v);
+    return `<div class="row"><span class="k">${o.l}</span><span><span class="pill ${c}">${esc(txt)}</span> <input data-k="${o.k}" value="${esc(v)}" placeholder="${o.ph}"></span></div>`; }).join('')
+    +`<div class="hint" style="margin-top:8px">改完自動存雲端。備份策略：Supabase 每週自動備份（Free 方案 7 天）→ mini 到貨後 pg_dump 週備份進 NAS → 半年一次離線硬碟。</div>`;
+  $('#ops').querySelectorAll('input').forEach(i=>i.addEventListener('change',()=>{ ST.ops[i.dataset.k]=i.value.trim(); saveState('ops'); renderOps(); }));
+}
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.106.2/dist/umd/supabase.min.js"></script>
-<script>
-(function(){
-  const sb = supabase.createClient('https://riiflvhbxrnmzriwngjs.supabase.co','sb_publishable_R69Hj9hcR5G4dp3Uz1J0PQ_1BabpwsN');
-  const gate=document.getElementById('gate'), lo=document.getElementById('logoutBtn');
-  function unlock(){ document.body.classList.remove('locked'); gate.style.display='none'; lo.style.display='block'; }
-  sb.auth.getSession().then(({data:{session}})=>{ if(session) unlock(); });
-  document.getElementById('gateForm').addEventListener('submit', async e=>{
-    e.preventDefault(); const b=document.getElementById('gBtn'), err=document.getElementById('gErr');
-    b.disabled=true; err.textContent='';
-    const {error}=await sb.auth.signInWithPassword({email:document.getElementById('gEmail').value.trim(),password:document.getElementById('gPw').value});
-    b.disabled=false;
-    if(error){ err.textContent='登入失敗：'+(error.message.includes('Invalid')?'帳號或密碼錯誤':error.message); return; }
-    unlock();
-  });
-  lo.addEventListener('click', async ()=>{ await sb.auth.signOut(); location.reload(); });
-})();
+// ═══════════════════ 即時統計 ═══════════════════
+async function loadStats(){
+  try{
+    const [a,l,n,f,p,s]=await Promise.all([
+      sb.from('law_articles').select('article_id',{count:'exact',head:true}),
+      sb.from('laws').select('law_code,scope'),
+      sb.from('law_articles').select('article_id',{count:'exact',head:true}).not('my_note','is',null),
+      sb.from('finder_state').select('data').eq('user_id',UID).maybeSingle(),
+      sb.from('products').select('id',{count:'exact',head:true}),
+      sb.storage.from('law-pdf').list('',{limit:500}),
+    ]);
+    const laws=l.data||[]; const local=laws.filter(x=>x.scope==='臺北市'||x.scope==='新北市').length;
+    $('#st-arts').textContent=a.count??'–'; $('#st-laws').textContent=laws.length; $('#st-local').textContent=local;
+    $('#st-noted').textContent=n.count??'–'; $('#st-pdf').textContent=(s.data||[]).length; $('#st-prod').textContent=p.count??0;
+    const fd=f.data?.data; $('#st-finder').textContent=fd?(fd.versions||[]).length:0;
+    $('#m-law').textContent=`${a.count??'–'} 條 · ${laws.length} 部 · ${(s.data||[]).length} 份 PDF`;
+  }catch(e){ console.warn('stats',e); }
+}
+
+// ═══════════════════ 架構圖 ═══════════════════
+let SEL=null;
+function renderArch(){
+  $('#archLayers').innerHTML=ARCH.layers.map(L=>`<div class="layer"><div class="lt">${L.k} · ${esc(L.t)}<small>${esc(L.s)}</small></div><div class="nodes">${L.nodes.map(id=>{ const n=ARCH.nodes[id]; const hot=SEL&&(SEL===id||ARCH.nodes[SEL].rel.includes(id)); const dim=SEL&&!hot;
+    return `<div class="node ${n.st==='plan'?'plan':n.st==='retired'?'retired':''}${SEL===id?' sel':''}${dim?' dim':''}" data-id="${id}"><i></i>${esc(n.n)}</div>`; }).join('')}</div></div>`).join('');
+  if(SEL){ const n=ARCH.nodes[SEL]; const st={live:'上線',plan:'規劃中',retired:'退場'}[n.st];
+    $('#archSide').innerHTML=`<div class="t">${st.toUpperCase()} · ${esc(SEL)}</div><h3>${esc(n.n)}</h3><p>${esc(n.p)}</p><div class="rel"><b>接到</b>${n.rel.map(r=>`<span data-id="${r}">${esc(ARCH.nodes[r].n)}</span>`).join('')||'—'}</div>`; }
+}
+document.addEventListener('click',e=>{ const n=e.target.closest('[data-id]'); if(!n||!$('#v-arch').classList.contains('on')) return; SEL=SEL===n.dataset.id&&e.target.closest('.node')?null:n.dataset.id; renderArch(); });
+
+// ═══════════════════ 交接：服務表 ═══════════════════
+$('#handSvc').textContent=`儀表板     https://atlas-public-data.vercel.app/            （GitHub: jrtoutal/atlas-public-data → Vercel 自動部署）
+法規條文庫 https://atlas-public-data.vercel.app/law.html
+選色表     https://atlas-public-data.vercel.app/finder.html
+Supabase   https://supabase.com/dashboard/project/riiflvhbxrnmzriwngjs   （Tokyo · Free）
+資料表     13 張 + laws / law_domains / ui_state；Storage: law-pdf · finder · products
+NAS        DS920+（純儲存／備份）
+退場       NocoDB · Tailscale · Web Station · Nginx · GitHub Pages JSON`;
+
+// ═══════════════════ 導覽 / 主題 ═══════════════════
+function go(v){ document.querySelectorAll('.view').forEach(x=>x.classList.toggle('on',x.id==='v-'+v)); document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('on',t.dataset.v===v)); window.scrollTo({top:0}); if(v==='arch') renderArch(); try{localStorage.setItem('atlas-view',v);}catch{} }
+document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>go(t.dataset.v)));
+$('#themeBtn').addEventListener('click',()=>{ const h=document.documentElement; const n=h.dataset.theme==='dark'?'light':'dark'; h.dataset.theme=n; $('#themeBtn').textContent=n==='dark'?'LIGHT':'DARK'; try{localStorage.setItem('atlas-theme',n);}catch{} });
+try{ const th=localStorage.getItem('atlas-theme'); if(th){ document.documentElement.dataset.theme=th; $('#themeBtn').textContent=th==='dark'?'LIGHT':'DARK'; } }catch{}
+function renderAll(){ renderRings(); renderStages(); renderNext(); renderDec(); renderOps(); renderArch(); }
+sb.auth.onAuthStateChange(ev=>{ if(ev==='SIGNED_OUT') location.reload(); });
+boot();
 </script>
 </body>
 </html>
