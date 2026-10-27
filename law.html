@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#0e1012">
-<title>ATLAS 法規條文庫 v2.1.1</title>
+<title>ATLAS 法規條文庫 v2.2</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Space+Mono:wght@400;700&display=swap');
 :root{
@@ -73,6 +73,13 @@ a{color:var(--teal2)}
 .asp-head:hover{background:var(--panel)}
 .asp-head .cnt{margin-left:auto;font-size:11px;color:var(--muted);font-family:'Space Mono',monospace}
 .asp>.body{display:none}.asp.open>.body{display:block}
+.scp-head{display:flex;align-items:center;gap:8px;padding:5px 12px 5px 32px;cursor:pointer;user-select:none;font-size:11px;color:var(--teal2);letter-spacing:.08em}
+.scp-head:hover{background:var(--panel)}
+.scp-head .cnt{margin-left:auto;font-size:10.5px;color:var(--muted);font-family:'Space Mono',monospace}
+.scp>.body{display:none}.scp.open>.body{display:block}
+.scp.open>.scp-head>.arrow{transform:rotate(90deg)}
+.scp .law-head{padding-left:52px}.scp .art-row{padding-left:70px}
+.dom>.body>.scp .scp-head{padding-left:20px}.dom>.body>.scp .law-head{padding-left:40px}.dom>.body>.scp .art-row{padding-left:58px}
 .arrow{color:var(--muted);font-size:10px;transition:transform .15s;width:10px;flex-shrink:0}
 .open>.dom-head>.arrow,.open>.asp-head>.arrow,.law.open>.law-head>.arrow{transform:rotate(90deg)}
 .law-head{display:flex;align-items:center;gap:6px;padding:8px 10px 8px 30px;cursor:pointer;user-select:none;font-size:12.5px;font-weight:500}
@@ -171,7 +178,8 @@ a{color:var(--teal2)}
 <!-- ═══ 主畫面 ═══ -->
 <div id="app">
   <div class="topbar">
-    <div class="brand"><span class="mark">▲ ATLAS</span><h1>法規條文庫</h1></div>
+    <a class="brand" href="index.html" title="回帷幄首頁" style="text-decoration:none;color:inherit"><span class="mark">▲ ATLAS</span><h1>法規條文庫</h1></a>
+    <a class="btn sm" href="index.html" title="回帷幄首頁" style="text-decoration:none">⌂ 首頁</a>
     <span class="stat">共 <b id="stTotal">0</b> 條 · <b id="stLaws">0</b> 部 · 已註記 <b id="stNoted">0</b></span>
     <span class="spacer"></span>
     <button class="btn sm" id="logoutBtn">登出</button>
@@ -346,7 +354,7 @@ function render() {
       const L = A.get(asp);
       const laws = [...L.entries()].sort((a, b) => { const x = LAWS.get(a[0]), y = LAWS.get(b[0]);
         return ((SCOPE_ORDER[x.scope] ?? 9) - (SCOPE_ORDER[y.scope] ?? 9)) || (x.sort - y.sort) || a[0].localeCompare(b[0]); });
-      const lawsHtml = laws.map(([code, arts]) => renderLaw(LAWS.get(code), arts, searching)).join('');
+      const lawsHtml = renderScopes(laws, dom + '/' + asp, searching);
       if (asp === '') { h += lawsHtml; continue; }
       const aOpen = searching || !OPEN.has('ac:' + dom + '/' + asp);
       h += `<div class="asp${aOpen ? ' open' : ''}" data-k="a:${esc(dom)}/${esc(asp)}"><div class="asp-head"><span class="arrow">▶</span><span>${esc(asp)}</span><span class="cnt">${L.size}</span></div><div class="body">${lawsHtml}</div></div>`;
@@ -354,6 +362,18 @@ function render() {
     h += `</div></div>`;
   }
   $('#list').innerHTML = h || '<div class="empty">沒有符合的條文</div>';
+}
+// 第四層：適用範圍（中央 → 臺北市 → 新北市）。預設中央展開、地方收合；只有一種範圍時不加這層
+function renderScopes(laws, path, searching) {
+  const groups = new Map();
+  for (const [code, arts] of laws) { const sc = LAWS.get(code).scope || '中央'; if (!groups.has(sc)) groups.set(sc, []); groups.get(sc).push([code, arts]); }
+  const lawsHtml = g => g.map(([code, arts]) => renderLaw(LAWS.get(code), arts, searching)).join('');
+  if (groups.size <= 1) return lawsHtml(laws);
+  return [...groups.entries()].sort((a, b) => (SCOPE_ORDER[a[0]] ?? 9) - (SCOPE_ORDER[b[0]] ?? 9)).map(([sc, g]) => {
+    const k = 's:' + path + '/' + sc;
+    const open = searching || (OPEN.has(k + ':open') ? true : OPEN.has(k + ':closed') ? false : sc === '中央');
+    return `<div class="scp${open ? ' open' : ''}" data-k="${esc(k)}"><div class="scp-head"><span class="arrow">▶</span><span>${esc(sc)}${sc === '中央' ? '法規' : ''}</span><span class="cnt">${g.length}</span></div><div class="body">${lawsHtml(g)}</div></div>`;
+  }).join('');
 }
 function renderLaw(l, arts, searching) {
   const q = $('#q').value.trim().toLowerCase();
@@ -380,6 +400,8 @@ $('#list').addEventListener('click', e => {
   if (pdf) { e.stopPropagation(); openPdf(pdf.dataset.pdf); return; }
   const ed = e.target.closest('[data-edit]');
   if (ed) { e.stopPropagation(); showLaw(ed.dataset.edit); return; }
+  const sh = e.target.closest('.scp-head');
+  if (sh) { const g = sh.parentElement, k = g.dataset.k; g.classList.toggle('open'); const o = g.classList.contains('open'); OPEN.delete(k + (o ? ':closed' : ':open')); OPEN.add(k + (o ? ':open' : ':closed')); saveOpen(); return; }
   const head = e.target.closest('.dom-head,.asp-head,.law-head');
   if (head && head.parentElement.classList.contains('pdfonly')) {
     const code = head.parentElement.dataset.code, vs = PDFS.get(code) || [];
@@ -406,7 +428,7 @@ $('#btnNew').addEventListener('click', () => showLaw(null));
 // ── 條文詳情 + 註記 ──
 function show(r) {
   CUR = r; const l = LAWS.get(r.law_code);
-  OPEN.add('l:' + r.law_code); OPEN.add('d:' + l.domain); if (l.aspect) OPEN.delete('ac:' + l.domain + '/' + l.aspect); saveOpen();
+  OPEN.add('l:' + r.law_code); OPEN.add('d:' + l.domain); if (l.aspect) OPEN.delete('ac:' + l.domain + '/' + l.aspect); { const k = 's:' + l.domain + '/' + (l.aspect || '') + '/' + (l.scope || '中央'); OPEN.delete(k + ':closed'); OPEN.add(k + ':open'); } saveOpen();
   document.querySelectorAll('.art-row.active').forEach(x => x.classList.remove('active'));
   document.querySelector(`.art-row[data-id="${r.article_id}"]`)?.classList.add('active');
   const st = r.status === '已廢止' ? '<span class="pill ab">已廢止</span>' : r.status === '已修正待覆核' ? '<span class="pill">已修正待覆核</span>' : '<span class="pill ok">現行</span>';
