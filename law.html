@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#0e1012">
-<title>ATLAS 法規條文庫 v2.2.2</title>
+<title>ATLAS 法規條文庫 v2.3</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Space+Mono:wght@400;700&display=swap');
 :root{
@@ -304,7 +304,7 @@ function dlUrl(law) {
 }
 
 // ── 篩選 ──
-function lawText(l) { return [l.domain, l.aspect, l.law_name, l.law_code, ...(l.tags||[]), l.my_note||''].join(' ').toLowerCase(); }
+function lawText(l) { return [l.domain, l.aspect, l.issuer||'', l.law_name, l.law_code, ...(l.tags||[]), l.my_note||''].join(' ').toLowerCase(); }
 // 回傳 Map(code → arts[])；純 PDF 法規 arts 為 []
 function filtered() {
   const q = $('#q').value.trim().toLowerCase(), dom = $('#fDomain').value;
@@ -375,10 +375,10 @@ function render() {
 // 第四層：適用範圍（中央 → 臺北市 → 新北市）。預設中央展開、地方收合；只有一種範圍時不加這層
 function renderScopes(laws, path, searching) {
   const groups = new Map();
-  for (const [code, arts] of laws) { const sc = LAWS.get(code).scope || '中央'; if (!groups.has(sc)) groups.set(sc, []); groups.get(sc).push([code, arts]); }
+  for (const [code, arts] of laws) { const L = LAWS.get(code), sc = L.issuer || L.scope || '中央'; if (!groups.has(sc)) groups.set(sc, []); groups.get(sc).push([code, arts]); }
   const lawsHtml = g => g.map(([code, arts]) => renderLaw(LAWS.get(code), arts, searching)).join('');
   if (groups.size <= 1) return lawsHtml(laws);
-  return [...groups.entries()].sort((a, b) => (SCOPE_ORDER[a[0]] ?? 9) - (SCOPE_ORDER[b[0]] ?? 9)).map(([sc, g]) => {
+  return [...groups.entries()].sort((a, b) => ((SCOPE_ORDER[a[0]] ?? 9) - (SCOPE_ORDER[b[0]] ?? 9)) || a[0].localeCompare(b[0], 'zh-Hant')).map(([sc, g]) => {
     const k = 's:' + path + '/' + sc;
     const open = searching || (OPEN.has(k + ':open') ? true : OPEN.has(k + ':closed') ? false : sc === '中央');
     return `<div class="scp${open ? ' open' : ''}" data-k="${esc(k)}"><div class="scp-head"><span class="arrow">▶</span><span>${esc(sc)}${sc === '中央' ? '法規' : ''}</span><span class="cnt">${g.length}</span></div><div class="body">${lawsHtml(g)}</div></div>`;
@@ -437,7 +437,7 @@ $('#btnNew').addEventListener('click', () => showLaw(null));
 // ── 條文詳情 + 註記 ──
 function show(r) {
   CUR = r; const l = LAWS.get(r.law_code);
-  OPEN.add('l:' + r.law_code); OPEN.add('d:' + l.domain); if (l.aspect) OPEN.delete('ac:' + l.domain + '/' + l.aspect); { const k = 's:' + l.domain + '/' + (l.aspect || '') + '/' + (l.scope || '中央'); OPEN.delete(k + ':closed'); OPEN.add(k + ':open'); } saveOpen();
+  OPEN.add('l:' + r.law_code); OPEN.add('d:' + l.domain); if (l.aspect) OPEN.delete('ac:' + l.domain + '/' + l.aspect); { const k = 's:' + l.domain + '/' + (l.aspect || '') + '/' + (l.issuer || l.scope || '中央'); OPEN.delete(k + ':closed'); OPEN.add(k + ':open'); } saveOpen();
   document.querySelectorAll('.art-row.active').forEach(x => x.classList.remove('active'));
   document.querySelector(`.art-row[data-id="${r.article_id}"]`)?.classList.add('active');
   const st = r.status === '已廢止' ? '<span class="pill ab">已廢止</span>' : r.status === '已修正待覆核' ? '<span class="pill">已修正待覆核</span>' : '<span class="pill ok">現行</span>';
@@ -487,6 +487,7 @@ function showLaw(code) {
       <div class="field full"><label>來源網址（選填）</label><input id="lpUrl" placeholder="https://…"></div>` : `<div class="field full"><label>名稱（樹上顯示）</label><input id="lpName" value="${esc(l.law_name)}"></div>`}
       <div class="field"><label>領域</label><input id="lpDomain" list="domList" value="${esc(l.domain)}"><datalist id="domList">${DOMAINS.map(d => `<option value="${esc(d)}">`).join('')}</datalist></div>
       <div class="field"><label>面向／第二層（可空，可自訂）</label><input id="lpAspect" list="aspList" value="${esc(l.aspect || '')}" placeholder="都市更新用 A–G；建材可用 磁磚、石材…"><datalist id="aspList">${aspAll.map(a => `<option value="${esc(a)}">`).join('')}</datalist></div>
+      <div class="field"><label>機關／單位（第四層分組；空＝用適用範圍）</label><input id="lpIssuer" list="issList" value="${esc(l.issuer || '')}" placeholder="例：工程會 (PCC)、住都中心 (HURC)"><datalist id="issList">${[...new Set([...LAWS.values()].map(x => x.issuer).filter(Boolean))].map(a => `<option value="${esc(a)}">`).join('')}</datalist></div>
       <div class="field"><label>適用範圍</label><select id="lpScope">${opt(['中央','臺北市','新北市','其他縣市'], l.scope)}</select></div>
       <div class="field"><label>分級</label><select id="lpTier">${opt(['核心','外圍'], l.tier)}</select></div>
       <div class="field"><label>同層排序（小的在前）</label><input id="lpSort" type="number" value="${l.sort ?? 100}"></div>
@@ -519,6 +520,7 @@ async function saveLaw(code) {
     domain: $('#lpDomain').value.trim() || '都市更新',
     aspect: $('#lpAspect').value.trim() || null,
     scope: $('#lpScope').value, tier: $('#lpTier').value,
+    issuer: $('#lpIssuer').value.trim() || null,
     sort: parseInt($('#lpSort').value) || 100,
     tags: $('#lpTags').value.split(/[,，]/).map(s => s.trim()).filter(Boolean),
     my_note: $('#lpNote').value.trim() || null,
