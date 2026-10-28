@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#0d0f14">
-<title>ATLAS 帷幄 v6.0.2 — 指揮中心</title>
+<title>ATLAS 帷幄 v6.0.3 — 指揮中心</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Noto+Serif+TC:wght@600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
 :root[data-theme="dark"]{--bg:#0d0f14;--bg-2:#12151c;--panel:#161a22;--card:#1c2028;--card-2:#22262f;--border:#252c38;--border-2:#2e3648;--ink:#e4e8f2;--ink-2:#b2bacb;--muted:#6a7490;--dim:#434b60;--gold:#d4a843;--gold-2:#f0cc7a;--teal:#3aaa8c;--teal-2:#5dd4b0;--indigo:#5b7ec4;--red:#e07060;--amber:#e8b04a;--grid:rgba(255,255,255,.04)}
@@ -178,7 +178,7 @@ h2.sec small{font-family:'Space Mono',monospace;font-size:10px;color:var(--muted
 </div>
 
 <div class="top"><div class="in">
-  <div class="brand" onclick="go('home')"><span class="mk">▲ ATLAS</span><b>帷幄</b><span class="v">v6.0.2</span></div>
+  <div class="brand" onclick="go('home')"><span class="mk">▲ ATLAS</span><b>帷幄</b><span class="v">v6.0.3</span></div>
   <nav class="tabs">
     <button class="tab on" data-v="home"><span class="n">01</span>首頁</button>
     <button class="tab" data-v="sched"><span class="n">02</span>工作時程</button>
@@ -333,16 +333,15 @@ const SCH = [
        w:'✅ 2026-10-17 完成。atlas-public-data.vercel.app/law.html，手機可開可寫註記'},
       {n:'Supabase Storage 建 law-pdf bucket，law.html 顯示「📄 原檔」', s:'sat', h:1, done:true,
        w:'✅ 2026-10-17。supabase_05_law_pdf.sql；私有 bucket，登入者才能開。Mac 的 SynologyDrive 資料夾只當本機整理用'},
-      {n:'Supabase 建 law_changes「法規異動紀錄」表', s:'sat', h:1,
-       w:'供儀表板顯示「N 筆法規異動待覆核」紅點'},
+
       {n:'★確認官方 PDF 下載網址', s:'sat', h:1, done:true,
        w:'✅ 2026-10-17。FilesType.aspx 是互動頁，機器抓不到 → law.html 放「⬇ 官方」按鈕，人點 16 次'},
       {n:'下載 16 部核心法規 PDF 原檔', s:'sat', h:2, done:true,
        w:'✅ 2026-10-17。檔名 {law_code}.pdf，全部進 Storage law-pdf'},
       {n:'法規主檔 laws + 三層樹（領域→面向→法規）', s:'sun', h:3, done:true,
        w:'✅ 2026-10-17 law.html v2.1。分類在表裡改，純 PDF 法規與多版本都能掛'},
-      {n:'法規異動排程：每季自動比對（mini 到貨前先手動跑）', s:'sat', h:2,
-       w:'年底 mini 到貨後掛 launchd 排程；之前每季手動 python3 atlas_law_push_sb.py'},
+      {n:'每季法規同步：中央走 API 腳本、地方 19 部人工看改版；跑完記到首頁「最近一次法規同步」', s:'sat', h:1,
+       w:'中央：python3 atlas_law_push_sb_v2.py（官方開放 API，不會被擋）。地方：國土署擋爬蟲，人工。mini 到貨後中央改排程'},
     ]},
   { id:'B', t:'階段 B · 經驗層啟動', d:'10月中 → 11月初',
     goal:'★ 幾乎不需工程，但累積的是<b>唯一的護城河</b>。愈早開始愈好，因為經驗是時間函數。',
@@ -357,6 +356,8 @@ const SCH = [
        w:'案件待辦 kind=案件；系統待辦 kind=系統。之後儀表板從這張表讀'},
       {n:'每週檢視一次速記／註記，併進正式欄位', s:'any', h:0,
        w:'持續性任務'},
+      {n:'淨零碳規劃管理師：讀書筆記寫進各法規／標準的「我的註記」', s:'any', h:0,
+       w:'初級兩科：L11 基礎概論、L12 盤查規範（ISO 14064-1／14067）。決定要考再啟動'},
     ]},
   { id:'C', t:'階段 C · 雲端骨架完成（D22）', d:'10月中 → 11月',
     goal:'<b>Vercel 前端 + Supabase 資料庫</b> 取代 NocoDB／Tailscale。完成後：手機、公司、家裡開同一個網址登入即可，不再有連不上的問題。',
@@ -377,8 +378,6 @@ const SCH = [
        w:'先唯讀列表，新增修改走 Supabase 表編輯器'},
       {n:'finder 的建商／專案改讀 jc_projects（表二）', s:'sun', h:2,
        w:'現在建商／專案存在 finder_state 內；接表二後選色版本才能正規化進 color_versions'},
-      {n:'NocoDB 容器停用、Tailscale／Web Station 關閉', s:'sat', h:1,
-       w:'★ 確認 finder 與法規都在 Vercel 正常用一週後再關。NocoDB 資料已導出 noco_export/'},
     ]},
   { id:'D', t:'階段 D · 產品庫與補強', d:'11月 → 12月',
     goal:'表五重建：<b>不搬舊的 787 筆</b>，爬蟲重抓現行型錄（加停產狀態、用途、紋理）。順便把地方法規與手冊入庫。',
@@ -395,6 +394,8 @@ const SCH = [
        w:'不進法規樹；這是 L2 經驗層的料'},
       {n:'地方法規逐條解析進 law_articles（兩市法規系統結構不同）', s:'sun', h:4,
        w:'有 PDF 先夠用；等常翻的那幾部再做'},
+      {n:'淨零碳領域：面向用簡章主題 L111–L122；氣候變遷因應法搬過來、盤查登錄辦法／碳費辦法 --add、ISO／PAS／CBAM PDF 上傳', s:'sat', h:2,
+       w:'同一棵樹既是讀書資料也是之後接淨零案子的法規庫'},
       {n:'都市更新作業手冊（109版）入庫', s:'sat', h:2,
        w:'PDF 拆章節；可先只做目錄 + 關鍵表格'},
       {n:'★ Supabase 備份：每週 pg_dump → NAS（mini 到貨後排程）', s:'sat', h:2,
@@ -413,8 +414,8 @@ const SCH = [
        w:'export ATLAS_SB_SECRET 進 ~/.zshrc；永不寫進任何檔案或對話'},
       {n:'launchd 排程：法規季更、爬蟲月更、pg_dump 週備份 → NAS', s:'hol', h:3,
        w:'先手動跑一次每支腳本確認可用，再掛排程'},
-      {n:'NAS 排程清空；Tailscale／VPN／Web Station 全部關閉', s:'hol', h:1,
-       w:'退場清單見 D22 架構圖 05'},
+      {n:'NAS 退場：NocoDB 容器停用、排程清空、Tailscale／VPN／Web Station 關閉', s:'hol', h:1,
+       w:'Vercel 版已穩定運作（10/29 驗收）。NocoDB 資料已導出 noco_export/'},
       {n:'（之後）地主／案件加鎖區：MFA aal2 policy', s:'any', h:2,
        w:'ur_projects / contacts 地主 / ledger 三張表改 aal2 policy；等資料真的有敏感內容再做'},
     ]},
