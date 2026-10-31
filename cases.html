@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#0e1012">
-<title>ATLAS 案件中心 v1.6.1</title>
+<title>ATLAS 案件中心 v1.6.3</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Space+Mono:wght@400;700&display=swap');
 :root{--bg:#0e1012;--sb:#141618;--panel:#1a1d21;--card:#1f2328;--border:#2a2f36;--border2:#353b44;--gold:#d4a843;--gold2:#f0cc7a;--teal:#3aaa8c;--teal2:#4dc9a8;--red:#e06c6c;--indigo:#7b8cff;--amber:#e8b04a;--text:#dde2ee;--sub:#8a94a6;--muted:#4a5566}
@@ -372,7 +372,8 @@ function relSections(){
   if(TAB==='ct'){
     const urs=DATA.urc.filter(x=>x.contact_id===id).map(l=>({r:DATA.ur.find(p=>p.id===l.ur_project_id),role:l.role})).filter(x=>x.r);
     const jcs=DATA.jcc.filter(x=>x.contact_id===id).map(l=>DATA.jc.find(p=>p.id===l.jc_project_id)).filter(Boolean);
-    const owns=DATA.po.filter(o=>o.contact_id===id).map(o=>({o,p:DATA.pcl.find(p=>p.id===o.parcel_id)})).filter(x=>x.p).map(x=>({...x,r:DATA.ur.find(u=>u.id===x.p.ur_project_id)}));
+    const owns=DATA.po.filter(o=>o.contact_id===id).map(o=>({o,p:DATA.pcl.find(p=>p.id===o.parcel_id)})).filter(x=>x.p).map(x=>({...x,r:DATA.ur.find(u=>u.id===x.p.ur_project_id)}))
+      .sort((a,b)=>(a.r?.name||'').localeCompare(b.r?.name||'','zh-Hant')||a.p.section.localeCompare(b.p.section,'zh-Hant')||a.p.lot.localeCompare(b.p.lot));
     const viaLand=[...new Map(owns.filter(x=>x.r&&!urs.some(u=>u.r.id===x.r.id)).map(x=>[x.r.id,x.r])).values()];
     h+=`<div class="sec"><h3>參與的案件</h3>${urs.map(x=>`<div class="it"><span class="pill k1">都更</span><span>${esc(x.r.name)}</span><span class="sub">${esc(x.role||'')}</span></div>`).join('')}${viaLand.map(r=>`<div class="it"><span class="pill k1">都更</span><span>${esc(r.name)}</span><span class="sub">地主（由持有地號推得）</span></div>`).join('')}${jcs.map(p=>`<div class="it"><span class="pill k2">建材</span><span>${esc(p.name)}</span></div>`).join('')}${urs.length+jcs.length+viaLand.length?'':'<div style="font-size:12px;color:var(--muted)">尚無。</div>'}
       <div class="addrow"><input id="jCase" list="dl-case" placeholder="打字找案件（都更／建材）" style="flex:1.6"><datalist id="dl-case">${DATA.ur.map(u=>`<option value="都更 · ${esc(u.name)}">${esc(u.stage||'')}</option>`).join('')}${DATA.jc.map(u=>`<option value="建材 · ${esc(u.name)}">${esc(u.builder_name||'')}</option>`).join('')}</datalist><select id="jRole">${UR_ROLE.map(o=>`<option>${o}</option>`).join('')}</select><button class="btn sm" id="btnJoin">加入案件</button></div></div>`;
@@ -548,7 +549,7 @@ function renderPdfPreview(pid,def){
 }
 function parcelSection(pid){
   if(DATA.noParcels) return `<div class="sec"><h3>地號與所有權人</h3><div style="font-size:12px;color:var(--amber)">資料表尚未建立：請先在 Supabase 跑 supabase_11_parcels.sql，重新整理後即出現。</div></div>`;
-  const pcls=DATA.pcl.filter(p=>p.ur_project_id===pid), c=consentCalc(pid);
+  const pcls=DATA.pcl.filter(p=>p.ur_project_id===pid).sort((a,b)=>a.section.localeCompare(b.section,'zh-Hant')||a.lot.localeCompare(b.lot)), c=consentCalc(pid);
   const pct=x=>x==null?'—':x.toFixed(1)+'%';
   let h=`<div class="sec"><h3>地號與所有權人 <span class="spacer"></span><span class="mono" style="font-weight:400">${pcls.length} 筆地號</span></h3>
     <div class="ratio">
@@ -575,7 +576,7 @@ function parcelSection(pid){
       ${PASTE_PCL===p.id?`<div class="addrow pe"><textarea data-pastetxt="${p.id}" rows="5" style="flex:1 1 100%;font-family:'Space Mono',monospace;font-size:12px;padding:6px 8px;background:var(--bg);border:1px solid var(--border2);border-radius:7px;color:var(--text)" placeholder="每行一人：姓名 遮罩識別碼 持分（照謄本寫就好）&#10;陳＊＊ F125*****3 36分之1&#10;陳** F127***4 1/36&#10;桃園農田水利會  全部"></textarea><button class="btn sm pri" data-pasteadd="${p.id}">加入這些人</button><span class="sub" data-pastemsg="${p.id}" style="align-self:center;font-size:12px"></span></div>`:''}</div>`;
   }
   h+=ctDatalist();
-  h+=`<div style="margin-top:10px"><span class="x" id="btnImpToggle" style="font-size:12px;color:var(--sub);cursor:pointer">📄 放入 PDF（都更計算機案件清單／單查地號）或貼上文字 ${PDFQ.length?'· 有 '+PDFQ.length+' 筆待寫入':''}</span>
+  h+=`<div style="margin-top:12px"><button class="btn sm pri" id="btnImpToggle">📄 放入 PDF 匯入地號${PDFQ.length?'（'+PDFQ.length+' 筆待寫入）':''}</button><span class="sub" style="font-size:12px;margin-left:8px">都更計算機「案件清單」或「單查地號」PDF，可多選；或貼文字</span>
     <div id="impBox" style="display:${PDFQ.length?'':'none'};margin-top:6px"><div class="addrow" style="margin:0 0 6px"><input type="file" id="impPdf" accept="application/pdf" multiple style="flex:1;padding:6px"><span class="sub" style="align-self:center;font-size:12px">可一次放多個：案件清單 PDF ＋ 各地號單查 PDF；沒文字層會自動 OCR（第一次要下載辨識模型，約 1 分鐘）</span></div><div id="pdfPrev"></div><textarea id="impTxt" style="width:100%;min-height:90px;font-family:'Space Mono',monospace;font-size:12px;background:var(--bg);border:1px solid var(--border2);border-radius:7px;color:var(--text);padding:8px" placeholder="五股區	五股段	05840000	947.61	自然人100%
 0584-0000 土地15 建物24"></textarea><div class="addrow"><button class="btn sm pri" id="btnImp">匯入</button><span class="sub" id="impMsg" style="align-self:center;font-size:12px"></span></div></div></div>`;
   h+=`<div class="addrow" style="margin-top:10px"><input id="pSection" placeholder="地段（例：五股區五股段）" style="flex:1.4"><input id="pLot" placeholder="地號 0584-0000" style="flex:1"><input id="pArea" type="number" step="0.01" placeholder="面積 m²" style="flex:0 0 110px"><select id="pUse"><option value="">地目</option>${LAND_USE.map(x=>`<option>${x}</option>`).join('')}</select><input id="pReg" placeholder="地政所" style="flex:0 0 120px"><button class="btn sm" id="btnAddPcl">＋ 加地號</button></div></div>`;
