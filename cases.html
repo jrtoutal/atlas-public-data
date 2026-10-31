@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#0e1012">
-<title>ATLAS 案件中心 v1.6</title>
+<title>ATLAS 案件中心 v1.5</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Space+Mono:wght@400;700&display=swap');
 :root{--bg:#0e1012;--sb:#141618;--panel:#1a1d21;--card:#1f2328;--border:#2a2f36;--border2:#353b44;--gold:#d4a843;--gold2:#f0cc7a;--teal:#3aaa8c;--teal2:#4dc9a8;--red:#e06c6c;--indigo:#7b8cff;--amber:#e8b04a;--text:#dde2ee;--sub:#8a94a6;--muted:#4a5566}
@@ -127,7 +127,6 @@ a{color:var(--teal2)}
 .chk.bad{border-color:var(--red);color:var(--red);font-weight:700}.chk.good{border-color:var(--teal);color:var(--teal2)}
 .ratio .r{padding:6px 10px;border:1px solid var(--border);border-radius:8px;background:var(--bg)}
 .autosv{font-size:11.5px;color:var(--muted);margin-left:6px}
-.pt{border-collapse:collapse;font-size:12px;width:100%}.pt th{font-weight:500;color:var(--sub);text-align:left;padding:4px 6px;border-bottom:1px solid var(--border2)}.pt td{padding:3px 6px;border-bottom:1px dashed var(--border)}.pt input{width:100%;padding:3px 6px;font-size:12px;background:var(--bg);border:1px solid var(--border2);border-radius:5px;color:var(--text);font-family:'Space Mono',monospace}
 @media (max-width:760px){ .pcl .po{grid-template-columns:1fr 1fr;} }
 @media (max-width:760px){
   .main{flex-direction:column}
@@ -452,16 +451,14 @@ function parseLots(text){
 }
 async function importLots(pid,text,defaultSection){
   const rows=parseLots(text); if(!rows.length) return {n:0,msg:'沒有解析到地號（每行要有 8 碼地號，例 05840000）'};
-  return importRows(pid,rows,defaultSection); }
-async function importRows(pid,rows,defaultSection){
   const have=DATA.pcl.filter(p=>p.ur_project_id===pid); let ins=0,upd=0,cnt=0;
   for(const r of rows){ const ex=have.find(p=>p.lot===r.lot);
-    if(r.owners_official!==undefined&&r.area_m2==null){ if(!ex) continue; const u={owners_official:r.owners_official}; if(r.bldg_owners_official!=null) u.bldg_owners_official=r.bldg_owners_official;
+    if(r.owners_official!==undefined){ if(!ex) continue; const u={owners_official:r.owners_official}; if(r.bldg_owners_official!=null) u.bldg_owners_official=r.bldg_owners_official;
       const {error}=await sb.from('parcels').update(u).eq('id',ex.id); if(error) return {n:ins+upd,msg:error.message}; Object.assign(ex,u); cnt++; continue; }
     const sec=r.section||ex?.section||defaultSection||'（未填地段）';
-    if(ex){ const u={}; if(r.area_m2!=null) u.area_m2=r.area_m2; if(r.notes&&!ex.notes) u.notes=r.notes; if(r.owners_official!=null) u.owners_official=r.owners_official; if(r.bldg_owners_official!=null) u.bldg_owners_official=r.bldg_owners_official; if(!Object.keys(u).length) continue;
+    if(ex){ const u={}; if(r.area_m2!=null) u.area_m2=r.area_m2; if(r.notes&&!ex.notes) u.notes=r.notes; if(!Object.keys(u).length) continue;
       const {error}=await sb.from('parcels').update(u).eq('id',ex.id); if(error) return {n:ins+upd,msg:error.message}; Object.assign(ex,u); upd++; }
-    else { const {data,error}=await sb.from('parcels').insert({ur_project_id:pid,section:sec,lot:r.lot,area_m2:r.area_m2,notes:r.notes,owners_official:r.owners_official??null,bldg_owners_official:r.bldg_owners_official??null}).select().single(); if(error) return {n:ins+upd,msg:error.message}; DATA.pcl.push(data); have.push(data); ins++; } }
+    else { const {data,error}=await sb.from('parcels').insert({ur_project_id:pid,section:sec,lot:r.lot,area_m2:r.area_m2,notes:r.notes}).select().single(); if(error) return {n:ins+upd,msg:error.message}; DATA.pcl.push(data); have.push(data); ins++; } }
   return {n:ins+upd+cnt,msg:`新增 ${ins} 筆、更新 ${upd} 筆、官方人數 ${cnt} 筆`};
 }
 
@@ -477,69 +474,6 @@ function parseOwners(text){ const out=[];
       if(!name&&/[\u4e00-\u9fff＊*]/.test(t)) name=t.replace(/\*/g,'＊'); }
     if(name) out.push({owner_name:name,owner_key:key,share_num:num,share_den:den,hasShare}); }
   return out; }
-
-// ── PDF 直接放入：都更計算機（案件清單／單查地號）→ 文字層；沒有文字層就在瀏覽器 OCR ──
-const PDFJS='https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js', PDFJS_W='https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js', TESS='https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js';
-const loadLib=src=>new Promise((res,rej)=>{ if(document.querySelector(`script[src="${src}"]`)) return res(); const el=document.createElement('script'); el.src=src; el.onload=res; el.onerror=()=>rej(new Error('載入失敗 '+src)); document.head.appendChild(el); });
-let OCRW=null;
-async function ocrWorker(prog){ if(OCRW) return OCRW; await loadLib(TESS); OCRW=await Tesseract.createWorker(['chi_tra','eng'],1,{logger:m=>{ if(m.status==='recognizing text') prog(`OCR ${Math.round(m.progress*100)}%`); else if(m.status&&m.progress<1) prog(`準備 OCR（${m.status}）`); }}); return OCRW; }
-async function pdfToText(file,prog){
-  await loadLib(PDFJS); pdfjsLib.GlobalWorkerOptions.workerSrc=PDFJS_W;
-  const pdf=await pdfjsLib.getDocument({data:await file.arrayBuffer()}).promise; const lines=[];
-  for(let i=1;i<=pdf.numPages;i++){ const page=await pdf.getPage(i); const tc=await page.getTextContent();
-    const rows={}; for(const t of tc.items){ if(!t.str.trim()) continue; const y=Math.round(t.transform[5]/4); (rows[y]??=[]).push(t); }
-    const txt=Object.keys(rows).map(Number).sort((a,b)=>b-a).map(y=>rows[y].sort((a,b)=>a.transform[4]-b.transform[4]).map(t=>t.str).join(' ')).join('\n');
-    if(/\d{8}|\d{4}-\d{4}|所有權人/.test(txt)){ lines.push(...txt.split('\n')); continue; }
-    prog(`${file.name} 第 ${i}/${pdf.numPages} 頁沒有文字層，OCR 中…`);
-    const vp=page.getViewport({scale:2.5}); const cv=document.createElement('canvas'); cv.width=vp.width; cv.height=vp.height;
-    await page.render({canvasContext:cv.getContext('2d'),viewport:vp}).promise;
-    const w=await ocrWorker(m=>prog(`${file.name} 第 ${i}/${pdf.numPages} 頁 ${m}`)); const {data}=await w.recognize(cv); lines.push(...data.text.split('\n')); }
-  return lines;
-}
-// 從文字行抓：地號清單（行政區 地段 地號 面積 權屬）＋ 單查頁的 土地所有權人數／建物所有權人數
-function parsePdfLines(lines){
-  const lots=[]; let landN=null,bldgN=null,singleLot=null;
-  const num=t=>{ const m=t.replace(/[,，]/g,'').match(/\d+(?:\.\d+)?/); return m?Number(m[0]):null; };
-  for(const raw of lines){ const line=raw.replace(/[|｜]/g,' ').trim(); if(!line) continue;
-    let m;
-    if((m=line.match(/土地所有權人[^\d]{0,8}(\d+)/))) landN=+m[1];
-    if((m=line.match(/建物所有權人[^\d]{0,8}(\d+)/))) bldgN=+m[1];
-    const lm=line.match(/(?<!\d)(\d{4})\s*[-－]?\s*(\d{4})(?!\d)/); if(!lm) continue;
-    const lot=lm[1]+'-'+lm[2], after=line.slice(lm.index+lm[0].length), before=line.slice(0,lm.index);
-    const area=(after.match(/\d[\d,]*\.\d+|\d[\d,]*/)||[])[0];
-    if(area!=null&&/%|自然人|國有|公有|法人|私有|市有/.test(after)){ // 清單行
-      const own=(after.match(/(自然人|國有|公有|市有|法人|私有)/)||[])[1];
-      const sec=(before.match(/(?:[一-鿿]{1,3}[區鄉鎮市]\s*)?[一-鿿]+段/)||[])[0]?.replace(/\s+/g,'')||null;
-      lots.push({lot,section:sec,area_m2:Number(area.replace(/,/g,'')),notes:own?'權屬 '+own+'100%':null}); continue; }
-    if(!singleLot&&!/\./.test(after)) singleLot=lot; // 單查頁：地號出現在標題
-  }
-  if(!lots.length&&singleLot&&(landN!=null||bldgN!=null)) lots.push({lot:singleLot,owners_official:landN,bldg_owners_official:bldgN,single:true});
-  return {lots,landN,bldgN};
-}
-let PDFQ=[]; // 預覽列
-async function pdfImport(files,pid){
-  const msg=$('#impMsg'); PDFQ=[]; const def=DATA.pcl.find(p=>p.ur_project_id===pid)?.section||'';
-  for(const f of files){ try{ msg.textContent=`讀取 ${f.name}…`; const lines=await pdfToText(f,t=>msg.textContent=t); const r=parsePdfLines(lines);
-      if(!r.lots.length) msg.textContent=`${f.name}：沒讀到地號`;
-      for(const l of r.lots){ const ex=PDFQ.find(q=>q.lot===l.lot); if(ex) Object.assign(ex,Object.fromEntries(Object.entries(l).filter(([k,v])=>v!=null))); else PDFQ.push({...l,file:f.name}); } }
-    catch(e){ msg.textContent=`${f.name} 失敗：${e.message}`; } }
-  if(OCRW){ try{ await OCRW.terminate(); }catch(e){} OCRW=null; }
-  msg.textContent=PDFQ.length?`讀到 ${PDFQ.length} 筆，請檢查下表再寫入`:'沒有讀到任何地號';
-  renderPdfPreview(pid,def);
-}
-function renderPdfPreview(pid,def){
-  const box=$('#pdfPrev'); if(!box) return; if(!PDFQ.length){ box.innerHTML=''; return; }
-  const have=DATA.pcl.filter(p=>p.ur_project_id===pid);
-  box.innerHTML=`<div class="sub" style="font-size:12px;margin:8px 0 4px">預覽（可直接改，OCR 偶爾會看錯數字）：</div><div style="overflow:auto"><table class="pt"><tr><th>地段</th><th>地號</th><th>面積 m²</th><th>權屬</th><th>土地人數</th><th>建物人數</th><th>狀態</th><th></th></tr>
-    ${PDFQ.map((q,i)=>{ const ex=have.find(p=>p.lot===q.lot); return `<tr data-i="${i}"><td><input data-f="section" value="${esc(q.section||ex?.section||def)}"></td><td><input data-f="lot" value="${esc(q.lot)}" style="width:95px"></td><td><input data-f="area_m2" value="${q.area_m2??''}" style="width:80px"></td><td><input data-f="notes" value="${esc(q.notes||'')}" style="width:110px"></td><td><input data-f="owners_official" value="${q.owners_official??''}" style="width:60px"></td><td><input data-f="bldg_owners_official" value="${q.bldg_owners_official??''}" style="width:60px"></td><td class="sub">${ex?'更新':'新增'}</td><td><span class="x" data-rm="${i}">✕</span></td></tr>`; }).join('')}</table></div>
-    <div class="addrow"><button class="btn sm pri" id="btnPdfWrite">寫入 ${PDFQ.length} 筆</button><button class="btn sm" id="btnPdfClear">清除</button></div>`;
-  box.querySelectorAll('[data-rm]').forEach(x=>x.addEventListener('click',()=>{ PDFQ.splice(+x.dataset.rm,1); renderPdfPreview(pid,def); }));
-  $('#btnPdfClear').addEventListener('click',()=>{ PDFQ=[]; renderPdfPreview(pid,def); });
-  $('#btnPdfWrite').addEventListener('click',async()=>{
-    const rows=[...box.querySelectorAll('tr[data-i]')].map(tr=>{ const g=f=>tr.querySelector(`[data-f="${f}"]`).value.trim(); const n=f=>g(f)===''?null:Number(g(f));
-      const lot=g('lot').replace(/^(\d{4})(\d{4})$/,'$1-$2'); return {lot,section:g('section')||null,area_m2:n('area_m2'),notes:g('notes')||null,owners_official:n('owners_official'),bldg_owners_official:n('bldg_owners_official')}; }).filter(r=>/^\d{4}-\d{4}$/.test(r.lot));
-    $('#btnPdfWrite').disabled=true; const r=await importRows(pid,rows,def); PDFQ=[]; showForm(); setTimeout(()=>alert('寫入完成：'+r.msg),50); });
-}
 function parcelSection(pid){
   if(DATA.noParcels) return `<div class="sec"><h3>地號與所有權人</h3><div style="font-size:12px;color:var(--amber)">資料表尚未建立：請先在 Supabase 跑 supabase_11_parcels.sql，重新整理後即出現。</div></div>`;
   const pcls=DATA.pcl.filter(p=>p.ur_project_id===pid), c=consentCalc(pid);
@@ -569,8 +503,8 @@ function parcelSection(pid){
       ${PASTE_PCL===p.id?`<div class="addrow pe"><textarea data-pastetxt="${p.id}" rows="5" style="flex:1 1 100%;font-family:'Space Mono',monospace;font-size:12px;padding:6px 8px;background:var(--bg);border:1px solid var(--border2);border-radius:7px;color:var(--text)" placeholder="每行一人：姓名 遮罩識別碼 持分（照謄本寫就好）&#10;陳＊＊ F125*****3 36分之1&#10;陳** F127***4 1/36&#10;桃園農田水利會  全部"></textarea><button class="btn sm pri" data-pasteadd="${p.id}">加入這些人</button><span class="sub" data-pastemsg="${p.id}" style="align-self:center;font-size:12px"></span></div>`:''}</div>`;
   }
   h+=ctDatalist();
-  h+=`<div style="margin-top:10px"><span class="x" id="btnImpToggle" style="font-size:12px;color:var(--sub);cursor:pointer">📄 放入 PDF（都更計算機案件清單／單查地號）或貼上文字 ${PDFQ.length?'· 有 '+PDFQ.length+' 筆待寫入':''}</span>
-    <div id="impBox" style="display:${PDFQ.length?'':'none'};margin-top:6px"><div class="addrow" style="margin:0 0 6px"><input type="file" id="impPdf" accept="application/pdf" multiple style="flex:1;padding:6px"><span class="sub" style="align-self:center;font-size:12px">可一次放多個：案件清單 PDF ＋ 各地號單查 PDF；沒文字層會自動 OCR（第一次要下載辨識模型，約 1 分鐘）</span></div><div id="pdfPrev"></div><textarea id="impTxt" style="width:100%;min-height:90px;font-family:'Space Mono',monospace;font-size:12px;background:var(--bg);border:1px solid var(--border2);border-radius:7px;color:var(--text);padding:8px" placeholder="五股區	五股段	05840000	947.61	自然人100%
+  h+=`<div style="margin-top:10px"><span class="x" id="btnImpToggle" style="font-size:12px;color:var(--sub);cursor:pointer">📋 匯入／更新地號清單（貼上都更計算機表格，或「地號 土地15 建物24」官方人數）</span>
+    <div id="impBox" style="display:none;margin-top:6px"><textarea id="impTxt" style="width:100%;min-height:90px;font-family:'Space Mono',monospace;font-size:12px;background:var(--bg);border:1px solid var(--border2);border-radius:7px;color:var(--text);padding:8px" placeholder="五股區	五股段	05840000	947.61	自然人100%
 0584-0000 土地15 建物24"></textarea><div class="addrow"><button class="btn sm pri" id="btnImp">匯入</button><span class="sub" id="impMsg" style="align-self:center;font-size:12px"></span></div></div></div>`;
   h+=`<div class="addrow" style="margin-top:10px"><input id="pSection" placeholder="地段（例：五股區五股段）" style="flex:1.4"><input id="pLot" placeholder="地號 0584-0000" style="flex:1"><input id="pArea" type="number" step="0.01" placeholder="面積 m²" style="flex:0 0 110px"><select id="pUse"><option value="">地目</option>${LAND_USE.map(x=>`<option>${x}</option>`).join('')}</select><input id="pReg" placeholder="地政所" style="flex:0 0 120px"><button class="btn sm" id="btnAddPcl">＋ 加地號</button></div></div>`;
   return h;
@@ -599,8 +533,6 @@ function bindHoldings(){
 function bindParcels(){
   const pid=CUR?.id; if(!pid||TAB!=='ur'||DATA.noParcels) return;
   $('#btnImpToggle')?.addEventListener('click',()=>{ const b=$('#impBox'); b.style.display=b.style.display==='none'?'':'none'; });
-  $('#impPdf')?.addEventListener('change',e=>{ const fs=[...e.target.files]; if(fs.length) pdfImport(fs,pid); });
-  if(PDFQ.length) renderPdfPreview(pid,DATA.pcl.find(p=>p.ur_project_id===pid)?.section||'');
   $('#btnImp')?.addEventListener('click',async()=>{ const t=$('#impTxt').value.trim(); if(!t) return; $('#impMsg').textContent='匯入中…';
     const def=DATA.pcl.find(p=>p.ur_project_id===pid)?.section; const r=await importLots(pid,t,def); if(r.n) showForm(); else $('#impMsg').textContent=r.msg; if(r.n) setTimeout(()=>alert('匯入完成：'+r.msg),50); });
   $('#btnAddPcl')?.addEventListener('click',async()=>{
