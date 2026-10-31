@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0e1012">
+<title>ATLAS 案件中心 v1.0</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Space+Mono:wght@400;700&display=swap');
+:root{--bg:#0e1012;--sb:#141618;--panel:#1a1d21;--card:#1f2328;--border:#2a2f36;--border2:#353b44;--gold:#d4a843;--gold2:#f0cc7a;--teal:#3aaa8c;--teal2:#4dc9a8;--red:#e06c6c;--indigo:#7b8cff;--amber:#e8b04a;--text:#dde2ee;--sub:#8a94a6;--muted:#4a5566}
+@media (min-width:1600px){html{zoom:1.1}}@media (min-width:2200px){html{zoom:1.25}}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%}
+body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.6;overflow-x:hidden}
+.mono{font-family:'Space Mono',monospace}
+button,input,textarea,select{font-family:inherit;font-size:inherit}
+a{color:var(--teal2)}
+
+#login{min-height:100%;display:flex;align-items:center;justify-content:center;padding:24px}
+.login-box{width:100%;max-width:360px;background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:28px 26px}
+.brand{display:flex;align-items:baseline;gap:10px;margin-bottom:6px;text-decoration:none;color:inherit}
+.brand .mark{font-family:'Space Mono',monospace;letter-spacing:.3em;color:var(--gold);font-size:12px}
+.brand h1{font-size:20px;font-weight:700}
+.login-box p{color:var(--sub);font-size:12.5px;margin-bottom:20px}
+.field{margin-bottom:12px;min-width:0}
+.field label{display:block;font-size:11.5px;color:var(--sub);margin-bottom:5px;letter-spacing:.06em}
+.field label b{color:var(--red);font-weight:400}
+.field input,.field select,.field textarea{width:100%;padding:9px 11px;background:var(--bg);border:1px solid var(--border2);border-radius:8px;color:var(--text);outline:none}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--gold)}
+.field textarea{min-height:90px;resize:vertical;line-height:1.7}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:9px 15px;border-radius:8px;border:1px solid var(--border2);background:var(--card);color:var(--text);cursor:pointer;transition:all .15s;white-space:nowrap;text-decoration:none}
+.btn:hover{border-color:var(--gold);color:var(--gold2)}
+.btn.pri{background:var(--gold);border-color:var(--gold);color:#1a1200;font-weight:700}
+.btn.pri:hover{background:var(--gold2)}
+.btn.danger{color:var(--red);border-color:var(--red)}
+.btn.sm{padding:6px 11px;font-size:12px;border-radius:6px}
+.btn.w{width:100%}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.err{color:var(--red);font-size:12.5px;margin-top:10px;min-height:18px}
+
+#app{display:none;height:100%;flex-direction:column}
+.topbar{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--sb);border-bottom:1px solid var(--border);flex-shrink:0;flex-wrap:wrap;min-width:0}
+.topbar .brand{margin:0}.topbar .brand h1{font-size:15px}
+.tabs{display:flex;gap:4px}
+.tab{padding:6px 12px;border-radius:7px;border:1px solid transparent;background:none;color:var(--sub);cursor:pointer;font-size:12.5px}
+.tab.on{color:var(--gold2);border-color:var(--border2);background:var(--panel)}
+.spacer{flex:1}
+.cloud{font-size:11px;color:var(--sub);display:flex;align-items:center;gap:6px;white-space:nowrap}
+.cloud i{width:7px;height:7px;border-radius:50%;background:var(--muted);display:inline-block}
+.cloud i.ok{background:var(--teal2)}.cloud i.wait{background:var(--amber)}.cloud i.err{background:var(--red)}
+
+.main{flex:1;display:flex;min-height:0}
+.list{width:clamp(300px,28vw,420px);flex-shrink:0;border-right:1px solid var(--border);overflow-y:auto;background:var(--sb);display:flex;flex-direction:column}
+.list .tools{padding:10px 12px;border-bottom:1px solid var(--border);display:flex;gap:6px;flex-wrap:wrap;position:sticky;top:0;background:var(--sb);z-index:2}
+.list .tools input,.list .tools select{padding:7px 10px;background:var(--bg);border:1px solid var(--border2);border-radius:7px;color:var(--text);outline:none;min-width:0}
+.list .tools input{flex:1;min-width:120px}
+.row{padding:10px 14px;border-bottom:1px solid var(--border);cursor:pointer;border-left:2px solid transparent}
+.row:hover{background:var(--panel)}
+.row.active{background:var(--card);border-left-color:var(--gold)}
+.row .n{font-size:13.5px;font-weight:500;display:flex;gap:8px;align-items:baseline}
+.row .n .id{font-family:'Space Mono',monospace;font-size:10px;color:var(--muted)}
+.row .m{font-size:11.5px;color:var(--sub);margin-top:2px;display:flex;gap:8px;flex-wrap:wrap}
+.pill{font-size:10.5px;padding:1px 7px;border-radius:5px;border:1px solid var(--border2);color:var(--sub);white-space:nowrap}
+.pill.k1{border-color:var(--indigo);color:var(--indigo)}.pill.k2{border-color:var(--amber);color:var(--amber)}
+.pill.st{border-color:var(--teal);color:var(--teal2)}
+.empty{color:var(--muted);text-align:center;padding:50px 20px;font-size:13px}
+
+.detail{flex:1;overflow-y:auto;padding:22px 26px}
+.d-head{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.d-head h2{font-size:20px;font-weight:700}
+.d-head .id{font-family:'Space Mono',monospace;font-size:11px;color:var(--muted)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:4px 16px;max-width:860px}
+.grid .full{grid-column:1/-1}
+.chips{display:flex;gap:6px;flex-wrap:wrap;padding:4px 0}
+.chip{font-size:12px;padding:4px 10px;border-radius:999px;border:1px solid var(--border2);background:transparent;color:var(--sub);cursor:pointer}
+.chip.on{background:var(--teal);border-color:var(--teal);color:#06211a;font-weight:600}
+.chip.add{border-style:dashed}
+.actions{display:flex;gap:10px;align-items:center;margin:16px 0 26px;max-width:860px}
+.actions .st{flex:1;font-size:12px;color:var(--sub)}
+.actions .st.ok{color:var(--teal2)}.actions .st.err{color:var(--red)}
+.sec{max-width:860px;border-top:1px solid var(--border);padding-top:14px;margin-top:6px}
+.sec h3{font-size:12px;color:var(--sub);letter-spacing:.12em;margin-bottom:8px;display:flex;align-items:center;gap:10px}
+.sec h3 .spacer{flex:1}
+.it{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px dashed var(--border);font-size:13px}
+.it .x{color:var(--muted);cursor:pointer;font-size:12px;margin-left:auto}
+.it .x:hover{color:var(--red)}
+.it .sub{color:var(--sub);font-size:12px}
+.it.done .t{color:var(--muted);text-decoration:line-through}
+.it .cb{width:15px;height:15px;border:1px solid var(--border2);border-radius:4px;cursor:pointer;flex-shrink:0;position:relative}
+.it.done .cb{background:var(--teal);border-color:var(--teal)}
+.it.done .cb::after{content:'✓';color:#fff;font-size:10px;position:absolute;left:2px;top:-3px}
+.addrow{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.addrow input,.addrow select{padding:7px 10px;background:var(--bg);border:1px solid var(--border2);border-radius:7px;color:var(--text);outline:none;min-width:0}
+.addrow input{flex:1;min-width:140px}
+
+@media (max-width:760px){
+  .main{flex-direction:column}
+  .list{width:100%;max-height:40vh;border-right:0;border-bottom:1px solid var(--border)}
+  .detail{padding:14px}
+  .grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<div id="login">
+  <div class="login-box">
+    <div class="brand"><span class="mark">▲ ATLAS</span><h1>案件中心</h1></div>
+    <p>帷幄 · 僅限本人登入</p>
+    <form id="loginForm">
+      <div class="field"><label>EMAIL</label><input id="email" type="email" autocomplete="username" required></div>
+      <div class="field"><label>PASSWORD</label><input id="pw" type="password" autocomplete="current-password" required></div>
+      <button class="btn pri w" id="loginBtn" type="submit">登入</button>
+      <div class="err" id="loginErr"></div>
+    </form>
+  </div>
+</div>
+
+<div id="app">
+  <div class="topbar">
+    <a class="brand" href="index.html" title="回帷幄首頁"><span class="mark">▲ ATLAS</span><h1>案件中心</h1></a>
+    <a class="btn sm" href="index.html">⌂ 首頁</a>
+    <nav class="tabs">
+      <button class="tab on" data-t="ur">都更案件</button>
+      <button class="tab" data-t="jc">建材專案</button>
+      <button class="tab" data-t="ct">聯絡人</button>
+    </nav>
+    <span class="spacer"></span>
+    <span class="cloud"><i id="cloudDot"></i><span id="cloudTxt">—</span></span>
+    <button class="btn sm" id="logoutBtn">登出</button>
+  </div>
+  <div class="main">
+    <div class="list">
+      <div class="tools">
+        <input id="q" type="search" placeholder="搜尋…">
+        <select id="fStage"></select>
+        <button class="btn sm pri" id="btnNew">＋ 新增</button>
+      </div>
+      <div id="rows"></div>
+    </div>
+    <div class="detail" id="detail"><div class="empty">左側選一筆，或按「＋ 新增」</div></div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.106.2/dist/umd/supabase.min.js"></script>
+<script>
+const SB_URL='https://riiflvhbxrnmzriwngjs.supabase.co', SB_KEY='sb_publishable_R69Hj9hcR5G4dp3Uz1J0PQ_1BabpwsN';
+const sb=supabase.createClient(SB_URL,SB_KEY);
+const $=s=>document.querySelector(s);
+const esc=x=>String(x??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const fmtD=d=>d?String(d).slice(0,10):'';
+
+// ── 選項（對應資料庫 enum / check）──
+const UR_KIND=['都市更新','危老重建'];
+const UR_STAGE=['0.潛在評估與產權調閱','1.意願整合中','2.更新單元劃定','3.成立更新會','W1.危老耐震初評與資格認定','W2.危老100%同意與簽約','W3.危老重建計畫報核','U1.都更擬訂事業計畫','U2.都更擬訂權利變換計畫','完成.取得建拆照'];
+const UR_FLAGS=['產權調閱完成','耐震初評完成','耐震詳評完成','危老資格認定通過','更新單元已劃定','事業概要核准','說明會已辦','海砂屋／輻射屋','公有地佔比高'];
+const UR_ROLE=['地主代表/管委會','建築師/團隊','其他'];
+const JC_CAT=['指定','採購','規劃','結案'];
+const CT_KIND=['地主/住戶','建築師/設計師','營造廠/工程行','建設公司/業主','合作夥伴/代書'];
+const TASK_TAG=['送件審議','內部作業','協調會議','送樣','其他'];
+
+// ── 狀態 ──
+let UID=null, TAB='ur', CUR=null, DATA={ur:[],jc:[],ct:[],tasks:[],urc:[],jcc:[]};
+const T={
+  ur:{table:'ur_projects',label:'都更案件',name:r=>r.name,sub:r=>[r.kind,r.stage,r.consent_pct!=null?`同意 ${r.consent_pct}%`:''].filter(Boolean),filterKey:'stage',filterOpts:UR_STAGE,filterLabel:'全部階段'},
+  jc:{table:'jc_projects',label:'建材專案',name:r=>r.name,sub:r=>[r.builder_name,r.owner,(r.categories||[]).join('·'),fmtD(r.track_date)].filter(Boolean),filterKey:'_cat',filterOpts:JC_CAT,filterLabel:'全部類別'},
+  ct:{table:'contacts',label:'聯絡人',name:r=>r.name,sub:r=>[r.kind,r.company,r.title,r.phone].filter(Boolean),filterKey:'kind',filterOpts:CT_KIND,filterLabel:'全部類型'},
+};
+
+// ── 登入 ──
+$('#loginForm').addEventListener('submit',async e=>{ e.preventDefault(); $('#loginBtn').disabled=true; $('#loginErr').textContent='';
+  const {error}=await sb.auth.signInWithPassword({email:$('#email').value.trim(),password:$('#pw').value}); $('#loginBtn').disabled=false;
+  if(error){ $('#loginErr').textContent='登入失敗：'+(error.message.includes('Invalid')?'帳號或密碼錯誤':error.message); return; } boot(); });
+$('#logoutBtn').addEventListener('click',async()=>{ await sb.auth.signOut(); location.reload(); });
+async function boot(){ const {data:{session}}=await sb.auth.getSession(); if(!session){ $('#login').style.display='flex'; $('#app').style.display='none'; return; }
+  UID=session.user.id; $('#login').style.display='none'; $('#app').style.display='flex'; await loadAll(); setTab(new URLSearchParams(location.search).get('t')||'ur'); }
+function cloud(st,txt){ $('#cloudDot').className=st; $('#cloudTxt').textContent=txt; }
+
+// ── 載入 ──
+async function loadAll(){
+  cloud('wait','載入中…');
+  const [a,b,c,d,e,f]=await Promise.all([
+    sb.from('ur_projects').select('*').order('updated_at',{ascending:false}),
+    sb.from('jc_projects').select('*').order('updated_at',{ascending:false}),
+    sb.from('contacts').select('*').order('name'),
+    sb.from('tasks').select('*').eq('kind','案件').order('due_at',{ascending:true,nullsFirst:false}),
+    sb.from('ur_project_contacts').select('*'),
+    sb.from('jc_project_contacts').select('*'),
+  ]);
+  const err=[a,b,c,d,e,f].find(x=>x.error)?.error; if(err){ cloud('err','讀取失敗：'+err.message); return; }
+  DATA={ur:a.data,jc:b.data,ct:c.data,tasks:d.data,urc:e.data,jcc:f.data};
+  cloud('ok','已同步');
+}
+
+// ── 清單 ──
+function setTab(t){ TAB=t; CUR=null; document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('on',x.dataset.t===t));
+  const cfg=T[t]; $('#fStage').innerHTML=`<option value="">${cfg.filterLabel}</option>`+cfg.filterOpts.map(o=>`<option>${esc(o)}</option>`).join('');
+  $('#q').value=''; renderList(); $('#detail').innerHTML=`<div class="empty">左側選一筆${cfg.label}，或按「＋ 新增」</div>`; history.replaceState(null,'','?t='+t); }
+document.querySelectorAll('.tab').forEach(x=>x.addEventListener('click',()=>setTab(x.dataset.t)));
+function renderList(){
+  const cfg=T[TAB], q=$('#q').value.trim().toLowerCase(), f=$('#fStage').value;
+  const rows=DATA[TAB].filter(r=>{ if(f){ if(cfg.filterKey==='_cat'){ if(!(r.categories||[]).includes(f)) return false; } else if(r[cfg.filterKey]!==f) return false; }
+    return !q||JSON.stringify(r).toLowerCase().includes(q); });
+  $('#rows').innerHTML=rows.map(r=>`<div class="row${CUR&&CUR.id===r.id?' active':''}" data-id="${r.id}"><div class="n"><span>${esc(cfg.name(r))}</span><span class="id">#${r.id}</span></div><div class="m">${cfg.sub(r).map((s,i)=>`<span class="pill${TAB==='ur'&&i===0?(r.kind==='都市更新'?' k1':' k2'):TAB==='ur'&&i===1?' st':''}">${esc(s)}</span>`).join('')}</div></div>`).join('')
+    ||`<div class="empty">沒有資料</div>`;
+}
+$('#q').addEventListener('input',renderList); $('#fStage').addEventListener('change',renderList);
+$('#rows').addEventListener('click',e=>{ const r=e.target.closest('.row'); if(!r) return; CUR=DATA[TAB].find(x=>x.id===+r.dataset.id); renderList(); showForm(); });
+$('#btnNew').addEventListener('click',()=>{ CUR=null; renderList(); showForm(); });
+
+// ── 表單 ──
+const fld=(id,label,val,type='text',extra='')=>`<div class="field ${extra}"><label>${label}</label><input id="f-${id}" type="${type}" value="${esc(val??'')}"></div>`;
+const sel=(id,label,opts,val,extra='')=>`<div class="field ${extra}"><label>${label}</label><select id="f-${id}"><option value="">—</option>${opts.map(o=>`<option${o===val?' selected':''}>${esc(o)}</option>`).join('')}</select></div>`;
+const txt=(id,label,val,extra='full')=>`<div class="field ${extra}"><label>${label}</label><textarea id="f-${id}">${esc(val??'')}</textarea></div>`;
+const chips=(id,label,opts,vals,extra='full')=>`<div class="field ${extra}"><label>${label}</label><div class="chips" id="f-${id}">${opts.map(o=>`<button type="button" class="chip${(vals||[]).includes(o)?' on':''}" data-v="${esc(o)}">${esc(o)}</button>`).join('')}<button type="button" class="chip add" data-add="1">＋ 自訂</button></div></div>`;
+const chipVals=id=>[...document.querySelectorAll(`#f-${id} .chip.on`)].map(c=>c.dataset.v);
+const v=id=>{ const el=$('#f-'+id); return el?el.value.trim():''; };
+const num=id=>{ const s=v(id); return s===''?null:Number(s); };
+
+function showForm(){
+  const r=CUR||{}, isNew=!CUR; let h='';
+  if(TAB==='ur') h=`<div class="d-head"><h2>${isNew?'新增都更案件':esc(r.name)}</h2>${isNew?'':`<span class="id">#${r.id} · 更新 ${fmtD(r.updated_at)}</span>`}</div><div class="grid">
+    ${fld('name','案名（基地名）<b>＊</b>',r.name,'text','full')}
+    ${sel('kind','案件類型',UR_KIND,r.kind)}${sel('stage','推動階段',UR_STAGE,r.stage)}
+    ${fld('address','基地地址／地段地號',r.address,'text','full')}
+    ${fld('site_area_m2','基地面積（m²，依權狀）',r.site_area_m2,'number')}${fld('consent_pct','整合同意比例（%）',r.consent_pct,'number')}
+    ${chips('legal_flags','耐震評估與法規狀態（可複選）',UR_FLAGS,r.legal_flags)}
+    ${fld('bonus_est','預估容積獎勵',r.bonus_est,'text','full')}
+    ${txt('checklist','闖關檢核表',r.checklist)}${txt('notes','推動備註／說明會紀錄',r.notes)}</div>`;
+  if(TAB==='jc') h=`<div class="d-head"><h2>${isNew?'新增建材專案':esc(r.name)}</h2>${isNew?'':`<span class="id">#${r.id} · 更新 ${fmtD(r.updated_at)}</span>`}</div><div class="grid">
+    ${fld('name','專案名稱<b>＊</b>（與選色表一致）',r.name,'text','full')}
+    ${chips('categories','類別（可複選）',JC_CAT,r.categories)}
+    ${fld('builder_name','建商',r.builder_name)}${fld('owner','業主',r.owner)}
+    ${fld('architect','建築師',r.architect)}${fld('designer','設計單位',r.designer)}
+    ${fld('track_date','追蹤／執行日',fmtD(r.track_date),'date')}</div>`;
+  if(TAB==='ct') h=`<div class="d-head"><h2>${isNew?'新增聯絡人':esc(r.name)}</h2>${isNew?'':`<span class="id">#${r.id}</span>`}</div><div class="grid">
+    ${fld('name','姓名<b>＊</b>',r.name)}${sel('kind','類型',CT_KIND,r.kind)}
+    ${fld('company','公司',r.company)}${fld('title','職稱',r.title)}
+    ${fld('phone','電話',r.phone,'tel')}${fld('line_id','LINE ID',r.line_id)}
+    ${txt('background','背景與備註',r.background)}
+    ${fld('next_action','下一步待辦',r.next_action)}${fld('next_date','待辦日期',fmtD(r.next_date),'date')}</div>`;
+  h+=`<div class="actions"><button class="btn pri" id="btnSave">${isNew?'建立':'儲存'}</button>${isNew?'':`<button class="btn danger sm" id="btnDel">刪除</button>`}<span class="st" id="st"></span></div>`;
+  if(!isNew) h+=relSections();
+  $('#detail').innerHTML=h;
+  $('#btnSave').addEventListener('click',save); $('#btnDel')?.addEventListener('click',del);
+  bindRel(); if(window.innerWidth<=760) $('#detail').scrollIntoView({behavior:'smooth'});
+}
+function payload(){
+  if(TAB==='ur') return {name:v('name'),kind:v('kind')||null,stage:v('stage')||null,address:v('address')||null,site_area_m2:num('site_area_m2'),consent_pct:num('consent_pct'),legal_flags:chipVals('legal_flags'),bonus_est:v('bonus_est')||null,checklist:v('checklist')||null,notes:v('notes')||null};
+  if(TAB==='jc') return {name:v('name'),categories:chipVals('categories'),builder_name:v('builder_name')||null,owner:v('owner')||null,architect:v('architect')||null,designer:v('designer')||null,track_date:v('track_date')||null};
+  return {name:v('name'),kind:v('kind')||null,company:v('company')||null,title:v('title')||null,phone:v('phone')||null,line_id:v('line_id')||null,background:v('background')||null,next_action:v('next_action')||null,next_date:v('next_date')||null};
+}
+async function save(){
+  const p=payload(), st=$('#st'); if(!p.name){ st.className='st err'; st.textContent='名稱必填'; return; }
+  st.className='st'; st.textContent='儲存中…'; $('#btnSave').disabled=true;
+  const q=CUR?sb.from(T[TAB].table).update(p).eq('id',CUR.id).select().single():sb.from(T[TAB].table).insert(p).select().single();
+  const {data,error}=await q; $('#btnSave').disabled=false;
+  if(error){ st.className='st err'; st.textContent='儲存失敗：'+error.message; return; }
+  const i=DATA[TAB].findIndex(x=>x.id===data.id); if(i>=0) DATA[TAB][i]=data; else DATA[TAB].unshift(data);
+  CUR=data; renderList(); showForm(); $('#st').className='st ok'; $('#st').textContent='✓ 已儲存 '+new Date().toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'});
+}
+async function del(){
+  if(!confirm(`確定刪除「${T[TAB].name(CUR)}」？相關聯絡人連結、待辦會一併處理。無法復原。`)) return;
+  const {error}=await sb.from(T[TAB].table).delete().eq('id',CUR.id);
+  if(error){ $('#st').className='st err'; $('#st').textContent='刪除失敗：'+error.message; return; }
+  DATA[TAB]=DATA[TAB].filter(x=>x.id!==CUR.id); CUR=null; await loadAll(); renderList(); $('#detail').innerHTML='<div class="empty">已刪除</div>';
+}
+
+// ── 關聯區：聯絡人、待辦、所屬案件 ──
+function relSections(){
+  const id=CUR.id; let h='';
+  if(TAB==='ur'||TAB==='jc'){
+    const links=TAB==='ur'?DATA.urc.filter(x=>x.ur_project_id===id):DATA.jcc.filter(x=>x.jc_project_id===id);
+    h+=`<div class="sec"><h3>相關聯絡人 <span class="spacer"></span><span class="mono" style="font-weight:400">${links.length}</span></h3>
+      ${links.map(l=>{ const c=DATA.ct.find(x=>x.id===l.contact_id)||{name:'(已刪除)'}; return `<div class="it"><span>${esc(c.name)}</span><span class="sub">${esc([l.role,c.kind,c.company,c.phone].filter(Boolean).join(' · '))}</span><span class="x" data-unlink="${l.contact_id}" data-role="${esc(l.role||'')}">移除</span></div>`; }).join('')||'<div class="sub" style="font-size:12px;color:var(--muted)">尚無</div>'}
+      <div class="addrow"><select id="linkCt"><option value="">— 選聯絡人 —</option>${DATA.ct.map(c=>`<option value="${c.id}">${esc(c.name)}${c.company?' · '+esc(c.company):''}</option>`).join('')}</select>${TAB==='ur'?`<select id="linkRole">${UR_ROLE.map(o=>`<option>${o}</option>`).join('')}</select>`:''}<button class="btn sm" id="btnLink">加入</button><button class="btn sm" id="btnNewCt" title="先新增聯絡人再回來連結">＋ 新聯絡人</button></div></div>`;
+    const ts=DATA.tasks.filter(t=>TAB==='ur'?t.ur_project_id===id:t.jc_project_id===id);
+    h+=`<div class="sec"><h3>待辦 <span class="spacer"></span><span class="mono" style="font-weight:400">${ts.filter(t=>t.status!=='完成').length} 未完成</span></h3>
+      ${ts.map(t=>`<div class="it${t.status==='完成'?' done':''}"><span class="cb" data-task="${t.id}"></span><span class="t">${esc(t.title)}</span><span class="sub">${esc([t.tag,fmtD(t.due_at)?'到期 '+fmtD(t.due_at):''].filter(Boolean).join(' · '))}</span><span class="x" data-deltask="${t.id}">刪</span></div>`).join('')||'<div style="font-size:12px;color:var(--muted)">尚無</div>'}
+      <div class="addrow"><input id="taskTitle" placeholder="新待辦…"><select id="taskTag">${TASK_TAG.map(o=>`<option>${o}</option>`).join('')}</select><input id="taskDue" type="date" style="flex:0 0 150px"><button class="btn sm" id="btnTask">加入</button></div></div>`;
+  }
+  if(TAB==='ct'){
+    const urs=DATA.urc.filter(x=>x.contact_id===id).map(l=>({r:DATA.ur.find(p=>p.id===l.ur_project_id),role:l.role})).filter(x=>x.r);
+    const jcs=DATA.jcc.filter(x=>x.contact_id===id).map(l=>DATA.jc.find(p=>p.id===l.jc_project_id)).filter(Boolean);
+    h+=`<div class="sec"><h3>參與的案件</h3>${urs.map(x=>`<div class="it"><span class="pill k1">都更</span><span>${esc(x.r.name)}</span><span class="sub">${esc(x.role||'')}</span></div>`).join('')}${jcs.map(p=>`<div class="it"><span class="pill k2">建材</span><span>${esc(p.name)}</span></div>`).join('')}${urs.length+jcs.length?'':'<div style="font-size:12px;color:var(--muted)">尚無（到案件頁的「相關聯絡人」加入）</div>'}</div>`;
+  }
+  return h;
+}
+function bindRel(){
+  const id=CUR?.id; if(!id) return;
+  $('#btnLink')?.addEventListener('click',async()=>{ const cid=+$('#linkCt').value; if(!cid) return;
+    const row=TAB==='ur'?{ur_project_id:id,contact_id:cid,role:$('#linkRole').value}:{jc_project_id:id,contact_id:cid};
+    const {error}=await sb.from(TAB==='ur'?'ur_project_contacts':'jc_project_contacts').insert(row);
+    if(error){ alert('加入失敗：'+error.message); return; } (TAB==='ur'?DATA.urc:DATA.jcc).push(row); showForm(); });
+  $('#btnNewCt')?.addEventListener('click',()=>{ setTab('ct'); CUR=null; showForm(); });
+  document.querySelectorAll('[data-unlink]').forEach(x=>x.addEventListener('click',async()=>{ const cid=+x.dataset.unlink;
+    let q=sb.from(TAB==='ur'?'ur_project_contacts':'jc_project_contacts').delete().eq('contact_id',cid).eq(TAB==='ur'?'ur_project_id':'jc_project_id',id); if(TAB==='ur') q=q.eq('role',x.dataset.role);
+    const {error}=await q; if(error){ alert(error.message); return; }
+    if(TAB==='ur') DATA.urc=DATA.urc.filter(l=>!(l.ur_project_id===id&&l.contact_id===cid&&(l.role||'')===x.dataset.role)); else DATA.jcc=DATA.jcc.filter(l=>!(l.jc_project_id===id&&l.contact_id===cid)); showForm(); }));
+  $('#btnTask')?.addEventListener('click',async()=>{ const title=$('#taskTitle').value.trim(); if(!title) return;
+    const row={kind:'案件',title,tag:$('#taskTag').value,due_at:$('#taskDue').value?new Date($('#taskDue').value).toISOString():null,[TAB==='ur'?'ur_project_id':'jc_project_id']:id};
+    const {data,error}=await sb.from('tasks').insert(row).select().single(); if(error){ alert(error.message); return; } DATA.tasks.push(data); showForm(); });
+  document.querySelectorAll('[data-task]').forEach(x=>x.addEventListener('click',async()=>{ const t=DATA.tasks.find(k=>k.id===+x.dataset.task); const done=t.status!=='完成';
+    const {error}=await sb.from('tasks').update({status:done?'完成':'待辦',done_on:done?new Date().toISOString().slice(0,10):null}).eq('id',t.id); if(error){ alert(error.message); return; } t.status=done?'完成':'待辦'; showForm(); }));
+  document.querySelectorAll('[data-deltask]').forEach(x=>x.addEventListener('click',async()=>{ if(!confirm('刪除這筆待辦？')) return; const tid=+x.dataset.deltask;
+    const {error}=await sb.from('tasks').delete().eq('id',tid); if(error){ alert(error.message); return; } DATA.tasks=DATA.tasks.filter(k=>k.id!==tid); showForm(); }));
+}
+$('#detail').addEventListener('click',e=>{ const c=e.target.closest('.chip'); if(!c) return;
+  if(c.dataset.add){ const t=prompt('自訂項目：'); if(t&&t.trim()){ const b=document.createElement('button'); b.type='button'; b.className='chip on'; b.dataset.v=t.trim(); b.textContent=t.trim(); c.before(b);} return; }
+  c.classList.toggle('on'); });
+sb.auth.onAuthStateChange(ev=>{ if(ev==='SIGNED_OUT') location.reload(); });
+boot();
+</script>
+</body>
+</html>
