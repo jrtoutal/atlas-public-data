@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#0d0f14">
-<title>ATLAS 帷幄 v6.0.3 — 指揮中心</title>
+<title>ATLAS 帷幄 v6.1 — 指揮中心</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Noto+Serif+TC:wght@600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
 :root[data-theme="dark"]{--bg:#0d0f14;--bg-2:#12151c;--panel:#161a22;--card:#1c2028;--card-2:#22262f;--border:#252c38;--border-2:#2e3648;--ink:#e4e8f2;--ink-2:#b2bacb;--muted:#6a7490;--dim:#434b60;--gold:#d4a843;--gold-2:#f0cc7a;--teal:#3aaa8c;--teal-2:#5dd4b0;--indigo:#5b7ec4;--red:#e07060;--amber:#e8b04a;--grid:rgba(255,255,255,.04)}
@@ -178,7 +178,7 @@ h2.sec small{font-family:'Space Mono',monospace;font-size:10px;color:var(--muted
 </div>
 
 <div class="top"><div class="in">
-  <div class="brand" onclick="go('home')"><span class="mk">▲ ATLAS</span><b>帷幄</b><span class="v">v6.0.3</span></div>
+  <div class="brand" onclick="go('home')"><span class="mk">▲ ATLAS</span><b>帷幄</b><span class="v">v6.1</span></div>
   <nav class="tabs">
     <button class="tab on" data-v="home"><span class="n">01</span>首頁</button>
     <button class="tab" data-v="sched"><span class="n">02</span>工作時程</button>
@@ -213,12 +213,16 @@ h2.sec small{font-family:'Space Mono',monospace;font-size:10px;color:var(--muted
     <div class="rings" id="rings"></div>
   </div>
 
-  <h2 class="sec">三個入口 <small>ENTRY</small></h2>
-  <div class="grid3">
+  <h2 class="sec">入口 <small>ENTRY</small></h2>
+  <div class="grid3" style="grid-template-columns:repeat(4,1fr)">
+    <a class="card link" href="cases.html"><div class="ic">🏗</div><h3>案件中心</h3><div class="d">都更案件、建材專案、聯絡人：中文表單、下拉、待辦、關聯。</div><div class="meta" id="m-cases">–</div><span class="arrow">→</span></a>
     <a class="card link" href="law.html"><div class="ic">📜</div><h3>法規條文庫</h3><div class="d">領域 → 面向 → 法規 三層樹、全文搜尋、實務註記、PDF 原檔。</div><div class="meta" id="m-law">–</div><span class="arrow">→</span></a>
     <a class="card link" href="finder.html"><div class="ic">🎨</div><h3>選色表</h3><div class="d">建商／專案／版本、產品搜尋、圖片裁剪、PDF 輸出。資料自動同步雲端。</div><div class="meta">v6.0.2 · Supabase 同步</div><span class="arrow">→</span></a>
-    <a class="card link" href="https://supabase.com/dashboard/project/riiflvhbxrnmzriwngjs/editor" target="_blank" rel="noopener"><div class="ic">🗄</div><h3>資料表</h3><div class="d">案件、聯絡人、工地日誌、帳務、任務……直接在 Supabase 表編輯器輸入。</div><div class="meta">13 張表 · 輸入頁之後再做</div><span class="arrow">↗</span></a>
+    <a class="card link" href="https://supabase.com/dashboard/project/riiflvhbxrnmzriwngjs/editor" target="_blank" rel="noopener"><div class="ic">🗄</div><h3>資料表</h3><div class="d">幕後資料庫：跑 SQL、拖 PDF、查資料。日常輸入請用案件中心。</div><div class="meta">Supabase · 16 張表</div><span class="arrow">↗</span></a>
   </div>
+
+  <h2 class="sec">案件清單 <small>CASES · 讀 ur_projects / jc_projects</small></h2>
+  <div class="grid2" id="caseList"><div class="card"><div class="d">載入中…</div></div></div>
 
   <h2 class="sec">現在可以開始的三件事 <small>NEXT · 由時程表自動抓</small></h2>
   <div class="grid3 next" id="next3"></div>
@@ -347,9 +351,9 @@ const SCH = [
     goal:'★ 幾乎不需工程，但累積的是<b>唯一的護城河</b>。愈早開始愈好，因為經驗是時間函數。',
     tasks:[
       {n:'ur_projects（表一）：補登過去 3 個案子的初判（含不投的）', s:'any', h:2,
-       w:'先用 Supabase 表編輯器直接打，不等輸入頁'},
+       w:'在案件中心 cases.html 登；不投的也登，notes 寫為什麼不投'},
       {n:'contacts（表四）：補登現有建商／地主／顧問', s:'any', h:1,
-       w:'表四已建好，關聯用 ur_project_contacts / jc_project_contacts'},
+       w:'案件中心 → 聯絡人分頁；再到案件頁「相關聯絡人」連起來'},
       {n:'開始寫法規「我的註記」：先補 10 條最常用的', s:'any', h:0,
        w:'在 law.html 直接寫，手機也能寫。這是 L2 經驗層的起點'},
       {n:'tasks（表九）：把 kind=系統 的待辦從儀表板搬進去', s:'sat', h:1,
@@ -374,8 +378,8 @@ const SCH = [
        w:'✅ 2026-10-17。公開讀、登入者寫 finder、products 只有 service_role 寫'},
       {n:'儀表板 v6.0：首頁改儀表板式、勾選存 ui_state 跨裝置、架構關聯圖、決策紀錄', s:'sun', h:4, done:true,
        w:'✅ 2026-10-27。路線圖與長篇規格書退場，改成關聯圖節點說明＋決策一條一筆'},
-      {n:'儀表板「案件清單」區塊，讀 ur_projects / jc_projects', s:'sun', h:2,
-       w:'先唯讀列表，新增修改走 Supabase 表編輯器'},
+      {n:'案件中心 cases.html：都更／建材／聯絡人表單＋首頁案件清單', s:'sun', h:4, done:true,
+       w:'✅ 2026-10-31 v1.0。日常輸入不再進 Supabase；待辦與聯絡人關聯一併做了'},
       {n:'finder 的建商／專案改讀 jc_projects（表二）', s:'sun', h:2,
        w:'現在建商／專案存在 finder_state 內；接表二後選色版本才能正規化進 color_versions'},
     ]},
@@ -430,6 +434,7 @@ let UID=null, ST={schedule:{}, ops:{}};
 
 // ═══════════════════ 決策紀錄（新的在上）═══════════════════
 const DECISIONS=[
+  {id:'D31',d:'2026-10-31',t:'資料輸入一律在帷幄網頁（案件中心），Supabase 退到幕後',why:'中文欄名、下拉、關聯在表編輯器做不到；輸入順手才會持續登，L2 經驗層才累積得起來。表編輯器只留 SQL／PDF／查資料。'},
   {id:'D30',d:'2026-10-27',t:'地方法規先收核心 19 部，其餘 71 筆行政規則等用到再補',why:'臺北 54／新北 37 筆行政規則多為收費、基金、單一議題處理原則；日常會翻的已在 19 部內。解釋函 72 筆不進法規樹，等 D 段另開函釋表。'},
   {id:'D29',d:'2026-10-17',t:'法規樹三層：領域 → 面向 → 法規；分類住在 laws 主檔，不寫死在腳本',why:'之後加綠建築、氣候變遷、CNS，面向可自由命名（建材用磁磚／石材）。純 PDF 法規（CNS、地方法規）也能掛在樹上，多版本並存。'},
   {id:'D28',d:'2026-10-17',t:'PDF 原檔放 Supabase Storage，不放 NAS',why:'NAS 路徑需要 Tailscale（已放棄）。私有 bucket + 登入簽名連結，手機也能開；NAS 只留備份角色。'},
@@ -446,17 +451,18 @@ const DECISIONS=[
 const ARCH={
   layers:[
     {k:'L0',t:'使用者',s:'手機 · Mac · 公司 PC',nodes:['user']},
-    {k:'L1',t:'前端 Vercel',s:'atlas-public-data.vercel.app',nodes:['index','law','finder']},
+    {k:'L1',t:'前端 Vercel',s:'atlas-public-data.vercel.app',nodes:['index','law','finder','cases']},
     {k:'L2',t:'Supabase',s:'Tokyo · Free',nodes:['auth','law_articles','laws','ui_state','finder_state','products','jc','ur','ops_tables','storage']},
     {k:'L3',t:'幕後',s:'Mac（年底 → mini）',nodes:['push','local','crawler','backup','agent']},
     {k:'L4',t:'儲存',s:'DS920+',nodes:['nas']},
     {k:'X',t:'退場',s:'不再使用',nodes:['nocodb','tailscale','ghpages']},
   ],
   nodes:{
-    user:{n:'你',st:'live',p:'只用自己的 Mac、iPhone、公司 PC 登入；每個頁面都要帳密。',rel:['index','law','finder']},
+    user:{n:'你',st:'live',p:'只用自己的 Mac、iPhone、公司 PC 登入；每個頁面都要帳密。',rel:['index','law','finder','cases']},
     index:{n:'index.html 儀表板',st:'live',p:'這一頁。進度、入口、決策、時程；勾選狀態存 ui_state。',rel:['auth','ui_state','law','finder']},
     law:{n:'law.html 法規條文庫',st:'live',p:'v2.2：領域→面向→適用範圍→法規 四層樹、搜尋、註記、PDF 多版本、法規屬性編輯。',rel:['auth','law_articles','laws','storage']},
     finder:{n:'finder.html 選色表',st:'live',p:'v6.0.2：資料存 finder_state，圖片進 Storage/finder，產品搜尋讀 products。',rel:['auth','finder_state','products','storage','jc']},
+    cases:{n:'cases.html 案件中心',st:'live',p:'v1.0：都更案件／建材專案／聯絡人的清單與中文表單，含關聯聯絡人與案件待辦。寫 ur_projects、jc_projects、contacts、tasks。',rel:['auth','ur','jc','ops_tables']},
     auth:{n:'Auth 登入',st:'live',p:'Email + 密碼，唯一使用者，關閉自助註冊。RLS 以 authenticated 角色放行。之後地主／案件表改 MFA（aal2）。',rel:['index','law','finder']},
     law_articles:{n:'law_articles 條文',st:'live',p:'568 條／17 部中央法規，一條一筆；my_note 永不被腳本覆蓋。',rel:['laws','law','push']},
     laws:{n:'laws 法規主檔',st:'live',p:'領域／面向／標籤／核心外圍／排序／法規註記。中央 17 + 地方 19 + CNS；law_domains 放領域清單。',rel:['law_articles','law','push','local']},
@@ -464,7 +470,7 @@ const ARCH={
     finder_state:{n:'finder_state',st:'live',p:'選色表整包資料（建商／專案／版本／明細／排版），一人一列 jsonb。',rel:['finder']},
     products:{n:'products 產品庫',st:'plan',p:'表五重建版：status／usages／texture／finish，(brand,model,size) 唯一。等爬蟲入庫。',rel:['finder','crawler','storage']},
     jc:{n:'jc_projects · color_versions · version_items',st:'plan',p:'表二／表三／明細的正規化版。finder 之後改讀這裡，選色版本才能寫回個案明細。',rel:['finder','products']},
-    ur:{n:'ur_projects · contacts · ledger',st:'plan',p:'案件、聯絡人、帳務——加鎖區，之後改 aal2 policy。先用表編輯器輸入。',rel:['auth','ops_tables']},
+    ur:{n:'ur_projects · contacts · ledger',st:'plan',p:'案件、聯絡人、帳務——加鎖區，之後改 aal2 policy。由案件中心輸入。',rel:['auth','ops_tables','cases']},
     ops_tables:{n:'site_logs · firing_tests · tasks',st:'plan',p:'工地日誌、燒製測試、任務（kind 案件／系統）。',rel:['ur']},
     storage:{n:'Storage',st:'live',p:'law-pdf（私有，法規 PDF 多版本）· finder（公開，選色圖片）· products（公開，型錄圖，service_role 寫）。',rel:['law','finder','products','local']},
     push:{n:'atlas_law_push_sb_v2.py',st:'live',p:'全國法規資料庫 API zip → law_articles UPSERT；同步登記 laws；--add 強制納入；每季跑。',rel:['law_articles','laws']},
@@ -493,7 +499,7 @@ async function boot(){
   if(!session){ document.body.classList.add('locked'); $('#gate').style.display='flex'; return; }
   if(_booted) return; _booted=true; UID=session.user.id;
   $('#gate').style.display='none'; document.body.classList.remove('locked');
-  await loadState(); if(seedDone()) saveState('schedule'); renderAll(); loadStats();
+  await loadState(); if(seedDone()) saveState('schedule'); renderAll(); loadStats(); loadCases();
 }
 function cloud(st,txt){ $('#cloudDot').className=st; $('#cloudTxt').textContent=txt; }
 
@@ -583,6 +589,23 @@ async function loadStats(){
     const fd=f.data?.data; $('#st-finder').textContent=fd?(fd.versions||[]).length:0;
     $('#m-law').textContent=`${a.count??'–'} 條 · ${laws.length} 部 · ${(s.data||[]).length} 份 PDF`;
   }catch(e){ console.warn('stats',e); }
+}
+
+// ═══════════════════ 案件清單 ═══════════════════
+async function loadCases(){
+  const [u,j,t]=await Promise.all([
+    sb.from('ur_projects').select('id,name,kind,stage,consent_pct,updated_at').order('updated_at',{ascending:false}).limit(8),
+    sb.from('jc_projects').select('id,name,builder_name,categories,track_date,updated_at').order('updated_at',{ascending:false}).limit(8),
+    sb.from('tasks').select('id,title,due_at,ur_project_id,jc_project_id').eq('kind','案件').neq('status','完成'),
+  ]);
+  const ur=u.data||[], jc=j.data||[], ts=t.data||[];
+  const li=(href,name,meta,badge)=>`<a href="${href}" style="display:flex;gap:10px;align-items:baseline;padding:7px 0;border-bottom:1px dashed var(--border);color:inherit;text-decoration:none"><span style="flex:1;font-size:13px">${esc(name)}</span>${badge?`<span class="pill" style="font-size:10px;padding:1px 7px;border-radius:5px;border:1px solid var(--border-2);color:var(--ink-2)">${esc(badge)}</span>`:''}<span style="font-size:11px;color:var(--muted);font-family:'Space Mono',monospace">${esc(meta)}</span></a>`;
+  $('#caseList').innerHTML=`
+    <div class="card"><h3 style="display:flex;gap:8px;align-items:baseline">都更案件 <span class="mono" style="font-size:10px;color:var(--muted)">${ur.length}</span><span style="flex:1"></span><a href="cases.html?t=ur" style="font-size:12px">全部 →</a></h3>
+      ${ur.map(r=>li('cases.html?t=ur',r.name,(r.consent_pct!=null?r.consent_pct+'% · ':'')+(ts.filter(x=>x.ur_project_id===r.id).length+' 待辦'),r.stage)).join('')||'<div class="d">還沒有案件，到案件中心新增。</div>'}</div>
+    <div class="card"><h3 style="display:flex;gap:8px;align-items:baseline">建材專案 <span class="mono" style="font-size:10px;color:var(--muted)">${jc.length}</span><span style="flex:1"></span><a href="cases.html?t=jc" style="font-size:12px">全部 →</a></h3>
+      ${jc.map(r=>li('cases.html?t=jc',r.name,(r.track_date||'').slice(0,10),r.builder_name||(r.categories||[])[0])).join('')||'<div class="d">還沒有專案。選色表裡的建商／專案之後會接到這裡。</div>'}</div>`;
+  $('#m-cases').textContent=`${ur.length} 都更 · ${jc.length} 建材 · ${ts.length} 待辦`;
 }
 
 // ═══════════════════ 架構圖 ═══════════════════
