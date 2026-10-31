@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#0d0f14">
-<title>ATLAS 帷幄 v6.1 — 指揮中心</title>
+<title>ATLAS 帷幄 v6.1.1 — 指揮中心</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Noto+Serif+TC:wght@600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
 :root[data-theme="dark"]{--bg:#0d0f14;--bg-2:#12151c;--panel:#161a22;--card:#1c2028;--card-2:#22262f;--border:#252c38;--border-2:#2e3648;--ink:#e4e8f2;--ink-2:#b2bacb;--muted:#6a7490;--dim:#434b60;--gold:#d4a843;--gold-2:#f0cc7a;--teal:#3aaa8c;--teal-2:#5dd4b0;--indigo:#5b7ec4;--red:#e07060;--amber:#e8b04a;--grid:rgba(255,255,255,.04)}
@@ -178,7 +178,7 @@ h2.sec small{font-family:'Space Mono',monospace;font-size:10px;color:var(--muted
 </div>
 
 <div class="top"><div class="in">
-  <div class="brand" onclick="go('home')"><span class="mk">▲ ATLAS</span><b>帷幄</b><span class="v">v6.1</span></div>
+  <div class="brand" onclick="go('home')"><span class="mk">▲ ATLAS</span><b>帷幄</b><span class="v">v6.1.1</span></div>
   <nav class="tabs">
     <button class="tab on" data-v="home"><span class="n">01</span>首頁</button>
     <button class="tab" data-v="sched"><span class="n">02</span>工作時程</button>
@@ -215,7 +215,7 @@ h2.sec small{font-family:'Space Mono',monospace;font-size:10px;color:var(--muted
 
   <h2 class="sec">入口 <small>ENTRY</small></h2>
   <div class="grid3" style="grid-template-columns:repeat(4,1fr)">
-    <a class="card link" href="cases.html"><div class="ic">🏗</div><h3>案件中心</h3><div class="d">都更案件、建材專案、聯絡人：中文表單、下拉、待辦、關聯。</div><div class="meta" id="m-cases">–</div><span class="arrow">→</span></a>
+    <a class="card link" href="cases.html"><div class="ic">🏗</div><h3>案件中心</h3><div class="d">都更案件、建材專案、聯絡人：地號與持分、同意比例自動算、自動儲存。</div><div class="meta" id="m-cases">–</div><span class="arrow">→</span></a>
     <a class="card link" href="law.html"><div class="ic">📜</div><h3>法規條文庫</h3><div class="d">領域 → 面向 → 法規 三層樹、全文搜尋、實務註記、PDF 原檔。</div><div class="meta" id="m-law">–</div><span class="arrow">→</span></a>
     <a class="card link" href="finder.html"><div class="ic">🎨</div><h3>選色表</h3><div class="d">建商／專案／版本、產品搜尋、圖片裁剪、PDF 輸出。資料自動同步雲端。</div><div class="meta">v6.0.2 · Supabase 同步</div><span class="arrow">→</span></a>
     <a class="card link" href="https://supabase.com/dashboard/project/riiflvhbxrnmzriwngjs/editor" target="_blank" rel="noopener"><div class="ic">🗄</div><h3>資料表</h3><div class="d">幕後資料庫：跑 SQL、拖 PDF、查資料。日常輸入請用案件中心。</div><div class="meta">Supabase · 16 張表</div><span class="arrow">↗</span></a>
@@ -281,7 +281,7 @@ NAS                     → DS920+ 管理員密碼（實體備忘）</pre></div>
 3. 腳本：atlas_law_push_sb_v2.py / atlas_local_laws.py（Downloads）
 4. 建 ~/Downloads/.atlas_env 放 Secret key
 5. 法規資料：到 law.moj.gov.tw/api/swagger 重抓 ChLaw.json.zip、ChOrder.json.zip
-6. Supabase 不用動；若要重建，SQL 依序 01→03→04→05→06→07</pre></div>
+6. Supabase 不用動；若要重建，SQL 依序 01→03→04→…→11</pre></div>
     <div class="card" style="grid-column:1/-1"><h3>怎麼更新網頁與程式碼</h3><pre>三個網頁（index.html / law.html / finder.html）都放在 GitHub repo「atlas-public-data」，
 Vercel 盯著這個 repo，檔案一變就自動重新部署（約 30–60 秒）。
 
@@ -304,7 +304,7 @@ Vercel 盯著這個 repo，檔案一變就自動重新部署（約 30–60 秒�
 
 資料庫結構（SQL）
   每次改結構都是一支新的 supabase_NN_xxx.sql，在 Supabase SQL Editor 跑一次
-  已跑：01 法規條文 · 03 全表 · 04 Storage · 05 law-pdf · 06 法規主檔 · 07 ui_state
+  已跑：01 法規條文 · 03 全表 · 04 Storage · 05 law-pdf · 06 法規主檔 · 07 ui_state · 08 刪法規 · 09 issuer · 10 ur_projects 中文化 · 11 地號與持分
   改 SQL 不會動到資料；重建整個專案才需要從 01 依序跑
 
 版本號慣例
