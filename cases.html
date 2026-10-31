@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#0e1012">
-<title>ATLAS 案件中心 v1.7</title>
+<title>ATLAS 案件中心 v1.8</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Space+Mono:wght@400;700&display=swap');
 :root{--bg:#0e1012;--sb:#141618;--panel:#1a1d21;--card:#1f2328;--border:#2a2f36;--border2:#353b44;--gold:#d4a843;--gold2:#f0cc7a;--teal:#3aaa8c;--teal2:#4dc9a8;--red:#e06c6c;--indigo:#7b8cff;--amber:#e8b04a;--text:#dde2ee;--sub:#8a94a6;--muted:#4a5566}
@@ -202,7 +202,7 @@ const LAND_USE=['建','田','旱','林','道','水','雜','—'];
 let UID=null, TAB='ur', CUR=null, DATA={ur:[],jc:[],ct:[],tasks:[],urc:[],jcc:[],pcl:[],po:[]};
 let AUTOSAVE=null, EDIT_PCL=null, PASTE_PCL=null;
 const T={
-  ur:{table:'ur_projects',label:'都更案件',name:r=>r.name,sub:r=>[r.kind,r.stage,r.consent_pct!=null?`同意 ${r.consent_pct}%`:''].filter(Boolean),filterKey:'stage',filterOpts:UR_STAGE,filterLabel:'全部階段'},
+  ur:{table:'ur_projects',label:'都更案件',name:r=>r.name,sub:r=>[r.kind,r.consent_pct!=null?`同意 ${r.consent_pct}%`:'',r.site_area_m2?`${Number(r.site_area_m2).toLocaleString()} m²`:''].filter(Boolean),filterKey:'stage',filterOpts:UR_STAGE,filterLabel:'全部階段'},
   jc:{table:'jc_projects',label:'建材專案',name:r=>r.name,sub:r=>[r.builder_name,r.owner,(r.categories||[]).join('·'),fmtD(r.track_date)].filter(Boolean),filterKey:'_cat',filterOpts:JC_CAT,filterLabel:'全部類別'},
   ct:{table:'contacts',label:'聯絡人',name:r=>r.name,sub:r=>[r.relation,r.company,r.title,r.phone].filter(Boolean),filterKey:'kind',filterOpts:CT_KIND,filterLabel:'全部類型'},
 };
@@ -245,8 +245,9 @@ function renderList(){
   const cfg=T[TAB], q=$('#q').value.trim().toLowerCase(), f=$('#fStage').value;
   const rows=DATA[TAB].filter(r=>{ if(f){ if(cfg.filterKey==='_cat'){ if(!(r.categories||[]).includes(f)) return false; } else if(r[cfg.filterKey]!==f) return false; }
     return !q||JSON.stringify(r).toLowerCase().includes(q); });
-  const rowHtml=r=>`<div class="row${CUR&&CUR.id===r.id?' active':''}" data-id="${r.id}"><div class="n"><span>${esc(cfg.name(r))}</span><span class="id">#${r.id}</span></div><div class="m">${cfg.sub(r).map((s,i)=>`<span class="pill${TAB==='ur'&&i===0?(r.kind==='都市更新'?' k1':' k2'):TAB==='ur'&&i===1?' st':''}">${esc(s)}</span>`).join('')}</div></div>`;
+  const rowHtml=r=>`<div class="row${CUR&&CUR.id===r.id?' active':''}" data-id="${r.id}"><div class="n"><span>${esc(cfg.name(r))}</span><span class="id">${TAB==='ur'&&r.code?esc(r.code):'#'+r.id}</span></div><div class="m">${cfg.sub(r).map((s,i)=>`<span class="pill${TAB==='ur'&&i===0?(r.kind==='都市更新'?' k1':' k2'):''}">${esc(s)}</span>`).join('')}</div></div>`;
   if(TAB==='ct'){ $('#rows').className='tree'; $('#rows').innerHTML=renderCtTree(rows,!!q)||`<div class="empty">沒有資料</div>`; return; }
+  if(TAB==='ur'){ $('#rows').className='tree'; $('#rows').innerHTML=renderUrTree(rows,!!q||!!f,rowHtml)||`<div class="empty">沒有資料</div>`; return; }
   $('#rows').className='';
   $('#rows').innerHTML=rows.map(rowHtml).join('')||`<div class="empty">沒有資料</div>`;
 }
@@ -262,6 +263,12 @@ function ctCases(c){ // 一個人可能在多案 → 每案都列
   DATA.po.filter(o=>o.contact_id===c.id).forEach(o=>{ const p=DATA.pcl.find(x=>x.id===o.parcel_id); const u=p&&DATA.ur.find(x=>x.id===p.ur_project_id); if(u) set.set('u'+u.id,'都更 · '+u.name); });
   DATA.jcc.filter(l=>l.contact_id===c.id).forEach(l=>{ const u=DATA.jc.find(x=>x.id===l.jc_project_id); if(u) set.set('j'+u.id,'建材 · '+u.name); });
   return set.size?[...set.values()]:['未歸案'];
+}
+function renderUrTree(rows,searching,rowH){
+  const by={}; for(const r of rows) (by[r.stage||'未設定階段']??=[]).push(r);
+  const order=[...UR_STAGE,'未設定階段'].filter(k=>by[k]);
+  return order.map(k=>{ const key='s:'+k, closed=!searching&&TOPEN.has(key);
+    return `<div class="g1${closed?' closed':''}" data-t="${esc(key)}"><span class="ar">▼</span>${esc(k)}<span class="c">${by[k].length}</span></div>`+(closed?'':by[k].map(rowH).join('')); }).join('');
 }
 function renderCtTree(rows,searching){
   const tree={}; for(const c of rows) for(const cs of ctCases(c)){ const k=c.kind||'未分類', g=c.group_name||'未分組'; (((tree[cs]??={})[k]??={})[g]??=[]).push(c); }
@@ -291,9 +298,9 @@ const num=id=>{ const s=v(id); return s===''?null:Number(s); };
 
 function showForm(){
   const r=CUR||{}, isNew=!CUR; let h='';
-  if(TAB==='ur') h=`<div class="d-head"><h2>${isNew?'新增都更案件':esc(r.name)}</h2>${isNew?'':`<span class="id">#${r.id} · 更新 ${fmtD(r.updated_at)}</span>`}</div><div class="grid">
+  if(TAB==='ur') h=`<div class="d-head"><h2>${isNew?'新增都更案件':esc(r.name)}</h2>${isNew?'':`<span class="id">${esc(r.code||'#'+r.id)} · 更新 ${fmtD(r.updated_at)}</span>`}</div><div class="grid">
     ${fld('name','案名（基地名）<b>＊</b>',r.name,'text','full')}
-    ${sel('kind','案件類型',UR_KIND,r.kind)}${sel('stage','推動階段',UR_STAGE,r.stage)}
+    ${fld('code','案件代號（可自訂；留空＝自動 UR-年-流水號）',r.code)}${sel('kind','案件類型',UR_KIND,r.kind)}${sel('stage','推動階段',UR_STAGE,r.stage)}
     ${fld('address','基地地址／地段地號',r.address,'text','full')}
     ${fld('site_area_m2','基地面積（m²，依權狀）',r.site_area_m2,'number')}${fld('consent_pct','整合同意比例（%）',r.consent_pct,'number')}
     ${fld('owners_official','官方土地所有權人總數（清冊／計算機）',r.owners_official,'number')}
@@ -323,7 +330,7 @@ function showForm(){
   bindRel(); if(TAB==='ct') renderList(); if(window.innerWidth<=760) $('#detail').scrollIntoView({behavior:'smooth'});
 }
 function payload(){
-  if(TAB==='ur') return {name:v('name'),kind:v('kind')||null,stage:v('stage')||null,address:v('address')||null,site_area_m2:num('site_area_m2'),consent_pct:num('consent_pct'),owners_official:num('owners_official'),legal_flags:chipVals('legal_flags'),bonus_est:v('bonus_est')||null,checklist:v('checklist')||null,notes:v('notes')||null};
+  if(TAB==='ur') return {name:v('name'),code:v('code')||null,kind:v('kind')||null,stage:v('stage')||null,address:v('address')||null,site_area_m2:num('site_area_m2'),consent_pct:num('consent_pct'),owners_official:num('owners_official'),legal_flags:chipVals('legal_flags'),bonus_est:v('bonus_est')||null,checklist:v('checklist')||null,notes:v('notes')||null};
   if(TAB==='jc') return {name:v('name'),categories:chipVals('categories'),builder_name:v('builder_name')||null,owner:v('owner')||null,architect:v('architect')||null,designer:v('designer')||null,track_date:v('track_date')||null};
   return {name:v('name'),kind:v('kind')||null,group_name:v('group_name')||null,relation:v('relation')||null,company:v('company')||null,title:v('title')||null,phone:v('phone')||null,line_id:v('line_id')||null,background:v('background')||null,next_action:v('next_action')||null,next_date:v('next_date')||null};
 }
@@ -332,6 +339,7 @@ async function save(quiet=false){
   clearTimeout(AUTOSAVE);
   const p=payload(), st=$('#st'); if(!p.name){ st.className='st err'; st.textContent='名稱必填'; return; }
   st.className='st'; st.textContent='儲存中…'; $('#btnSave').disabled=true;
+  if(TAB==='ur'&&!p.code){ const y=new Date().getFullYear(); const n=DATA.ur.filter(u=>(u.code||'').startsWith('UR-'+y)).length+1; p.code=`UR-${y}-${String(n).padStart(3,'0')}`; }
   const q=CUR?sb.from(T[TAB].table).update(p).eq('id',CUR.id).select().single():sb.from(T[TAB].table).insert(p).select().single();
   const {data,error}=await q; $('#btnSave').disabled=false;
   if(error){ st.className='st err'; st.textContent='儲存失敗：'+error.message; return; }
@@ -411,13 +419,15 @@ const fmtM2=x=>x==null?'—':Number(x).toLocaleString('zh-TW',{minimumFractionDi
 const ownerKey=o=>o.contact_id?'c'+o.contact_id:o.owner_key?'k'+o.owner_key.replace(/[＊*\s]/g,''):'n'+o.owner_name;
 const maskKey=k=>k?esc(k):'';
 function consentCalc(pid){
-  const pcls=DATA.pcl.filter(p=>p.ur_project_id===pid&&p.in_site!==false);
-  const site=pcls.reduce((a,p)=>a+Number(p.area_m2||0),0);
+  const all=DATA.pcl.filter(p=>p.ur_project_id===pid&&p.in_site!==false);
+  const siteAll=all.reduce((a,p)=>a+Number(p.area_m2||0),0);
+  const pcls=all.filter(p=>!p.is_public); // 公有地：面積算基地，但同意比例免計
+  const site=pcls.reduce((a,p)=>a+Number(p.area_m2||0),0), pubM2=siteAll-site;
   const names=new Set(), agree=new Set(); let agreeM2=0, sumOfficial=0, anyOfficial=false;
   for(const p of pcls){ if(p.owners_official!=null){ sumOfficial+=p.owners_official; anyOfficial=true; }
     for(const o of DATA.po.filter(o=>o.parcel_id===p.id)){ const k=ownerKey(o);
       names.add(k); if(o.consent==='同意'){ agree.add(k); agreeM2+=Number(p.area_m2||0)*o.share_num/o.share_den; } } }
-  return {n:pcls.length,site,owners:names.size,agree:agree.size,agreeM2,sumOfficial:anyOfficial?sumOfficial:null,pctO:names.size?agree.size/names.size*100:null,pctA:site?agreeM2/site*100:null};
+  return {n:all.length,site,siteAll,pubM2,owners:names.size,agree:agree.size,agreeM2,sumOfficial:anyOfficial?sumOfficial:null,pctO:names.size?agree.size/names.size*100:null,pctA:site?agreeM2/site*100:null};
 }
 
 // 對照官方：人數 已建/官方、持分合計/1（＝面積 已建/登記）
@@ -455,7 +465,7 @@ function parseLots(text){
     if(cnt&&!before&&!/\./.test(after)){ out.push({lot,owners_official:+cnt[1],bldg_owners_official:cnt[2]!=null?+cnt[2]:null}); continue; }
     const area=(after.match(/(\d[\d,]*\.\d+|\d[\d,]*)/)||[])[1]; const own=(after.match(/(自然人|國有|公有|市有|法人|私有)[^\s]*/)||[])[0];
     const toks=before.split(/[\s\t,，]+/).filter(Boolean); const dist=toks.find(t=>/[區鄉鎮市]$/.test(t))||'', sec=toks.filter(t=>/段$/.test(t)).join('');
-    out.push({lot,section:(dist+sec)||null,area_m2:area?Number(area.replace(/,/g,'')):null,notes:own?'權屬 '+own:null}); }
+    out.push({lot,section:(dist+sec)||null,area_m2:area?Number(area.replace(/,/g,'')):null,is_public:/國有|公有|市有|縣有/.test(own||'')}); }
   return out;
 }
 async function importLots(pid,text,defaultSection){
@@ -467,9 +477,9 @@ async function importRows(pid,rows,defaultSection){
     if(r.owners_official!==undefined&&r.area_m2==null){ if(!ex) continue; const u={owners_official:r.owners_official}; if(r.bldg_owners_official!=null) u.bldg_owners_official=r.bldg_owners_official;
       const {error}=await sb.from('parcels').update(u).eq('id',ex.id); if(error) return {n:ins+upd,msg:error.message}; Object.assign(ex,u); cnt++; continue; }
     const sec=r.section||ex?.section||defaultSection||'（未填地段）';
-    if(ex){ const u={}; if(r.area_m2!=null) u.area_m2=r.area_m2; if(r.notes&&!ex.notes) u.notes=r.notes; if(r.owners_official!=null) u.owners_official=r.owners_official; if(r.bldg_owners_official!=null) u.bldg_owners_official=r.bldg_owners_official; if(!Object.keys(u).length) continue;
+    if(ex){ const u={}; if(r.area_m2!=null) u.area_m2=r.area_m2; if(r.notes&&!ex.notes) u.notes=r.notes; if(r.is_public!=null&&r.is_public!==!!ex.is_public) u.is_public=r.is_public; if(r.owners_official!=null) u.owners_official=r.owners_official; if(r.bldg_owners_official!=null) u.bldg_owners_official=r.bldg_owners_official; if(!Object.keys(u).length) continue;
       const {error}=await sb.from('parcels').update(u).eq('id',ex.id); if(error) return {n:ins+upd,msg:error.message}; Object.assign(ex,u); upd++; }
-    else { const {data,error}=await sb.from('parcels').insert({ur_project_id:pid,section:sec,lot:r.lot,area_m2:r.area_m2,notes:r.notes,owners_official:r.owners_official??null,bldg_owners_official:r.bldg_owners_official??null}).select().single(); if(error) return {n:ins+upd,msg:error.message}; DATA.pcl.push(data); have.push(data); ins++; } }
+    else { const {data,error}=await sb.from('parcels').insert({ur_project_id:pid,section:sec,lot:r.lot,area_m2:r.area_m2,notes:r.notes,is_public:!!r.is_public,owners_official:r.owners_official??null,bldg_owners_official:r.bldg_owners_official??null}).select().single(); if(error) return {n:ins+upd,msg:error.message}; DATA.pcl.push(data); have.push(data); ins++; } }
   return {n:ins+upd+cnt,msg:`新增 ${ins} 筆、更新 ${upd} 筆、官方人數 ${cnt} 筆`};
 }
 
@@ -506,10 +516,11 @@ async function pdfToText(file,prog){
 }
 // 從文字行抓：地號清單（行政區 地段 地號 面積 權屬）＋ 單查頁的 土地所有權人數／建物所有權人數
 function parsePdfLines(lines){
-  const lots=[]; let landN=null,bldgN=null,singleLot=null;
+  const lots=[]; let landN=null,bldgN=null,singleLot=null,anySec=null;
   const num=t=>{ const m=t.replace(/[,，]/g,'').match(/\d+(?:\.\d+)?/); return m?Number(m[0]):null; };
   for(const raw of lines){ const line=raw.replace(/[|｜]/g,' ').trim(); if(!line) continue;
     let m;
+    if(!anySec&&(m=line.match(/[一-鿿]{1,3}[區鄉鎮市]\s*[一-鿿]{1,6}段(?:[一-鿿]{1,6}小段)?/))) anySec=m[0].replace(/\s+/g,'');
     if((m=line.match(/土地所有權人[^\d]{0,8}(\d+)/))) landN=+m[1];
     if((m=line.match(/建物所有權人[^\d]{0,8}(\d+)/))) bldgN=+m[1];
     const lm=line.match(/(?<!\d)(\d{4})\s*[-－]?\s*(\d{4})(?!\d)/); if(!lm) continue;
@@ -518,11 +529,12 @@ function parsePdfLines(lines){
     if(area!=null&&/%|自然人|國有|公有|法人|私有|市有/.test(after)){ // 清單行
       const own=(after.match(/(自然人|國有|公有|市有|法人|私有)/)||[])[1];
       const sec=(before.match(/(?:[一-鿿]{1,3}[區鄉鎮市]\s*)?[一-鿿]+段/)||[])[0]?.replace(/\s+/g,'')||null;
-      lots.push({lot,section:sec,area_m2:Number(area.replace(/,/g,'')),notes:own?'權屬 '+own+'100%':null}); continue; }
+      lots.push({lot,section:sec,area_m2:Number(area.replace(/,/g,'')),is_public:/國有|公有|市有|縣有/.test(after)}); continue; }
     if(!singleLot&&!/\./.test(after)) singleLot=lot; // 單查頁：地號出現在標題
   }
   if(!lots.length&&singleLot&&(landN!=null||bldgN!=null)) lots.push({lot:singleLot,owners_official:landN,bldg_owners_official:bldgN,single:true});
-  return {lots,landN,bldgN};
+  for(const l of lots) if(!l.section&&anySec) l.section=anySec;
+  return {lots,landN,bldgN,anySec};
 }
 let PDFQ=[]; // 預覽列
 async function pdfImport(files,pid){
@@ -538,14 +550,15 @@ async function pdfImport(files,pid){
 function renderPdfPreview(pid,def){
   const box=$('#pdfPrev'); if(!box) return; if(!PDFQ.length){ box.innerHTML=''; return; }
   const have=DATA.pcl.filter(p=>p.ur_project_id===pid);
-  box.innerHTML=`<div class="sub" style="font-size:12px;margin:8px 0 4px">預覽（可直接改，OCR 偶爾會看錯數字）：</div><div style="overflow:auto"><table class="pt"><tr><th>地段</th><th>地號</th><th>面積 m²</th><th>權屬</th><th>土地人數</th><th>建物人數</th><th>狀態</th><th></th></tr>
-    ${PDFQ.map((q,i)=>{ const ex=have.find(p=>p.lot===q.lot); return `<tr data-i="${i}"><td><input data-f="section" value="${esc(q.section||ex?.section||def)}"></td><td><input data-f="lot" value="${esc(q.lot)}" style="width:95px"></td><td><input data-f="area_m2" value="${q.area_m2??''}" style="width:80px"></td><td><input data-f="notes" value="${esc(q.notes||'')}" style="width:110px"></td><td><input data-f="owners_official" value="${q.owners_official??''}" style="width:60px"></td><td><input data-f="bldg_owners_official" value="${q.bldg_owners_official??''}" style="width:60px"></td><td class="sub">${ex?'更新':'新增'}</td><td><span class="x" data-rm="${i}">✕</span></td></tr>`; }).join('')}</table></div>
+  box.innerHTML=`<div class="addrow" style="margin:8px 0 4px"><span class="sub" style="font-size:12px;align-self:center">預覽（可直接改，OCR 偶爾會看錯）。地段沒讀到時填這裡套用全部：</span><input id="pdfDefSec" placeholder="例：五股區五股段" value="${esc(def)}" style="flex:0 0 180px"><button class="btn sm" id="pdfApplySec">套用地段</button></div><div style="overflow:auto"><table class="pt"><tr><th>地段</th><th>地號</th><th>面積 m²</th><th>公有</th><th>土地人數</th><th>建物人數</th><th>狀態</th><th></th></tr>
+    ${PDFQ.map((q,i)=>{ const ex=have.find(p=>p.lot===q.lot); return `<tr data-i="${i}"><td><input data-f="section" value="${esc(q.section||ex?.section||def)}"></td><td><input data-f="lot" value="${esc(q.lot)}" style="width:95px"></td><td><input data-f="area_m2" value="${q.area_m2??''}" style="width:80px"></td><td style="text-align:center"><input type="checkbox" data-f="is_public"${q.is_public||ex?.is_public?' checked':''}></td><td><input data-f="owners_official" value="${q.owners_official??''}" style="width:60px"></td><td><input data-f="bldg_owners_official" value="${q.bldg_owners_official??''}" style="width:60px"></td><td class="sub">${ex?'更新':'新增'}</td><td><span class="x" data-rm="${i}">✕</span></td></tr>`; }).join('')}</table></div>
     <div class="addrow"><button class="btn sm pri" id="btnPdfWrite">寫入 ${PDFQ.length} 筆</button><button class="btn sm" id="btnPdfClear">清除</button></div>`;
   box.querySelectorAll('[data-rm]').forEach(x=>x.addEventListener('click',()=>{ PDFQ.splice(+x.dataset.rm,1); renderPdfPreview(pid,def); }));
   $('#btnPdfClear').addEventListener('click',()=>{ PDFQ=[]; renderPdfPreview(pid,def); });
+  $('#pdfApplySec').addEventListener('click',()=>{ const v=$('#pdfDefSec').value.trim(); if(!v) return; box.querySelectorAll('[data-f="section"]').forEach(i=>{ if(!i.value.trim()||i.value==='（未填地段）') i.value=v; }); });
   $('#btnPdfWrite').addEventListener('click',async()=>{
     const rows=[...box.querySelectorAll('tr[data-i]')].map(tr=>{ const g=f=>tr.querySelector(`[data-f="${f}"]`).value.trim(); const n=f=>g(f)===''?null:Number(g(f));
-      const lot=g('lot').replace(/^(\d{4})(\d{4})$/,'$1-$2'); return {lot,section:g('section')||null,area_m2:n('area_m2'),notes:g('notes')||null,owners_official:n('owners_official'),bldg_owners_official:n('bldg_owners_official')}; }).filter(r=>/^\d{4}-\d{4}$/.test(r.lot));
+      const lot=g('lot').replace(/^(\d{4})(\d{4})$/,'$1-$2'); return {lot,section:g('section')||null,area_m2:n('area_m2'),is_public:tr.querySelector('[data-f="is_public"]').checked,owners_official:n('owners_official'),bldg_owners_official:n('bldg_owners_official')}; }).filter(r=>/^\d{4}-\d{4}$/.test(r.lot));
     $('#btnPdfWrite').disabled=true; const r=await importRows(pid,rows,def); PDFQ=[];
     const mine=DATA.pcl.filter(p=>p.ur_project_id===pid&&p.in_site!==false), sum=mine.reduce((a,p)=>a+Number(p.area_m2||0),0), cur=DATA.ur.find(u=>u.id===pid);
     if(cur&&sum){ const u={site_area_m2:Number(sum.toFixed(2))}; if(!cur.address){ const secs=[...new Set(mine.map(p=>p.section))].join('、'), lots=[...mine].sort((a,b)=>a.lot.localeCompare(b.lot)).map(p=>p.lot.replace(/-0000$/,'').replace(/^0+/,'')).join('、'); u.address=secs+' '+lots+' 地號'; }
@@ -558,16 +571,16 @@ function parcelSection(pid){
   const pct=x=>x==null?'—':x.toFixed(1)+'%';
   let h=`<div class="sec"><h3>地號與所有權人 <span class="spacer"></span><span class="mono" style="font-weight:400">${pcls.length} 筆地號</span></h3>
     <div class="ratio">
-      <span class="r">土地總面積 <b>${fmtM2(c.site)}</b> m²${CUR.site_area_m2!=null&&Math.abs(Number(CUR.site_area_m2)-c.site)>0.01?` <span class="chk bad" title="案件欄位的基地面積與地號加總不同">欄位 ${fmtM2(CUR.site_area_m2)}</span>`:''}</span>
+      <span class="r" title="基地面積＝全部納入地號；私有＝扣掉公有地，同意比例用私有">基地 <b>${fmtM2(c.siteAll)}</b> m²${c.pubM2>0.005?` <span class="sub">公有 ${fmtM2(c.pubM2)} · 私有 ${fmtM2(c.site)}</span>`:''}${CUR.site_area_m2!=null&&Math.abs(Number(CUR.site_area_m2)-c.siteAll)>0.01?` <span class="chk bad" title="案件欄位的基地面積與地號加總不同">欄位 ${fmtM2(CUR.site_area_m2)}</span>`:''}</span>
       <span class="r" title="已建（去重）／案件官方去重總數；括號＝各地號官方人數直接相加（都更計算機不去重，只能當上限）">所有權人 <b>${c.owners}</b>${c.sumOfficial!=null?` <span class="sub">各地號加總 ${c.sumOfficial}（未去重）</span>`:''}${CUR.owners_official!=null?`/${CUR.owners_official} <span class="chk${c.owners===CUR.owners_official?' good':' bad'}">${c.owners===CUR.owners_official?'符合':'差 '+(CUR.owners_official-c.owners)}</span>`:' <span class="sub">官方數未填</span>'}</span>
       <span class="r${c.pctO>=75?' ok':''}">人數比 <b>${pct(c.pctO)}</b> <span class="sub">${c.agree}/${c.owners} 人</span></span>
       <span class="r${c.pctA>=75?' ok':''}">面積比 <b>${pct(c.pctA)}</b> <span class="sub">${fmtM2(c.agreeM2)} m²</span></span>
       <button class="btn sm" id="btnApplyRatio" title="把土地總面積寫到「基地面積」、面積比寫到「整合同意比例」">套用到案件欄位</button>
     </div>
-    <div style="font-size:11.5px;color:var(--muted);margin:-4px 0 8px">人數比＝同意人數／所有權人數（姓名去重）；面積比＝Σ同意者（面積×持分）／納入地號總面積。每筆地號右側「人 已建/官方」「面積 已建/登記」紅色＝與官方資料不符，請補 key 或查謄本。都更條例 §37 門檻通常 75%／75%（危老 100%）。勾掉「納入」的地號不計。</div>`;
+    <div style="font-size:11.5px;color:var(--muted);margin:-4px 0 8px">人數比＝同意人數／所有權人數（去重）；面積比＝Σ同意者（面積×持分）／私有地總面積。公有地（勾「公有」）面積算進基地，但人數與面積都不計入同意比例（都更條例 §37）。每筆地號右側「人 已建/官方」「面積 已建/登記」紅色＝與官方資料不符，請補 key 或查謄本。都更條例 §37 門檻通常 75%／75%（危老 100%）。勾掉「納入」的地號不計。</div>`;
   for(const p of pcls){
     const os=DATA.po.filter(o=>o.parcel_id===p.id);
-    h+=`<div class="pcl" data-pcl="${p.id}"><div class="ph"><label style="display:flex;align-items:center;gap:4px;font-size:11.5px;color:var(--sub)"><input type="checkbox" data-insite="${p.id}"${p.in_site!==false?' checked':''}>納入</label>
+    h+=`<div class="pcl" data-pcl="${p.id}"><div class="ph"><label style="display:flex;align-items:center;gap:4px;font-size:11.5px;color:var(--sub)"><input type="checkbox" data-insite="${p.id}"${p.in_site!==false?' checked':''}>納入</label><label style="display:flex;align-items:center;gap:4px;font-size:11.5px;color:var(--sub)" title="公有地：面積算基地，同意比例免計"><input type="checkbox" data-ispub="${p.id}"${p.is_public?' checked':''}>公有</label>
         <span>${esc(p.section)}</span><b>${esc(p.lot)}</b><span class="sub">${fmtM2(p.area_m2)} m²${p.land_use?' · 地目 '+esc(p.land_use):''}${p.zoning?' · '+esc(p.zoning):''}${p.registry?' · '+esc(p.registry):''}</span>${p.notes?`<span class="sub">· ${esc(p.notes)}</span>`:''}
         ${pclChecks(p,os)}
         <span class="x" data-editpcl="${p.id}" style="margin-left:auto;color:var(--sub)">✎ 編輯</span><span class="x" data-delpcl="${p.id}" style="margin-left:10px">刪地號</span></div>
@@ -629,6 +642,8 @@ function bindParcels(){
   document.querySelectorAll('[data-delpcl]').forEach(x=>x.addEventListener('click',async()=>{ const id=+x.dataset.delpcl; const p=DATA.pcl.find(k=>k.id===id);
     if(!confirm(`刪除地號 ${p.lot}？其所有權人持分一併刪除。`)) return;
     const {error}=await sb.from('parcels').delete().eq('id',id); if(error){ alert(error.message); return; } DATA.pcl=DATA.pcl.filter(k=>k.id!==id); DATA.po=DATA.po.filter(o=>o.parcel_id!==id); showForm(); }));
+  document.querySelectorAll('[data-ispub]').forEach(x=>x.addEventListener('change',async()=>{ const id=+x.dataset.ispub;
+    const {error}=await sb.from('parcels').update({is_public:x.checked}).eq('id',id); if(error){ alert(error.message); x.checked=!x.checked; return; } DATA.pcl.find(k=>k.id===id).is_public=x.checked; showForm(); }));
   document.querySelectorAll('[data-insite]').forEach(x=>x.addEventListener('change',async()=>{ const id=+x.dataset.insite;
     const {error}=await sb.from('parcels').update({in_site:x.checked}).eq('id',id); if(error){ alert(error.message); x.checked=!x.checked; return; } DATA.pcl.find(k=>k.id===id).in_site=x.checked; showForm(); }));
   let DRAG=null;
@@ -667,7 +682,7 @@ function bindParcels(){
     const upd={consent:x.value}; if(x.value==='同意'&&!o.signed_on) upd.signed_on=new Date().toISOString().slice(0,10); if(x.value!=='同意') upd.signed_on=null;
     const {error}=await sb.from('parcel_owners').update(upd).eq('id',id); if(error){ alert(error.message); return; } Object.assign(o,upd); showForm(); }));
   $('#btnApplyRatio')?.addEventListener('click',()=>{ const c=consentCalc(pid);
-    $('#f-site_area_m2').value=c.site?c.site.toFixed(2):''; $('#f-consent_pct').value=c.pctA!=null?c.pctA.toFixed(1):''; save(); });
+    $('#f-site_area_m2').value=c.siteAll?c.siteAll.toFixed(2):''; $('#f-consent_pct').value=c.pctA!=null?c.pctA.toFixed(1):''; save(); });
 }
 
 $('#detail').addEventListener('click',e=>{ const c=e.target.closest('.chip'); if(!c) return;
