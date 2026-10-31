@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#0e1012">
-<title>ATLAS 案件中心 v1.1</title>
+<title>ATLAS 案件中心 v1.1.2</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Space+Mono:wght@400;700&display=swap');
 :root{--bg:#0e1012;--sb:#141618;--panel:#1a1d21;--card:#1f2328;--border:#2a2f36;--border2:#353b44;--gold:#d4a843;--gold2:#f0cc7a;--teal:#3aaa8c;--teal2:#4dc9a8;--red:#e06c6c;--indigo:#7b8cff;--amber:#e8b04a;--text:#dde2ee;--sub:#8a94a6;--muted:#4a5566}
@@ -108,6 +108,7 @@ a{color:var(--teal2)}
 .pcl .po .x{color:var(--muted);cursor:pointer;font-size:12px}.pcl .po .x:hover{color:var(--red)}
 .pcl .addrow{padding:6px 10px 8px;margin-top:0;border-top:1px dashed var(--border)}
 .pcl .addrow input,.pcl .addrow select{padding:5px 8px;font-size:12.5px}
+.pcl .pe{background:var(--bg);border-top:1px solid var(--border2)}
 .ratio{display:flex;gap:14px;flex-wrap:wrap;margin:4px 0 10px;font-size:12.5px;color:var(--sub)}
 .ratio b{font-family:'Space Mono',monospace;font-weight:400;color:var(--text);font-size:15px}
 .ratio .ok b{color:var(--teal2)}
@@ -175,7 +176,7 @@ const fmtD=d=>d?String(d).slice(0,10):'';
 const UR_KIND=['都市更新','危老重建'];
 const UR_STAGE=['0.潛在評估與產權調閱','1.意願整合中','2.更新單元劃定','3.成立更新會','W1.危老耐震初評與資格認定','W2.危老100%同意與簽約','W3.危老重建計畫報核','U1.都更擬訂事業計畫','U2.都更擬訂權利變換計畫','完成.取得建拆照'];
 const UR_FLAGS=['產權調閱完成','耐震初評完成','耐震詳評完成','危老資格認定通過','更新單元已劃定','事業概要核准','說明會已辦','海砂屋／輻射屋','公有地佔比高'];
-const UR_ROLE=['地主代表/管委會','建築師/團隊','其他'];
+const UR_ROLE=['地主','地主代表/管委會','建築師/團隊','代書/估價師','其他'];
 const JC_CAT=['指定','採購','規劃','結案'];
 const CT_KIND=['地主/住戶','建築師/設計師','營造廠/工程行','建設公司/業主','合作夥伴/代書'];
 const TASK_TAG=['送件審議','內部作業','協調會議','送樣','其他'];
@@ -184,7 +185,7 @@ const LAND_USE=['建','田','旱','林','道','水','雜','—'];
 
 // ── 狀態 ──
 let UID=null, TAB='ur', CUR=null, DATA={ur:[],jc:[],ct:[],tasks:[],urc:[],jcc:[],pcl:[],po:[]};
-let AUTOSAVE=null;
+let AUTOSAVE=null, EDIT_PCL=null;
 const T={
   ur:{table:'ur_projects',label:'都更案件',name:r=>r.name,sub:r=>[r.kind,r.stage,r.consent_pct!=null?`同意 ${r.consent_pct}%`:''].filter(Boolean),filterKey:'stage',filterOpts:UR_STAGE,filterLabel:'全部階段'},
   jc:{table:'jc_projects',label:'建材專案',name:r=>r.name,sub:r=>[r.builder_name,r.owner,(r.categories||[]).join('·'),fmtD(r.track_date)].filter(Boolean),filterKey:'_cat',filterOpts:JC_CAT,filterLabel:'全部類別'},
@@ -318,7 +319,8 @@ function relSections(){
     const urs=DATA.urc.filter(x=>x.contact_id===id).map(l=>({r:DATA.ur.find(p=>p.id===l.ur_project_id),role:l.role})).filter(x=>x.r);
     const jcs=DATA.jcc.filter(x=>x.contact_id===id).map(l=>DATA.jc.find(p=>p.id===l.jc_project_id)).filter(Boolean);
     const owns=DATA.po.filter(o=>o.contact_id===id).map(o=>({o,p:DATA.pcl.find(p=>p.id===o.parcel_id)})).filter(x=>x.p).map(x=>({...x,r:DATA.ur.find(u=>u.id===x.p.ur_project_id)}));
-    h+=`<div class="sec"><h3>參與的案件</h3>${urs.map(x=>`<div class="it"><span class="pill k1">都更</span><span>${esc(x.r.name)}</span><span class="sub">${esc(x.role||'')}</span></div>`).join('')}${jcs.map(p=>`<div class="it"><span class="pill k2">建材</span><span>${esc(p.name)}</span></div>`).join('')}${urs.length+jcs.length?'':'<div style="font-size:12px;color:var(--muted)">尚無。連結方式：到「都更案件」或「建材專案」頁，下方「相關聯絡人」選這個人 → 加入。</div>'}</div>`;
+    const viaLand=[...new Map(owns.filter(x=>x.r&&!urs.some(u=>u.r.id===x.r.id)).map(x=>[x.r.id,x.r])).values()];
+    h+=`<div class="sec"><h3>參與的案件</h3>${urs.map(x=>`<div class="it"><span class="pill k1">都更</span><span>${esc(x.r.name)}</span><span class="sub">${esc(x.role||'')}</span></div>`).join('')}${viaLand.map(r=>`<div class="it"><span class="pill k1">都更</span><span>${esc(r.name)}</span><span class="sub">地主（由持有地號推得）</span></div>`).join('')}${jcs.map(p=>`<div class="it"><span class="pill k2">建材</span><span>${esc(p.name)}</span></div>`).join('')}${urs.length+jcs.length+viaLand.length?'':'<div style="font-size:12px;color:var(--muted)">尚無。連結方式：到「都更案件」或「建材專案」頁，下方「相關聯絡人」選這個人 → 加入。</div>'}</div>`;
     h+=`<div class="sec"><h3>持有地號 <span class="spacer"></span><span class="mono" style="font-weight:400">${owns.length}</span></h3>${owns.map(x=>`<div class="it"><span class="pill k1">${esc(x.r?.name||'')}</span><span>${esc(x.p.section)} <b class="mono" style="font-weight:400">${esc(x.p.lot)}</b></span><span class="sub">${fmtM2(x.p.area_m2)} m² × ${frac(x.o.share_num,x.o.share_den)}</span><span class="sub c-${x.o.consent}">${x.o.consent}</span></div>`).join('')||'<div style="font-size:12px;color:var(--muted)">尚無。到都更案件頁「地號與所有權人」加所有權人時選這個聯絡人，就會出現在這裡。</div>'}</div>`;
   }
   return h;
@@ -370,8 +372,9 @@ function parcelSection(pid){
   for(const p of pcls){
     const os=DATA.po.filter(o=>o.parcel_id===p.id);
     h+=`<div class="pcl" data-pcl="${p.id}"><div class="ph"><label style="display:flex;align-items:center;gap:4px;font-size:11.5px;color:var(--sub)"><input type="checkbox" data-insite="${p.id}"${p.in_site!==false?' checked':''}>納入</label>
-        <span>${esc(p.section)}</span><b>${esc(p.lot)}</b><span class="sub">${fmtM2(p.area_m2)} m²${p.land_use?' · '+esc(p.land_use):''}${p.registry?' · '+esc(p.registry):''}</span>${p.notes?`<span class="sub">· ${esc(p.notes)}</span>`:''}
-        <span class="x" data-delpcl="${p.id}">刪地號</span></div>`;
+        <span>${esc(p.section)}</span><b>${esc(p.lot)}</b><span class="sub">${fmtM2(p.area_m2)} m²${p.land_use?' · 地目 '+esc(p.land_use):''}${p.zoning?' · '+esc(p.zoning):''}${p.registry?' · '+esc(p.registry):''}</span>${p.notes?`<span class="sub">· ${esc(p.notes)}</span>`:''}
+        <span class="x" data-editpcl="${p.id}" style="margin-left:auto;color:var(--sub)">✎ 編輯</span><span class="x" data-delpcl="${p.id}" style="margin-left:10px">刪地號</span></div>
+        ${EDIT_PCL===p.id?`<div class="addrow pe" data-pe="${p.id}"><input data-pe-section placeholder="地段" value="${esc(p.section)}" style="flex:1.3"><input data-pe-lot placeholder="地號" value="${esc(p.lot)}" style="flex:1"><input data-pe-area type="number" step="0.01" placeholder="面積 m²" value="${p.area_m2??''}" style="flex:0 0 100px"><select data-pe-use><option value="">地目</option>${LAND_USE.map(x=>`<option${x===p.land_use?' selected':''}>${x}</option>`).join('')}</select><input data-pe-zoning placeholder="使用分區（例：住三）" value="${esc(p.zoning)}" style="flex:1"><input data-pe-reg placeholder="地政所" value="${esc(p.registry)}" style="flex:0 0 110px"><input data-pe-notes placeholder="備註" value="${esc(p.notes)}" style="flex:1.5"><button class="btn sm pri" data-savepcl="${p.id}">儲存</button><button class="btn sm" data-cancelpcl="1">取消</button></div>`:''}`;
     for(const o of os){ const ct=o.contact_id?DATA.ct.find(x=>x.id===o.contact_id):null;
       h+=`<div class="po"><span class="nm">${esc(o.owner_name)}${ct?'<span class="pill" title="已連結聯絡人">聯</span>':''}</span><span class="mono">${frac(o.share_num,o.share_den)}</span><span class="sub">${fmtM2(Number(p.area_m2||0)*o.share_num/o.share_den)} m²</span>
         <select data-consent="${o.id}" class="c-${o.consent}">${CONSENT.map(x=>`<option${x===o.consent?' selected':''}>${x}</option>`).join('')}</select><span class="x" data-delown="${o.id}" title="${esc([o.deed_no,fmtD(o.registered_on)].filter(Boolean).join(' · '))}">刪</span></div>`; }
@@ -386,6 +389,13 @@ function bindParcels(){
     const row={ur_project_id:pid,section:$('#pSection').value.trim(),lot:$('#pLot').value.trim(),area_m2:$('#pArea').value?Number($('#pArea').value):null,land_use:$('#pUse').value||null,registry:$('#pReg').value.trim()||null};
     if(!row.section||!row.lot){ alert('地段與地號必填'); return; }
     const {data,error}=await sb.from('parcels').insert(row).select().single(); if(error){ alert('加入失敗：'+error.message); return; } DATA.pcl.push(data); showForm(); });
+  document.querySelectorAll('[data-editpcl]').forEach(x=>x.addEventListener('click',()=>{ EDIT_PCL=+x.dataset.editpcl; showForm(); }));
+  document.querySelectorAll('[data-cancelpcl]').forEach(x=>x.addEventListener('click',()=>{ EDIT_PCL=null; showForm(); }));
+  document.querySelectorAll('[data-savepcl]').forEach(b=>b.addEventListener('click',async()=>{ const id=+b.dataset.savepcl, w=document.querySelector(`[data-pe="${id}"]`), g=sel=>w.querySelector(sel).value.trim();
+    const upd={section:g('[data-pe-section]'),lot:g('[data-pe-lot]'),area_m2:g('[data-pe-area]')?Number(g('[data-pe-area]')):null,land_use:g('[data-pe-use]')||null,zoning:g('[data-pe-zoning]')||null,registry:g('[data-pe-reg]')||null,notes:g('[data-pe-notes]')||null};
+    if(!upd.section||!upd.lot){ alert('地段與地號必填'); return; }
+    const {data,error}=await sb.from('parcels').update(upd).eq('id',id).select().single(); if(error){ alert('儲存失敗：'+error.message); return; }
+    Object.assign(DATA.pcl.find(k=>k.id===id),data); EDIT_PCL=null; showForm(); }));
   document.querySelectorAll('[data-delpcl]').forEach(x=>x.addEventListener('click',async()=>{ const id=+x.dataset.delpcl; const p=DATA.pcl.find(k=>k.id===id);
     if(!confirm(`刪除地號 ${p.lot}？其所有權人持分一併刪除。`)) return;
     const {error}=await sb.from('parcels').delete().eq('id',id); if(error){ alert(error.message); return; } DATA.pcl=DATA.pcl.filter(k=>k.id!==id); DATA.po=DATA.po.filter(o=>o.parcel_id!==id); showForm(); }));
