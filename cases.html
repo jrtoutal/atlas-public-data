@@ -104,7 +104,7 @@ a{color:var(--teal2)}
 .pcl .po{display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr auto;gap:6px;align-items:center;padding:5px 10px;border-top:1px dashed var(--border);font-size:12.5px}
 .pcl .po .nm{display:flex;align-items:center;gap:6px}
 .pcl .po select{max-width:120px;padding:3px 6px;font-size:12px;background:var(--bg);border:1px solid var(--border2);border-radius:6px;color:var(--text)}
-.pcl .po .c-同意{color:var(--teal2)}.pcl .po .c-拒絕{color:var(--red)}.pcl .po .c-未同意{color:var(--amber)}
+.c-同意{color:var(--teal2)!important}.c-拒絕{color:var(--red)!important}.c-未同意{color:var(--amber)!important}
 .pcl .po .x{color:var(--muted);cursor:pointer;font-size:12px}.pcl .po .x:hover{color:var(--red)}
 .pcl .addrow{padding:6px 10px 8px;margin-top:0;border-top:1px dashed var(--border)}
 .pcl .addrow input,.pcl .addrow select{padding:5px 8px;font-size:12.5px}
@@ -317,7 +317,9 @@ function relSections(){
   if(TAB==='ct'){
     const urs=DATA.urc.filter(x=>x.contact_id===id).map(l=>({r:DATA.ur.find(p=>p.id===l.ur_project_id),role:l.role})).filter(x=>x.r);
     const jcs=DATA.jcc.filter(x=>x.contact_id===id).map(l=>DATA.jc.find(p=>p.id===l.jc_project_id)).filter(Boolean);
-    h+=`<div class="sec"><h3>參與的案件</h3>${urs.map(x=>`<div class="it"><span class="pill k1">都更</span><span>${esc(x.r.name)}</span><span class="sub">${esc(x.role||'')}</span></div>`).join('')}${jcs.map(p=>`<div class="it"><span class="pill k2">建材</span><span>${esc(p.name)}</span></div>`).join('')}${urs.length+jcs.length?'':'<div style="font-size:12px;color:var(--muted)">尚無（到案件頁的「相關聯絡人」加入）</div>'}</div>`;
+    const owns=DATA.po.filter(o=>o.contact_id===id).map(o=>({o,p:DATA.pcl.find(p=>p.id===o.parcel_id)})).filter(x=>x.p).map(x=>({...x,r:DATA.ur.find(u=>u.id===x.p.ur_project_id)}));
+    h+=`<div class="sec"><h3>參與的案件</h3>${urs.map(x=>`<div class="it"><span class="pill k1">都更</span><span>${esc(x.r.name)}</span><span class="sub">${esc(x.role||'')}</span></div>`).join('')}${jcs.map(p=>`<div class="it"><span class="pill k2">建材</span><span>${esc(p.name)}</span></div>`).join('')}${urs.length+jcs.length?'':'<div style="font-size:12px;color:var(--muted)">尚無。連結方式：到「都更案件」或「建材專案」頁，下方「相關聯絡人」選這個人 → 加入。</div>'}</div>`;
+    h+=`<div class="sec"><h3>持有地號 <span class="spacer"></span><span class="mono" style="font-weight:400">${owns.length}</span></h3>${owns.map(x=>`<div class="it"><span class="pill k1">${esc(x.r?.name||'')}</span><span>${esc(x.p.section)} <b class="mono" style="font-weight:400">${esc(x.p.lot)}</b></span><span class="sub">${fmtM2(x.p.area_m2)} m² × ${frac(x.o.share_num,x.o.share_den)}</span><span class="sub c-${x.o.consent}">${x.o.consent}</span></div>`).join('')||'<div style="font-size:12px;color:var(--muted)">尚無。到都更案件頁「地號與所有權人」加所有權人時選這個聯絡人，就會出現在這裡。</div>'}</div>`;
   }
   return h;
 }
