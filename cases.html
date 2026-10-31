@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#0e1012">
-<title>ATLAS 案件中心 v1.6</title>
+<title>ATLAS 案件中心 v1.6.1</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Space+Mono:wght@400;700&display=swap');
 :root{--bg:#0e1012;--sb:#141618;--panel:#1a1d21;--card:#1f2328;--border:#2a2f36;--border2:#353b44;--gold:#d4a843;--gold2:#f0cc7a;--teal:#3aaa8c;--teal2:#4dc9a8;--red:#e06c6c;--indigo:#7b8cff;--amber:#e8b04a;--text:#dde2ee;--sub:#8a94a6;--muted:#4a5566}
@@ -112,7 +112,8 @@ a{color:var(--teal2)}
 .pcl .po{display:grid;grid-template-columns:1.2fr .8fr .9fr .9fr 1.6fr auto;gap:6px;align-items:center;padding:5px 10px;border-top:1px dashed var(--border);font-size:12.5px}
 .pcl .po .nm{display:flex;align-items:center;gap:6px}
 .pcl .pg{padding:4px 10px;font-size:11px;letter-spacing:.08em;color:var(--sub);background:var(--panel);border-top:1px dashed var(--border)}
-.pcl .po .mv{display:inline-flex;flex-direction:column;gap:0;margin-right:2px}.pcl .po .mv span{font-size:8px;line-height:8px;color:var(--muted);cursor:pointer;padding:0 3px}.pcl .po .mv span:hover{color:var(--text)}
+.pcl .po .hd{color:var(--muted);cursor:grab;font-size:13px;user-select:none;padding:0 4px 0 0;letter-spacing:-2px}.pcl .po .hd:active{cursor:grabbing}
+.pcl .po.dragging{opacity:.4}.pcl .po.over{box-shadow:inset 0 2px 0 var(--gold)}.pcl .po.over-b{box-shadow:inset 0 -2px 0 var(--gold)}
 .pcl .po input{padding:3px 6px;font-size:12px;background:var(--bg);border:1px solid var(--border2);border-radius:6px;color:var(--text);min-width:0}
 .pcl .po select{max-width:120px;padding:3px 6px;font-size:12px;background:var(--bg);border:1px solid var(--border2);border-radius:6px;color:var(--text)}
 .c-同意{color:var(--teal2)!important}.c-拒絕{color:var(--red)!important}.c-未同意{color:var(--amber)!important}
@@ -429,6 +430,11 @@ const ctDatalist=()=>`<datalist id="dl-ct">${[...DATA.ct].sort((a,b)=>(a.group_n
 // 找聯絡人：姓名完全相符（同名多人時取同群組優先）
 const findCt=name=>DATA.ct.find(c=>c.name===name)||null;
 function ownersSorted(os){ return [...os].sort((a,b)=>{ const ga=DATA.ct.find(c=>c.id===a.contact_id)?.group_name||'', gb=DATA.ct.find(c=>c.id===b.contact_id)?.group_name||''; return (ga===gb?0:ga===''?1:gb===''?-1:ga.localeCompare(gb,'zh-Hant'))||(a.sort_order-b.sort_order)||(a.id-b.id); }); }
+async function dropOwner(srcId,dstId,after){ const src=DATA.po.find(k=>k.id===srcId), dst=DATA.po.find(k=>k.id===dstId); if(!src||!dst||src.parcel_id!==dst.parcel_id) return;
+  const sib=ownersSorted(DATA.po.filter(k=>k.parcel_id===src.parcel_id)).filter(k=>k.id!==srcId); let j=sib.findIndex(k=>k.id===dstId); if(after) j++; sib.splice(j,0,src);
+  const ups=sib.map((k,idx)=>({id:k.id,sort_order:idx})).filter(u=>DATA.po.find(k=>k.id===u.id).sort_order!==u.sort_order); if(!ups.length) return;
+  const rs=await Promise.all(ups.map(u=>sb.from('parcel_owners').update({sort_order:u.sort_order}).eq('id',u.id))); const err=rs.find(r=>r.error)?.error; if(err){ alert(err.message); return; }
+  ups.forEach(u=>DATA.po.find(k=>k.id===u.id).sort_order=u.sort_order); showForm(); }
 async function moveOwner(id,dir){ const o=DATA.po.find(k=>k.id===id); const sib=ownersSorted(DATA.po.filter(k=>k.parcel_id===o.parcel_id)); const i=sib.findIndex(k=>k.id===id), j=i+dir; if(j<0||j>=sib.length) return;
   const gi=DATA.ct.find(c=>c.id===sib[i].contact_id)?.group_name||'', gj=DATA.ct.find(c=>c.id===sib[j].contact_id)?.group_name||''; if(gi!==gj){ alert('只能在同一群組內移動；要換群組請到聯絡人改「群組」欄'); return; }
   [sib[i],sib[j]]=[sib[j],sib[i]]; const ups=sib.map((k,idx)=>({id:k.id,sort_order:idx})).filter(u=>DATA.po.find(k=>k.id===u.id).sort_order!==u.sort_order);
@@ -563,7 +569,7 @@ function parcelSection(pid){
     const osSorted=ownersSorted(os); let lastG=null;
     for(const o of osSorted){ const ct=o.contact_id?DATA.ct.find(x=>x.id===o.contact_id):null; const g=ct?.group_name||'';
       if(g!==lastG){ if(g) h+=`<div class="pg">${esc(g)}</div>`; lastG=g; }
-      h+=`<div class="po"><span class="nm"><span class="mv"><span data-mv="${o.id}" data-dir="-1" title="上移">▲</span><span data-mv="${o.id}" data-dir="1" title="下移">▼</span></span>${esc(o.owner_name)}${o.owner_key?`<span class="mono" style="font-size:10px;color:var(--muted)" title="遮罩識別碼">${maskKey(o.owner_key)}</span>`:''}${ct?'<span class="pill" title="已連結聯絡人">聯</span>':''}</span><span class="mono">${frac(o.share_num,o.share_den)}</span><span class="sub">${fmtM2(Number(p.area_m2||0)*o.share_num/o.share_den)} m²</span>
+      h+=`<div class="po" draggable="true" data-po="${o.id}" data-g="${esc(g)}"><span class="nm"><span class="hd" title="拖曳調整順序（同群組內）">⋮⋮</span>${esc(o.owner_name)}${o.owner_key?`<span class="mono" style="font-size:10px;color:var(--muted)" title="遮罩識別碼">${maskKey(o.owner_key)}</span>`:''}${ct?'<span class="pill" title="已連結聯絡人">聯</span>':''}</span><span class="mono">${frac(o.share_num,o.share_den)}</span><span class="sub">${fmtM2(Number(p.area_m2||0)*o.share_num/o.share_den)} m²</span>
         <select data-consent="${o.id}" class="c-${o.consent}">${CONSENT.map(x=>`<option${x===o.consent?' selected':''}>${x}</option>`).join('')}</select><input data-onote="${o.id}" value="${esc(o.notes??'')}" placeholder="備註（條件、顧慮、聯絡紀錄）" title="離開欄位即儲存"><span class="x" data-delown="${o.id}" title="${esc([o.deed_no,fmtD(o.registered_on)].filter(Boolean).join(' · '))}">刪</span></div>`; }
     h+=`<div class="addrow"><input data-ownname="${p.id}" list="dl-ct" placeholder="姓名（打字找聯絡人，或直接填新名字）" style="flex:1.6;min-width:160px"><input data-ownkey="${p.id}" placeholder="遮罩識別碼 F125*****3" style="flex:1;min-width:130px" title="二類謄本的遮罩統編，跨地號去重用；不要填完整統編"><input data-ownnum="${p.id}" type="number" min="1" placeholder="分子" style="flex:0 0 70px"><span style="align-self:center">／</span><input data-ownden="${p.id}" type="number" min="1" placeholder="分母" style="flex:0 0 70px"><select data-owncs="${p.id}">${CONSENT.map(x=>`<option>${x}</option>`).join('')}</select><button class="btn sm" data-addown="${p.id}">加所有權人</button><button class="btn sm" data-pastetgl="${p.id}" title="貼二類謄本的所有權人清單，一次加多人">📋 貼謄本</button></div>
       ${PASTE_PCL===p.id?`<div class="addrow pe"><textarea data-pastetxt="${p.id}" rows="5" style="flex:1 1 100%;font-family:'Space Mono',monospace;font-size:12px;padding:6px 8px;background:var(--bg);border:1px solid var(--border2);border-radius:7px;color:var(--text)" placeholder="每行一人：姓名 遮罩識別碼 持分（照謄本寫就好）&#10;陳＊＊ F125*****3 36分之1&#10;陳** F127***4 1/36&#10;桃園農田水利會  全部"></textarea><button class="btn sm pri" data-pasteadd="${p.id}">加入這些人</button><span class="sub" data-pastemsg="${p.id}" style="align-self:center;font-size:12px"></span></div>`:''}</div>`;
@@ -619,7 +625,15 @@ function bindParcels(){
     const {error}=await sb.from('parcels').delete().eq('id',id); if(error){ alert(error.message); return; } DATA.pcl=DATA.pcl.filter(k=>k.id!==id); DATA.po=DATA.po.filter(o=>o.parcel_id!==id); showForm(); }));
   document.querySelectorAll('[data-insite]').forEach(x=>x.addEventListener('change',async()=>{ const id=+x.dataset.insite;
     const {error}=await sb.from('parcels').update({in_site:x.checked}).eq('id',id); if(error){ alert(error.message); x.checked=!x.checked; return; } DATA.pcl.find(k=>k.id===id).in_site=x.checked; showForm(); }));
-  document.querySelectorAll('[data-mv]').forEach(x=>x.addEventListener('click',()=>moveOwner(+x.dataset.mv,+x.dataset.dir)));
+  let DRAG=null;
+  document.querySelectorAll('.po[data-po]').forEach(el=>{
+    el.addEventListener('dragstart',e=>{ DRAG=el; el.classList.add('dragging'); e.dataTransfer.effectAllowed='move'; try{ e.dataTransfer.setData('text/plain',el.dataset.po); }catch(_){} });
+    el.addEventListener('dragend',()=>{ el.classList.remove('dragging'); document.querySelectorAll('.po.over,.po.over-b').forEach(x=>x.classList.remove('over','over-b')); DRAG=null; });
+    el.addEventListener('dragover',e=>{ if(!DRAG||DRAG===el) return; if(DRAG.closest('.pcl')!==el.closest('.pcl')||DRAG.dataset.g!==el.dataset.g) return; e.preventDefault(); e.dataTransfer.dropEffect='move';
+      const r=el.getBoundingClientRect(), b=(e.clientY-r.top)>r.height/2; el.classList.toggle('over',!b); el.classList.toggle('over-b',b); });
+    el.addEventListener('dragleave',()=>el.classList.remove('over','over-b'));
+    el.addEventListener('drop',async e=>{ if(!DRAG||DRAG===el) return; e.preventDefault(); const after=el.classList.contains('over-b'); el.classList.remove('over','over-b'); await dropOwner(+DRAG.dataset.po,+el.dataset.po,after); });
+  });
   document.querySelectorAll('[data-addown]').forEach(b=>b.addEventListener('click',async()=>{ const id=+b.dataset.addown;
     const name=document.querySelector(`[data-ownname="${id}"]`).value.trim(); if(!name){ alert('請填姓名'); return; }
     const ct=findCt(name), cid=ct?ct.id:null;
