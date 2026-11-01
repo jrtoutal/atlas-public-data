@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#0e1012">
-<title>ATLAS 案件中心 v2.4.1</title>
+<title>ATLAS 案件中心 v2.4.2</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Space+Mono:wght@400;700&display=swap');
 :root{--bg:#0e1012;--sb:#141618;--panel:#1a1d21;--card:#1f2328;--border:#2a2f36;--border2:#353b44;--gold:#d4a843;--gold2:#f0cc7a;--teal:#3aaa8c;--teal2:#4dc9a8;--red:#e06c6c;--indigo:#7b8cff;--amber:#e8b04a;--text:#dde2ee;--sub:#8a94a6;--muted:#4a5566}
@@ -388,6 +388,11 @@ function showForm(){
   $('#detail').innerHTML=h;
   $('#btnSave').addEventListener('click',()=>save()); $('#btnDel')?.addEventListener('click',del);
   if(!isNew) document.querySelectorAll('#detail .grid input,#detail .grid select,#detail .grid textarea').forEach(el=>el.addEventListener('input',scheduleSave));
+  // 案件類型 ↔ 同意門檻：危老＝100%；都更預設 75（自行劃定單元 80，可自己改）
+  $('#f-kind')?.addEventListener('change',()=>{ const k=$('#f-kind').value, th=$('#f-consent_threshold'); if(!th) return;
+    if(k==='危老重建') th.value=100; else if(k==='都市更新'&&(+th.value===100||!th.value)) th.value=75;
+    th.dispatchEvent(new Event('input',{bubbles:true})); const live=$('#thLive'); if(live) live.textContent=th.value; });
+  $('#f-consent_threshold')?.addEventListener('input',()=>{ const live=$('#thLive'); if(live) live.textContent=$('#f-consent_threshold').value||'75'; });
   bindRel(); if(TAB==='ct') renderList(); if(window.innerWidth<=760) $('#detail').scrollIntoView({behavior:'smooth'});
 }
 function payload(){
@@ -400,6 +405,7 @@ async function save(quiet=false){
   clearTimeout(AUTOSAVE);
   const p=payload(), st=$('#st'); if(!p.name){ st.className='st err'; st.textContent='名稱必填'; return; }
   st.className='st'; st.textContent='儲存中…'; $('#btnSave').disabled=true;
+  if(TAB==='ur'&&p.consent_threshold==null) p.consent_threshold=p.kind==='危老重建'?100:75;
   if(TAB==='ur'&&!p.code){ const y=new Date().getFullYear(); const n=DATA.ur.filter(u=>(u.code||'').startsWith('UR-'+y)).length+1; p.code=`UR-${y}-${String(n).padStart(3,'0')}`; }
   const q=CUR?sb.from(T[TAB].table).update(p).eq('id',CUR.id).select().single():sb.from(T[TAB].table).insert(p).select().single();
   const {data,error}=await q; $('#btnSave').disabled=false;
@@ -696,8 +702,9 @@ function parcelSection(pid){
       <span class="r" title="基地面積＝全部納入地號；私有＝扣掉公有地，同意比例用私有">基地 <b>${fmtM2(c.siteAll)}</b> m²${c.pubM2>0.005?` <span class="sub">公有 ${fmtM2(c.pubM2)} · 私有 ${fmtM2(c.site)}</span>`:''}${CUR.site_area_m2!=null&&Math.abs(Number(CUR.site_area_m2)-c.siteAll)>0.01?` <span class="chk bad" title="案件欄位的基地面積與地號加總不同">欄位 ${fmtM2(CUR.site_area_m2)}</span>`:''}</span>
       <span class="r" title="已建（去重）／案件官方去重總數；括號＝各地號官方人數直接相加（都更計算機不去重，只能當上限）">所有權人 <b>${c.owners}</b>${c.sumOfficial!=null?` <span class="sub">各地號加總 ${c.sumOfficial}（未去重）</span>`:''}${CUR.owners_official!=null?`/${CUR.owners_official} <span class="chk${c.owners===CUR.owners_official?' good':' bad'}">${c.owners===CUR.owners_official?'符合':'差 '+(CUR.owners_official-c.owners)}</span>`:' <span class="sub">官方數未填</span>'}</span>
       <span class="r${c.pctO>=TH?' ok':''}">人數比 <b>${pct(c.pctO)}</b> <span class="sub">${c.agree}/${c.owners} 人</span></span>
-      <span class="r${c.pctA>=TH?' ok':''}" title="門檻 ${TH}%">面積比 <b>${pct(c.pctA)}</b> <span class="sub">${fmtM2(c.agreeM2)} m²</span></span>
+      <span class="r${c.pctA>=TH?' ok':''}" title="門檻依案件類型：危老 100%、都更 75%（自行劃定 80%）">面積比 <b>${pct(c.pctA)}</b> <span class="sub">${fmtM2(c.agreeM2)} m²</span></span>
       ${CUR.unreg_bldg_count?`<span class="r" title="未登記建物不在建物登記簿裡，兩個工具都抓不到；需申請合法房屋證明才計入同意比例與原容積"><span class="chk bad">未登記建物 ${CUR.unreg_bldg_count} 棟 · 待合法認定</span></span>`:''}
+      <span class="r sub">門檻 <b id="thLive">${TH}</b>%</span>
       <button class="btn sm" id="btnApplyRatio" title="把土地總面積寫到「基地面積」、面積比寫到「整合同意比例」">套用到案件欄位</button>
     </div>
     ${(()=>{ const t=caseTotals(pid), f=x=>x==null?'—':Number(x).toLocaleString('zh-TW',{maximumFractionDigits:2}), d=(a,b)=>a!=null&&b!=null&&Math.abs(Number(a)-Number(b))>0.01?' bad':'';
