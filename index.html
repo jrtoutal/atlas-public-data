@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#0d0f14">
-<title>ATLAS 帷幄 v6.1.1 — 指揮中心</title>
+<title>ATLAS 帷幄 v6.2 — 指揮中心</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Noto+Serif+TC:wght@600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
 :root[data-theme="dark"]{--bg:#0d0f14;--bg-2:#12151c;--panel:#161a22;--card:#1c2028;--card-2:#22262f;--border:#252c38;--border-2:#2e3648;--ink:#e4e8f2;--ink-2:#b2bacb;--muted:#6a7490;--dim:#434b60;--gold:#d4a843;--gold-2:#f0cc7a;--teal:#3aaa8c;--teal-2:#5dd4b0;--indigo:#5b7ec4;--red:#e07060;--amber:#e8b04a;--grid:rgba(255,255,255,.04)}
@@ -178,7 +178,7 @@ h2.sec small{font-family:'Space Mono',monospace;font-size:10px;color:var(--muted
 </div>
 
 <div class="top"><div class="in">
-  <div class="brand" onclick="go('home')"><span class="mk">▲ ATLAS</span><b>帷幄</b><span class="v">v6.1.1</span></div>
+  <div class="brand" onclick="go('home')"><span class="mk">▲ ATLAS</span><b>帷幄</b><span class="v">v6.2</span></div>
   <nav class="tabs">
     <button class="tab on" data-v="home"><span class="n">01</span>首頁</button>
     <button class="tab" data-v="sched"><span class="n">02</span>工作時程</button>
@@ -281,7 +281,7 @@ NAS                     → DS920+ 管理員密碼（實體備忘）</pre></div>
 3. 腳本：atlas_law_push_sb_v2.py / atlas_local_laws.py（Downloads）
 4. 建 ~/Downloads/.atlas_env 放 Secret key
 5. 法規資料：到 law.moj.gov.tw/api/swagger 重抓 ChLaw.json.zip、ChOrder.json.zip
-6. Supabase 不用動；若要重建，SQL 依序 01→03→04→…→11</pre></div>
+6. Supabase 不用動；若要重建，SQL 依序 01→03→04→…→26</pre></div>
     <div class="card" style="grid-column:1/-1"><h3>怎麼更新網頁與程式碼</h3><pre>三個網頁（index.html / law.html / finder.html）都放在 GitHub repo「atlas-public-data」，
 Vercel 盯著這個 repo，檔案一變就自動重新部署（約 30–60 秒）。
 
@@ -304,13 +304,14 @@ Vercel 盯著這個 repo，檔案一變就自動重新部署（約 30–60 秒�
 
 資料庫結構（SQL）
   每次改結構都是一支新的 supabase_NN_xxx.sql，在 Supabase SQL Editor 跑一次
-  已跑：01 法規條文 · 03 全表 · 04 Storage · 05 law-pdf · 06 法規主檔 · 07 ui_state · 08 刪法規 · 09 issuer · 10 ur_projects 中文化 · 11 地號與持分
+  已跑：01 法規條文 · 03 全表 · 04 Storage · 05 law-pdf · 06 法規主檔 · 07 ui_state · 08 刪法規 · 09 issuer · 10 ur_projects 中文化 · 11 地號與持分 · 11b 授權 · 12 角色 · 13 群組 · 14 官方人數 · 15 持分排序 · 16 建物人數 · 17 遮罩識別碼 · 18 公有地／代號 · 19 地號排序 · 20 公告現值 · 21 建物筆數面積 · 22 未登記建物 · 23 案件總覽 · 24 分區容積率 · 25 擷取日 · 26 新北容積種子
   改 SQL 不會動到資料；重建整個專案才需要從 01 依序跑
 
 版本號慣例
   網頁 title 裡：index v6.x / law v2.x / finder v6.x；小修 +0.0.1，加功能 +0.1
   每次上線後把版本寫進「決策紀錄」或時程表的 ✅ 備註</pre></div>
-    <div class="card"><h3>每季例行</h3><pre>法規同步   python3 atlas_law_push_sb_v2.py --zip ChLaw.json.zip,ChOrder.json.zip
+    <div class="card"><h3>每季例行</h3><pre>分區容積   案件中心 → 都更案件 → 「分區容積」：查新北都市計畫通盤檢討／市地重劃公告，有變更就舊列「失效」＋新增一列
+法規同步   python3 atlas_law_push_sb_v2.py --zip ChLaw.json.zip,ChOrder.json.zip
           （先 --dry-run；--add 代碼 可強制納入新法規）
 備份       Supabase Dashboard → Database → Backups 看一眼
           （mini 到貨後改 pg_dump 週備份 → NAS）
@@ -593,16 +594,32 @@ async function loadStats(){
 
 // ═══════════════════ 案件清單 ═══════════════════
 async function loadCases(){
-  const [u,j,t]=await Promise.all([
-    sb.from('ur_projects').select('id,name,kind,stage,consent_pct,updated_at').order('updated_at',{ascending:false}).limit(8),
+  const [u,j,t,p,o]=await Promise.all([
+    sb.from('ur_projects').select('id,code,name,kind,stage,consent_pct,consent_threshold,site_area_m2,owners_official,unreg_bldg_count,updated_at').order('updated_at',{ascending:false}).limit(8),
     sb.from('jc_projects').select('id,name,builder_name,categories,track_date,updated_at').order('updated_at',{ascending:false}).limit(8),
     sb.from('tasks').select('id,title,due_at,ur_project_id,jc_project_id').eq('kind','案件').neq('status','完成'),
+    sb.from('parcels').select('id,ur_project_id,area_m2,in_site,is_public,owners_official'),
+    sb.from('parcel_owners').select('parcel_id,contact_id,owner_key,owner_name,consent'),
   ]);
-  const ur=u.data||[], jc=j.data||[], ts=t.data||[];
+  const ur=u.data||[], jc=j.data||[], ts=t.data||[], pcl=p.data||[], po=o.data||[];
+  // 同意比例（與案件中心同一套算法）：私有地號、人數去重、面積×持分
+  const okey=x=>x.contact_id?'c'+x.contact_id:x.owner_key?'k'+x.owner_key.replace(/[＊*\s]/g,''):'n'+x.owner_name;
+  const calc=id=>{ const all=pcl.filter(x=>x.ur_project_id===id&&x.in_site!==false), priv=all.filter(x=>!x.is_public); const site=priv.reduce((a,x)=>a+Number(x.area_m2||0),0);
+    const names=new Set(), agree=new Set(); let agreeM2=0, sumOff=0, anyOff=false;
+    for(const x of priv){ if(x.owners_official!=null){ sumOff+=x.owners_official; anyOff=true; } for(const w of po.filter(w=>w.parcel_id===x.id)){ const k=okey(w); names.add(k); if(w.consent==='同意'){ agree.add(k); agreeM2+=Number(x.area_m2||0)*1; } } }
+    return {n:all.length,site,owners:names.size,agree:agree.size,pctO:names.size?agree.size/names.size*100:null,pctA:null,sumOff:anyOff?sumOff:null}; };
+  const pct=x=>x==null?'—':x.toFixed(1)+'%';
+  const urCard=r=>{ const c=calc(r.id), th=r.consent_threshold||75, pa=r.consent_pct, okA=pa!=null&&pa>=th, okO=c.pctO!=null&&c.pctO>=th, open=ts.filter(x=>x.ur_project_id===r.id).length;
+    const light=(ok,v)=>`<span class="pill" style="font-size:10.5px;padding:1px 7px;border-radius:5px;border:1px solid ${ok?'var(--teal-2)':'var(--border-2)'};color:${ok?'var(--teal-2)':'var(--ink-2)'};font-family:'Space Mono',monospace">${v}</span>`;
+    return `<a href="cases.html?t=ur" style="display:block;padding:8px 0;border-bottom:1px dashed var(--border);color:inherit;text-decoration:none">
+      <div style="display:flex;gap:8px;align-items:baseline"><span style="font-size:13px;font-weight:500">${esc(r.name)}</span><span class="mono" style="font-size:10px;color:var(--muted)">${esc(r.code||'')}</span><span style="flex:1"></span><span style="font-size:11px;color:var(--muted)">${esc(r.stage||'')}</span></div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:4px;align-items:center;font-size:11px;color:var(--muted)">
+        ${light(okA,'面積 '+pct(pa))}${light(okO,'人數 '+pct(c.pctO))}<span>門檻 ${th}%</span><span>· ${c.n} 筆地號 · ${c.site?c.site.toLocaleString('zh-TW',{maximumFractionDigits:0}):'—'} m² 私有</span><span>· 已建 ${c.owners}${r.owners_official?'/'+r.owners_official:''} 人</span>${r.unreg_bldg_count?`<span style="color:var(--amber)">· 未登記建物 ${r.unreg_bldg_count}</span>`:''}${open?`<span>· ${open} 待辦</span>`:''}
+      </div></a>`; };
   const li=(href,name,meta,badge)=>`<a href="${href}" style="display:flex;gap:10px;align-items:baseline;padding:7px 0;border-bottom:1px dashed var(--border);color:inherit;text-decoration:none"><span style="flex:1;font-size:13px">${esc(name)}</span>${badge?`<span class="pill" style="font-size:10px;padding:1px 7px;border-radius:5px;border:1px solid var(--border-2);color:var(--ink-2)">${esc(badge)}</span>`:''}<span style="font-size:11px;color:var(--muted);font-family:'Space Mono',monospace">${esc(meta)}</span></a>`;
   $('#caseList').innerHTML=`
     <div class="card"><h3 style="display:flex;gap:8px;align-items:baseline">都更案件 <span class="mono" style="font-size:10px;color:var(--muted)">${ur.length}</span><span style="flex:1"></span><a href="cases.html?t=ur" style="font-size:12px">全部 →</a></h3>
-      ${ur.map(r=>li('cases.html?t=ur',r.name,(r.consent_pct!=null?r.consent_pct+'% · ':'')+(ts.filter(x=>x.ur_project_id===r.id).length+' 待辦'),r.stage)).join('')||'<div class="d">還沒有案件，到案件中心新增。</div>'}</div>
+      ${ur.map(urCard).join('')||'<div class="d">還沒有案件，到案件中心新增。</div>'}</div>
     <div class="card"><h3 style="display:flex;gap:8px;align-items:baseline">建材專案 <span class="mono" style="font-size:10px;color:var(--muted)">${jc.length}</span><span style="flex:1"></span><a href="cases.html?t=jc" style="font-size:12px">全部 →</a></h3>
       ${jc.map(r=>li('cases.html?t=jc',r.name,(r.track_date||'').slice(0,10),r.builder_name||(r.categories||[])[0])).join('')||'<div class="d">還沒有專案。選色表裡的建商／專案之後會接到這裡。</div>'}</div>`;
   $('#m-cases').textContent=`${ur.length} 都更 · ${jc.length} 建材 · ${ts.length} 待辦`;
