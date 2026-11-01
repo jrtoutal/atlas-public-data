@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#0e1012">
-<title>ATLAS 案件中心 v2.2</title>
+<title>ATLAS 案件中心 v2.2.1</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Space+Mono:wght@400;700&display=swap');
 :root{--bg:#0e1012;--sb:#141618;--panel:#1a1d21;--card:#1f2328;--border:#2a2f36;--border2:#353b44;--gold:#d4a843;--gold2:#f0cc7a;--teal:#3aaa8c;--teal2:#4dc9a8;--red:#e06c6c;--indigo:#7b8cff;--amber:#e8b04a;--text:#dde2ee;--sub:#8a94a6;--muted:#4a5566}
@@ -786,7 +786,7 @@ function bindParcels(){
   $('#btnApplyRatio')?.addEventListener('click',()=>{ const c=consentCalc(pid), t=caseTotals(pid); const set=(id,v,dec)=>{ const el=$('#f-'+id); if(!el) return; el.value=v==null?'':(dec!=null?Number(v).toFixed(dec):v); };
     set('site_area_m2',c.siteAll||null,2); set('consent_pct',c.pctA,1); set('land_count',t.land_count); set('land_private_m2',t.land_private_m2,2); set('land_public_m2',t.land_public_m2,2);
     set('land_owners_times',t.land_owners_times); set('bldg_count',t.bldg_count); set('bldg_owners_official',t.bldg_owners_official); set('bldg_floor_m2',t.bldg_floor_m2,2); set('bldg_private_m2',t.bldg_private_m2,2);
-    if(!v('owners_official')) set('owners_official',t.owners_keyed); if(!v('consent_threshold')) set('consent_threshold',75);
+    if(!Number(v('owners_official'))) set('owners_official',t.owners_keyed); if(!Number(v('consent_threshold'))) set('consent_threshold',75);
     save(); });
 }
 
