@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#0e1012">
-<title>ATLAS 案件中心 v2.5.2</title>
+<title>ATLAS 案件中心 v2.6</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Space+Mono:wght@400;700&display=swap');
 :root{--bg:#0e1012;--sb:#141618;--panel:#1a1d21;--card:#1f2328;--border:#2a2f36;--border2:#353b44;--gold:#d4a843;--gold2:#f0cc7a;--teal:#3aaa8c;--teal2:#4dc9a8;--red:#e06c6c;--indigo:#7b8cff;--amber:#e8b04a;--text:#dde2ee;--sub:#8a94a6;--muted:#4a5566}
@@ -79,6 +79,11 @@ a{color:var(--teal2)}
 .d-head h2{font-size:20px;font-weight:700}
 .d-head .id{font-family:'Space Mono',monospace;font-size:11px;color:var(--muted)}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:4px 16px;max-width:860px}
+.grid.g4{grid-template-columns:repeat(4,minmax(0,1fr));max-width:1000px;gap:2px 14px}
+.grid .c2{grid-column:span 2}.grid .c3{grid-column:span 3}.grid .full{grid-column:1/-1}
+.grid .gh{grid-column:1/-1;font-size:11px;letter-spacing:.14em;color:var(--gold);margin:10px 0 4px;padding-bottom:4px;border-bottom:1px solid var(--border);display:flex;gap:8px;align-items:baseline}.grid .gh small{font-size:10.5px;color:var(--muted);letter-spacing:.04em}
+.grid.g4 .field{margin-bottom:8px}.grid.g4 .field label{font-size:11px;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.grid.g4 .field input,.grid.g4 .field select{padding:7px 9px}
+@media (max-width:900px){ .grid.g4{grid-template-columns:1fr 1fr} .grid .c3{grid-column:span 2} }
 .grid .full{grid-column:1/-1}
 .chips{display:flex;gap:6px;flex-wrap:wrap;padding:4px 0}
 .chip{font-size:12px;padding:4px 10px;border-radius:999px;border:1px solid var(--border2);background:transparent;color:var(--sub);cursor:pointer}
@@ -377,20 +382,22 @@ const num=id=>{ const s=v(id); return s===''?null:Number(s); };
 
 function showForm(){
   const r=CUR||{}, isNew=!CUR; let h='';
-  if(TAB==='ur') h=`<div class="d-head"><h2>${isNew?'新增都更案件':esc(r.name)}</h2>${isNew?'':`<span class="id">${esc(r.code||'#'+r.id)} · 更新 ${fmtD(r.updated_at)}</span>`}</div><div class="grid">
-    ${fld('name','案名（基地名）<b>＊</b>',r.name,'text','full')}
-    ${fld('code','案件代號（可自訂；留空＝自動 UR-年-流水號）',r.code)}${sel('kind','案件類型',UR_KIND,r.kind)}${sel('stage','推動階段',UR_STAGE,r.stage)}
-    ${fld('address','基地地址／地段地號',r.address,'text','full')}
-    ${fld('site_area_m2','基地面積（m²，依權狀）',r.site_area_m2,'number')}${fld('consent_pct','整合同意比例（%）',r.consent_pct,'number')}
-    ${fld('land_count','土地登記筆數',r.land_count,'number')}${fld('land_owners_times','土地私有人數（人次）',r.land_owners_times,'number')}
-    ${fld('land_private_m2','土地私有面積（m²）',r.land_private_m2,'number')}${fld('land_public_m2','公有土地面積（m²）',r.land_public_m2,'number')}
-    ${fld('bldg_count','建物登記筆數',r.bldg_count,'number')}${fld('bldg_owners_official','建物私有人數',r.bldg_owners_official,'number')}
-    ${fld('bldg_floor_m2','建物登記總面積（m²）',r.bldg_floor_m2,'number')}${fld('bldg_private_m2','建物私有面積（m²）',r.bldg_private_m2,'number')}
-    ${fld('owners_official','土地所有權人總數（去重，清冊／謄本）',r.owners_official,'number')}${fld('consent_threshold','同意門檻 %（法定 75；自行劃定 80）',r.consent_threshold,'number')}
-    ${fld('unreg_bldg_count','未登記建物棟數（無建照／使照，待合法認定）',r.unreg_bldg_count,'number')}${fld('unreg_bldg_notes','未登記建物說明（門牌、稅籍起始年、建管日期對照、進度）',r.unreg_bldg_notes)}
+  if(TAB==='ur') h=`<div class="d-head"><h2>${isNew?'新增都更案件':esc(r.name)}</h2>${isNew?'':`<span class="id">${esc(r.code||'#'+r.id)} · 更新 ${fmtD(r.updated_at)}</span>`}</div><div class="grid g4">
+    <div class="gh">基本</div>
+    ${fld('name','案名（基地名）<b>＊</b>',r.name,'text','c2')}${fld('code','案件代號（留空自動 UR-年-流水號）',r.code)}${sel('kind','案件類型',UR_KIND,r.kind)}
+    ${fld('address','基地地址／地段地號',r.address,'text','c3')}${sel('stage','推動階段',UR_STAGE,r.stage)}
+    <div class="gh">同意比例</div>
+    ${fld('site_area_m2','基地面積 m²',r.site_area_m2,'number')}${fld('consent_pct','整合同意比例 %（面積比）',r.consent_pct,'number')}${fld('consent_threshold','同意門檻 %',r.consent_threshold,'number')}${fld('owners_official','土地所有權人總數（去重）',r.owners_official,'number')}
+    <div class="gh">土地 <small>都更計算機</small></div>
+    ${fld('land_count','登記筆數',r.land_count,'number')}${fld('land_owners_times','私有人數（人次）',r.land_owners_times,'number')}${fld('land_private_m2','私有面積 m²',r.land_private_m2,'number')}${fld('land_public_m2','公有面積 m²',r.land_public_m2,'number')}
+    <div class="gh">建物 <small>都更計算機</small></div>
+    ${fld('bldg_count','登記筆數',r.bldg_count,'number')}${fld('bldg_owners_official','私有人數',r.bldg_owners_official,'number')}${fld('bldg_floor_m2','登記總面積 m²',r.bldg_floor_m2,'number')}${fld('bldg_private_m2','私有面積 m²',r.bldg_private_m2,'number')}
+    <div class="gh">未登記建物 <small>待合法建築物認定</small></div>
+    ${fld('unreg_bldg_count','棟數',r.unreg_bldg_count,'number')}${fld('unreg_bldg_notes','說明（門牌、稅籍起始年、建管日期對照、進度）',r.unreg_bldg_notes,'text','c3')}
+    <div class="gh">法規與推動</div>
     ${chips('legal_flags','耐震評估與法規狀態（可複選）',UR_FLAGS,r.legal_flags)}
     ${fld('bonus_est','預估容積獎勵',r.bonus_est,'text','full')}
-    ${txt('checklist','闖關檢核表',r.checklist)}${txt('notes','推動備註／說明會紀錄',r.notes)}
+    ${txt('checklist','闖關檢核表',r.checklist,'c2')}${txt('notes','推動備註／說明會紀錄',r.notes,'c2')}
     ${isNew?`<div class="field full"><label>📄 放入都更計算機 PDF（選填：案件清單＋各地號單查，可多選；建立後自動讀取並出現預覽表）</label><input type="file" id="f-import_pdf" accept="application/pdf" multiple style="padding:8px"></div><div class="field full"><label>或貼上「本次分析地號清單」文字（建立時自動加入地號並加總基地面積）</label><textarea id="f-import_lots" placeholder="五股區	五股段	05840000	947.61	自然人100%&#10;五股區	五股段	05850000	195.61	自然人100%" style="font-family:'Space Mono',monospace;font-size:12px"></textarea></div>`:''}</div>`;
   if(TAB==='jc') h=`<div class="d-head"><h2>${isNew?'新增建材專案':esc(r.name)}</h2>${isNew?'':`<span class="id">#${r.id} · 更新 ${fmtD(r.updated_at)}</span>`}</div><div class="grid">
     ${fld('name','專案名稱<b>＊</b>（與選色表一致）',r.name,'text','full')}
