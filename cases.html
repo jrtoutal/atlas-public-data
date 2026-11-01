@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#0e1012">
-<title>ATLAS 案件中心 v2.5.1</title>
+<title>ATLAS 案件中心 v2.5.2</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Space+Mono:wght@400;700&display=swap');
 :root{--bg:#0e1012;--sb:#141618;--panel:#1a1d21;--card:#1f2328;--border:#2a2f36;--border2:#353b44;--gold:#d4a843;--gold2:#f0cc7a;--teal:#3aaa8c;--teal2:#4dc9a8;--red:#e06c6c;--indigo:#7b8cff;--amber:#e8b04a;--text:#dde2ee;--sub:#8a94a6;--muted:#4a5566}
@@ -112,11 +112,14 @@ a{color:var(--teal2)}
 .pcl .ph .hd{color:var(--muted);cursor:grab;font-size:13px;letter-spacing:-2px;user-select:none}.pcl .ph .hd:active{cursor:grabbing}
 .pcl .ph .ar{display:inline-block;width:12px;font-size:9px;color:var(--muted);cursor:pointer;transition:transform .15s}.pcl.closed .ph .ar{transform:rotate(-90deg)}
 .pm.tot{display:flex;flex-wrap:wrap;column-gap:20px;row-gap:4px;padding:5px 10px;border:1px solid var(--border);border-radius:8px;margin-bottom:6px;font-size:12px;align-items:center}.pm.tot .cell{display:flex;align-items:center;gap:6px;white-space:nowrap}.pm.tot .cell i{font-style:normal;font-size:10.5px;color:var(--muted)}.pm.tot .cell b{font-family:'Space Mono',monospace;font-weight:400}.pm.tot .cell b.bad{color:var(--red);font-weight:700}
-.pcl .pm{display:flex;flex-wrap:wrap;column-gap:22px;row-gap:4px;gap:6px;padding:5px 10px 5px 40px;border-top:1px dashed var(--border);font-size:12px;align-items:center}
+.pcl .pm{display:grid;grid-template-columns:repeat(10,minmax(0,1fr));gap:4px 8px;padding:6px 10px 7px 40px;border-top:1px dashed var(--border);font-size:12px}
+.pcl .pm .cell{display:flex;flex-direction:column;gap:1px;min-width:0}.pcl .pm .cell i{font-style:normal;font-size:10px;color:var(--muted);letter-spacing:.04em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.pcl .pm .cell b{font-family:'Space Mono',monospace;font-weight:400;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pcl .pm .cell b.good{color:var(--teal2)}.pcl .pm .cell b.bad{color:var(--red);font-weight:700}.pcl .pm .cell:last-child{grid-column:span 2}
 .pcl .pm .cell{display:flex;align-items:center;gap:6px;white-space:nowrap}.pcl .pm .cell i{font-style:normal;font-size:10.5px;color:var(--muted);letter-spacing:.06em}.pcl .pm .cell b{font-family:'Space Mono',monospace;font-weight:400}
 .pcl.closed .pb{display:none}.pcl.pub .ph .secn,.pcl.pub .ph b{color:var(--amber)}
 .pcl.dragging{opacity:.4}.pcl.over{box-shadow:inset 0 2px 0 var(--gold)}.pcl.over-b{box-shadow:inset 0 -2px 0 var(--gold)}
-@media (max-width:760px){ .pcl .pm{grid-template-columns:1fr 1fr;padding-left:10px} .pcl .ph{flex-wrap:wrap} }
+@media (max-width:760px){ .pcl .pm{grid-template-columns:repeat(3,1fr);padding-left:10px} .pcl .ph{flex-wrap:wrap} }
+@media (max-width:1100px){ .pcl .pm{grid-template-columns:repeat(5,minmax(0,1fr))} }
 .pcl .ph b{font-family:'Space Mono',monospace;font-weight:400}
 .pcl .ph .sub{color:var(--sub);font-size:12px}
 .pcl .ph .x{margin-left:auto;color:var(--muted);cursor:pointer;font-size:12px}.pcl .ph .x:hover{color:var(--red)}
@@ -524,10 +527,11 @@ const pclsSorted=pid=>DATA.pcl.filter(p=>p.ur_project_id===pid).sort((a,b)=>(a.s
 function pclChecks(p,os){
   const keyed=new Set(os.map(ownerKey)).size, sh=os.reduce((a,o)=>a+o.share_num/o.share_den,0), m2=Number(p.area_m2||0);
   const okN=p.owners_official==null?null:keyed===p.owners_official, okA=Math.abs(sh-1)<0.0005;
-  if(p.is_public) return `<span class="cell"><i>面積</i><b>${fmtM2(m2)}</b> m²</span><span class="cell"><i>私有土地人數</i><span class="chk good" title="公有地：不計入同意比例">公有 · 免計</span></span><span class="cell"><i>建物登記筆數</i><b>${p.bldg_count==null?'?':p.bldg_count}</b></span><span class="cell"><i>建物私有人數</i><span class="chk good">免計</span></span>${p.announced_value?`<span class="cell"><i>公告現值</i><b>${fmtN(p.announced_value)}</b></span>`:''}${p.announced_price?`<span class="cell"><i>公告地價</i><b>${fmtN(p.announced_price)}</b></span>`:''}<span class="cell"><i>持分檢核</i><span class="chk good">公有</span></span>`;
-  const cN=okN===null?'':okN?' good':' bad', cA=os.length?(okA?' good':' bad'):'';
-  const nz=x=>x==null?'?':Number(x).toLocaleString();
-  return `<span class="cell"><i>面積</i><b>${fmtM2(m2)}</b> m²</span><span class="cell"><i>私有土地人數</i><span class="chk${cN}" title="已建（去重）／官方（都更計算機單查）">${keyed}/${p.owners_official??'?'}</span></span><span class="cell"><i>建物登記筆數</i><b>${nz(p.bldg_count)}</b></span><span class="cell"><i>建物私有人數</i><span class="chk">${p.bldg_owners_official??'?'}</span></span><span class="cell"><i>建物登記總面積</i><b>${nz(p.bldg_floor_m2)}</b> m²</span><span class="cell"><i>建物私有面積</i><b>${nz(p.bldg_private_m2)}</b> m²</span>${p.announced_value?`<span class="cell"><i>公告現值</i><b>${fmtN(p.announced_value)}</b></span>`:''}${p.announced_price?`<span class="cell"><i>公告地價</i><b>${fmtN(p.announced_price)}</b></span>`:''}<span class="cell"><i>持分檢核</i><span class="chk${cA}" title="已建持分合計換算面積／登記面積">${fmtM2(m2*sh)}/${fmtM2(m2)}${os.length&&!okA?(sh<1?' 缺':' 超')+(Math.abs(1-sh)*100).toFixed(2)+'%':''}</span></span>`;
+  const nz=x=>x==null?'?':Number(x).toLocaleString('zh-TW',{maximumFractionDigits:2});
+  const cell=(l,v,cls='')=>`<span class="cell"><i>${l}</i><b class="${cls}">${v}</b></span>`;
+  if(p.is_public) return cell('面積',fmtM2(m2)+' m²')+cell('私有土地人數','公有 · 免計','good')+cell('建物登記筆數',nz(p.bldg_count))+cell('建物登記總面積',nz(p.bldg_floor_m2))+cell('建物私有面積','免計','good')+cell('建物私有人數','免計','good')+cell('公告現值',fmtN(p.announced_value)||'?')+cell('公告地價',fmtN(p.announced_price)||'?')+cell('持分檢核','公有','good');
+  const cN=okN===null?'':okN?'good':'bad', cA=os.length?(okA?'good':'bad'):'';
+  return cell('面積',fmtM2(m2)+' m²')+cell('私有土地人數',`${keyed}/${p.owners_official??'?'}`,cN)+cell('建物登記筆數',nz(p.bldg_count))+cell('建物登記總面積',nz(p.bldg_floor_m2)+' m²')+cell('建物私有面積',nz(p.bldg_private_m2)+' m²')+cell('建物私有人數',p.bldg_owners_official??'?')+cell('公告現值',fmtN(p.announced_value)||'?')+cell('公告地價',fmtN(p.announced_price)||'?')+cell('持分檢核',`${fmtM2(m2*sh)}/${fmtM2(m2)}${os.length&&!okA?(sh<1?' 缺':' 超')+(Math.abs(1-sh)*100).toFixed(2)+'%':''}`,cA);
 }
 
 const ctDatalist=()=>`<datalist id="dl-ct">${[...DATA.ct].sort((a,b)=>(a.group_name||'').localeCompare(b.group_name||'','zh-Hant')||a.name.localeCompare(b.name,'zh-Hant')).map(c=>`<option value="${esc(c.name)}">${esc([c.group_name,c.relation,c.kind].filter(Boolean).join(' · '))}</option>`).join('')}</datalist>`;
@@ -740,7 +744,7 @@ function parcelSection(pid){
         <label><input type="checkbox" data-insite="${p.id}"${p.in_site!==false?' checked':''}>納入</label><label title="公有地：面積算基地，同意比例免計"><input type="checkbox" data-ispub="${p.id}"${p.is_public?' checked':''}>公有</label>
         <span class="secn">${esc(p.section)}</span><b>${esc(p.lot)}</b><span class="sub">${p.land_use?'地目 '+esc(p.land_use):''}${zoneLabel(p)?' · '+esc(zoneLabel(p)):''}${p.registry?' · '+esc(p.registry):''}${p.calc_date?' · 計算機 '+fmtD(p.calc_date):''}${p.notes?' · '+esc(p.notes):''}</span>
         <span class="x" data-editpcl="${p.id}">✎ 編輯</span><span class="x" data-delpcl="${p.id}">刪地號</span></div>
-      <div class="pm">${pclChecks(p,os)}${full?'<span class="chk good">持分已滿</span>':''}</div>
+      <div class="pm">${pclChecks(p,os)}</div>
         ${EDIT_PCL===p.id?`<div class="pe" data-pe="${p.id}"><div class="addrow"><input data-pe-section placeholder="地段" value="${esc(p.section)}" style="flex:1.2;min-width:120px"><input data-pe-lot placeholder="地號" value="${esc(p.lot)}" style="flex:0 0 100px"><input data-pe-area type="number" step="0.01" placeholder="面積 m²" value="${p.area_m2??''}" style="flex:0 0 90px"><select data-pe-use style="flex:0 0 70px"><option value="">地目</option>${LAND_USE.map(x=>`<option${x===p.land_use?' selected':''}>${x}</option>`).join('')}</select><input data-pe-zoning list="dl-zone" placeholder="使用分區" value="${esc(p.zoning)}" style="flex:1;min-width:110px"><datalist id="dl-zone">${DATA.zr.filter(r=>r.city===caseCity(pid)).map(r=>`<option value="${esc(r.zone)}">${esc(r.plan_area||r.city)} · 容積 ${r.far_pct??'?'}% · 建蔽 ${r.bcr_pct??'?'}%${r.condition?' · '+esc(r.condition):''}</option>`).join('')}</datalist><label style="display:flex;align-items:center;gap:4px;font-size:11.5px;color:var(--sub);white-space:nowrap"><input type="checkbox" data-pe-zok${p.zoning_status==='已確認'?' checked':''}>分區已確認</label><input data-pe-reg placeholder="地政所" value="${esc(p.registry)}" style="flex:0 0 90px"></div>
           <div class="addrow" style="margin-top:4px"><input data-pe-own type="number" min="0" placeholder="土地人數" value="${p.owners_official??''}" style="flex:0 0 72px" title="土地私有人數（官方）"><input data-pe-bcnt type="number" min="0" placeholder="建物筆數" value="${p.bldg_count??''}" style="flex:0 0 72px"><input data-pe-bfloor type="number" step="0.01" placeholder="建物總面積" value="${p.bldg_floor_m2??''}" style="flex:0 0 92px"><input data-pe-bpriv type="number" step="0.01" placeholder="建物私有面積" value="${p.bldg_private_m2??''}" style="flex:0 0 100px"><input data-pe-bown type="number" min="0" placeholder="建物人數" value="${p.bldg_owners_official??''}" style="flex:0 0 72px" title="建物私有人數（官方）"><input data-pe-av placeholder="公告現值" value="${fmtN(p.announced_value)}" style="flex:0 0 84px"><input data-pe-ap placeholder="公告地價" value="${fmtN(p.announced_price)}" style="flex:0 0 84px"><input data-pe-notes placeholder="備註" value="${esc(p.notes)}" style="flex:2;min-width:140px"><span style="display:flex;gap:6px;flex:0 0 auto"><button class="btn sm pri" data-savepcl="${p.id}">儲存</button><button class="btn sm" data-cancelpcl="1">取消</button></span></div></div>`:''}`;
     h+=`<div class="pb">`; const osSorted=ownersSorted(os); let lastG=null;
