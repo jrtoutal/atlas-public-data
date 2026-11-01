@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#0e1012">
-<title>ATLAS 案件中心 v2.4.2</title>
+<title>ATLAS 案件中心 v2.5</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Space+Mono:wght@400;700&display=swap');
 :root{--bg:#0e1012;--sb:#141618;--panel:#1a1d21;--card:#1f2328;--border:#2a2f36;--border2:#353b44;--gold:#d4a843;--gold2:#f0cc7a;--teal:#3aaa8c;--teal2:#4dc9a8;--red:#e06c6c;--indigo:#7b8cff;--amber:#e8b04a;--text:#dde2ee;--sub:#8a94a6;--muted:#4a5566}
@@ -226,7 +226,7 @@ $('#loginForm').addEventListener('submit',async e=>{ e.preventDefault(); $('#log
   if(error){ $('#loginErr').textContent='登入失敗：'+(error.message.includes('Invalid')?'帳號或密碼錯誤':error.message); return; } boot(); });
 $('#logoutBtn').addEventListener('click',async()=>{ await sb.auth.signOut(); location.reload(); });
 async function boot(){ const {data:{session}}=await sb.auth.getSession(); if(!session){ $('#login').style.display='flex'; $('#app').style.display='none'; return; }
-  UID=session.user.id; $('#login').style.display='none'; $('#app').style.display='flex'; await loadAll(); setTab(new URLSearchParams(location.search).get('t')||'ur'); }
+  UID=session.user.id; $('#login').style.display='none'; $('#app').style.display='flex'; await loadAll(); await ctOrdLoad(); setTab(new URLSearchParams(location.search).get('t')||'ur'); }
 function cloud(st,txt){ $('#cloudDot').className=st; $('#cloudTxt').textContent=txt; }
 
 // ── 載入 ──
@@ -260,7 +260,7 @@ function renderList(){
   const rows=DATA[TAB].filter(r=>{ if(f){ if(cfg.filterKey==='_cat'){ if(!(r.categories||[]).includes(f)) return false; } else if(r[cfg.filterKey]!==f) return false; }
     return !q||JSON.stringify(r).toLowerCase().includes(q); });
   const rowHtml=r=>`<div class="row${CUR&&CUR.id===r.id?' active':''}" data-id="${r.id}"><div class="n"><span>${esc(cfg.name(r))}</span><span class="id">${TAB==='ur'&&r.code?esc(r.code):'#'+r.id}</span></div><div class="m">${cfg.sub(r).map((s,i)=>`<span class="pill${TAB==='ur'&&i===0?(r.kind==='都市更新'?' k1':' k2'):''}">${esc(s)}</span>`).join('')}</div></div>`;
-  if(TAB==='ct'){ $('#rows').className='tree'; $('#rows').innerHTML=renderCtTree(rows,!!q)||`<div class="empty">沒有資料</div>`; return; }
+  if(TAB==='ct'){ $('#rows').className='tree'; $('#rows').innerHTML=renderCtTree(rows,!!q)||`<div class="empty">沒有資料</div>`; bindTreeDrag(); return; }
   if(TAB==='ur'){ $('#rows').className='tree'; $('#rows').innerHTML=renderUrTree(rows,!!q||!!f,rowHtml)||`<div class="empty">沒有資料</div>`; return; }
   $('#rows').className='';
   $('#rows').innerHTML=rows.map(rowHtml).join('')||`<div class="empty">沒有資料</div>`;
@@ -284,20 +284,40 @@ function renderUrTree(rows,searching,rowH){
   return order.map(k=>{ const key='s:'+k, closed=!searching&&TOPEN.has(key);
     return `<div class="g1${closed?' closed':''}" data-t="${esc(key)}"><span class="ar">▼</span>${esc(k)}<span class="c">${by[k].length}</span></div>`+(closed?'':by[k].map(rowH).join('')); }).join('');
 }
+// 樹的自訂順序（存 ui_state key=ct_tree）：cases=[案件名…]、groups={案件|類型:[群組…]}、people={案件|類型|群組:[id…]}
+let CTORD={cases:[],groups:{},people:{}};
+async function ctOrdLoad(){ const {data}=await sb.from('ui_state').select('data').eq('key','ct_tree').maybeSingle(); if(data?.data) CTORD={cases:[],groups:{},people:{},...data.data}; }
+async function ctOrdSave(){ const {error}=await sb.from('ui_state').upsert({user_id:UID,key:'ct_tree',data:CTORD},{onConflict:'user_id,key'}); if(error) alert('順序儲存失敗：'+error.message); }
+const ordSort=(arr,order,key)=>{ const idx=x=>{ const i=order.indexOf(key(x)); return i<0?1e9:i; }; return [...arr].sort((a,b)=>idx(a)-idx(b)); };
 function renderCtTree(rows,searching){
   const tree={}; for(const c of rows) for(const cs of ctCases(c)){ const k=c.kind||'未分類', g=c.group_name||'未分組'; (((tree[cs]??={})[k]??={})[g]??=[]).push(c); }
-  const cases=Object.keys(tree).sort((a,b)=>a==='未歸案'?1:b==='未歸案'?-1:a.localeCompare(b,'zh-Hant'));
+  let cases=Object.keys(tree).sort((a,b)=>a==='未歸案'?1:b==='未歸案'?-1:a.localeCompare(b,'zh-Hant')); cases=ordSort(cases,CTORD.cases,x=>x);
   const cnt=o=>Object.values(o).reduce((a,v)=>a+(Array.isArray(v)?v.length:cnt(v)),0);
-  const node=(cls,key,label,n,closed)=>`<div class="${cls}${closed?' closed':''}" data-t="${esc(key)}"><span class="ar">▼</span>${esc(label)}<span class="c">${n}</span></div>`;
-  const rowH=c=>`<div class="row${CUR&&CUR.id===c.id?' active':''}" data-id="${c.id}"><div class="n"><span>${esc(c.name)}</span>${c.relation?`<span class="rel">${esc(c.relation)}</span>`:''}<span class="id">#${c.id}</span></div><div class="m">${[c.company,c.title,c.phone].filter(Boolean).map(s=>`<span class="pill">${esc(s)}</span>`).join('')}</div></div>`;
+  const node=(cls,key,label,n,closed,drag)=>`<div class="${cls}${closed?' closed':''}" data-t="${esc(key)}"${drag?` draggable="true" data-dk="${esc(drag.k)}" data-dv="${esc(drag.v)}"`:''}>${drag?'<span class="hd" title="拖曳調整順序">⋮⋮</span>':''}<span class="ar">▼</span>${esc(label)}<span class="c">${n}</span></div>`;
+  const rowH=(c,scope)=>`<div class="row${CUR&&CUR.id===c.id?' active':''}" data-id="${c.id}" draggable="true" data-dk="p:${esc(scope)}" data-dv="${c.id}"><div class="n"><span class="hd" title="拖曳調整順序">⋮⋮</span><span>${esc(c.name)}</span>${c.relation?`<span class="rel">${esc(c.relation)}</span>`:''}<span class="id">#${c.id}</span></div><div class="m">${[c.company,c.title,c.phone].filter(Boolean).map(s=>`<span class="pill">${esc(s)}</span>`).join('')}</div></div>`;
   return cases.map(cs=>{ const k1='c:'+cs, c1=!searching&&TOPEN.has(k1); const kinds=tree[cs];
-    return node('g1',k1,cs,cnt(kinds),c1)+(c1?'':[...CT_KIND,'未分類'].filter(k=>kinds[k]).map(k=>{ const k2='k:'+cs+'|'+k, c2=!searching&&TOPEN.has(k2); const groups=kinds[k];
-      const gs=Object.keys(groups).sort((a,b)=>a==='未分組'?1:b==='未分組'?-1:a.localeCompare(b,'zh-Hant'));
-      return node('g2',k2,k,cnt(groups),c2)+(c2?'':gs.map(g=>{ const k3='g:'+cs+'|'+k+'|'+g, c3=!searching&&TOPEN.has(k3);
-        return node('g3',k3,g,groups[g].length,c3)+(c3?'':groups[g].map(rowH).join('')); }).join('')); }).join('')); }).join('');
+    return node('g1',k1,cs,cnt(kinds),c1,{k:'c',v:cs})+(c1?'':[...CT_KIND,'未分類'].filter(k=>kinds[k]).map(k=>{ const k2='k:'+cs+'|'+k, c2=!searching&&TOPEN.has(k2); const groups=kinds[k]; const gscope=cs+'|'+k;
+      let gs=Object.keys(groups).sort((a,b)=>a==='未分組'?1:b==='未分組'?-1:a.localeCompare(b,'zh-Hant')); gs=ordSort(gs,CTORD.groups[gscope]||[],x=>x);
+      return node('g2',k2,k,cnt(groups),c2)+(c2?'':gs.map(g=>{ const k3='g:'+cs+'|'+k+'|'+g, c3=!searching&&TOPEN.has(k3); const pscope=gscope+'|'+g; const people=ordSort(groups[g],CTORD.people[pscope]||[],x=>x.id);
+        return node('g3',k3,g,groups[g].length,c3,{k:'g:'+gscope,v:g})+(c3?'':people.map(c=>rowH(c,pscope)).join('')); }).join('')); }).join('')); }).join('');
+}
+// 樹節點拖曳：同層同父才能互換；放開後把整層順序寫進 CTORD
+function bindTreeDrag(){
+  let D=null; const els=[...document.querySelectorAll('#rows [data-dk]')];
+  els.forEach(el=>{
+    el.addEventListener('mousedown',e=>{ el._hd=!!e.target.closest('.hd'); });
+    el.addEventListener('dragstart',e=>{ if(!el._hd){ e.preventDefault(); return; } D=el; el.classList.add('dragging'); e.dataTransfer.effectAllowed='move'; try{ e.dataTransfer.setData('text/plain',el.dataset.dv); }catch(_){} e.stopPropagation(); });
+    el.addEventListener('dragend',()=>{ el.classList.remove('dragging'); els.forEach(x=>x.classList.remove('over','over-b')); D=null; });
+    el.addEventListener('dragover',e=>{ if(!D||D===el||D.dataset.dk!==el.dataset.dk) return; e.preventDefault(); e.stopPropagation(); const r=el.getBoundingClientRect(), b=(e.clientY-r.top)>r.height/2; el.classList.toggle('over',!b); el.classList.toggle('over-b',b); });
+    el.addEventListener('dragleave',()=>el.classList.remove('over','over-b'));
+    el.addEventListener('drop',async e=>{ if(!D||D===el||D.dataset.dk!==el.dataset.dk) return; e.preventDefault(); e.stopPropagation(); const after=el.classList.contains('over-b'); el.classList.remove('over','over-b');
+      const dk=D.dataset.dk; const sib=els.filter(x=>x.dataset.dk===dk).map(x=>x.dataset.dv).filter(v=>v!==D.dataset.dv); let j=sib.indexOf(el.dataset.dv); if(after) j++; sib.splice(j,0,D.dataset.dv);
+      if(dk==='c') CTORD.cases=sib; else if(dk.startsWith('g:')) CTORD.groups[dk.slice(2)]=sib; else if(dk.startsWith('p:')) CTORD.people[dk.slice(2)]=sib.map(Number);
+      await ctOrdSave(); renderList(); });
+  });
 }
 $('#q').addEventListener('input',renderList); $('#fStage').addEventListener('change',renderList);
-$('#rows').addEventListener('click',e=>{ const g=e.target.closest('[data-t]'); if(g){ const k=g.dataset.t; TOPEN.has(k)?TOPEN.delete(k):TOPEN.add(k); tSave(); renderList(); return; }
+$('#rows').addEventListener('click',e=>{ if(e.target.closest('.hd')) return; const g=e.target.closest('[data-t]'); if(g){ const k=g.dataset.t; TOPEN.has(k)?TOPEN.delete(k):TOPEN.add(k); tSave(); renderList(); return; }
   const r=e.target.closest('.row'); if(!r) return; CUR=DATA[TAB].find(x=>x.id===+r.dataset.id); renderList(); showForm(); });
 $('#btnNew').addEventListener('click',()=>{ CUR=null; renderList(); showForm(); });
 // 聯絡人分頁：貼謄本（個資在這裡處理）
