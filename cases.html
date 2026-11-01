@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#0e1012">
-<title>ATLAS 案件中心 v2.1</title>
+<title>ATLAS 案件中心 v2.1.1</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Space+Mono:wght@400;700&display=swap');
 :root{--bg:#0e1012;--sb:#141618;--panel:#1a1d21;--card:#1f2328;--border:#2a2f36;--border2:#353b44;--gold:#d4a843;--gold2:#f0cc7a;--teal:#3aaa8c;--teal2:#4dc9a8;--red:#e06c6c;--indigo:#7b8cff;--amber:#e8b04a;--text:#dde2ee;--sub:#8a94a6;--muted:#4a5566}
@@ -200,7 +200,7 @@ const fmtD=d=>d?String(d).slice(0,10):'';
 // ── 選項（對應資料庫 enum / check）──
 const UR_KIND=['都市更新','危老重建'];
 const UR_STAGE=['0.潛在評估與產權調閱','1.意願整合中','2.更新單元劃定','3.成立更新會','W1.危老耐震初評與資格認定','W2.危老100%同意與簽約','W3.危老重建計畫報核','U1.都更擬訂事業計畫','U2.都更擬訂權利變換計畫','完成.取得建拆照'];
-const UR_FLAGS=['產權調閱完成','耐震初評完成','耐震詳評完成','危老資格認定通過','更新單元已劃定','事業概要核准','說明會已辦','海砂屋／輻射屋','公有地佔比高'];
+const UR_FLAGS=['產權調閱完成','合法建築物證明已取得','耐震初評完成','耐震詳評完成','危老資格認定通過','更新單元已劃定','事業概要核准','說明會已辦','海砂屋／輻射屋','公有地佔比高','有未登記建物'];
 const UR_ROLE=['地主','地主代表/管委會','建築師/團隊','代書/估價師','其他'];
 const JC_CAT=['指定','採購','規劃','結案'];
 const CT_KIND=['地主/住戶','建築師/設計師','營造廠/工程行','建設公司/業主','合作夥伴/代書'];
@@ -341,6 +341,7 @@ function showForm(){
     ${fld('site_area_m2','基地面積（m²，依權狀）',r.site_area_m2,'number')}${fld('consent_pct','整合同意比例（%）',r.consent_pct,'number')}
     ${fld('owners_official','土地所有權人總數（去重，清冊）',r.owners_official,'number')}${fld('land_owners_times','土地私有人數（計算機，人次）',r.land_owners_times,'number')}
     ${fld('bldg_owners_official','建物私有人數（計算機）',r.bldg_owners_official,'number')}${fld('consent_threshold','同意門檻 %（計算機判定）',r.consent_threshold,'number')}
+    ${fld('unreg_bldg_count','未登記建物棟數（無建照／使照，待合法認定）',r.unreg_bldg_count,'number')}${fld('unreg_bldg_notes','未登記建物說明（門牌、稅籍起始年、建管日期對照、進度）',r.unreg_bldg_notes)}
     ${chips('legal_flags','耐震評估與法規狀態（可複選）',UR_FLAGS,r.legal_flags)}
     ${fld('bonus_est','預估容積獎勵',r.bonus_est,'text','full')}
     ${txt('checklist','闖關檢核表',r.checklist)}${txt('notes','推動備註／說明會紀錄',r.notes)}
@@ -367,7 +368,7 @@ function showForm(){
   bindRel(); if(TAB==='ct') renderList(); if(window.innerWidth<=760) $('#detail').scrollIntoView({behavior:'smooth'});
 }
 function payload(){
-  if(TAB==='ur') return {name:v('name'),code:v('code')||null,kind:v('kind')||null,stage:v('stage')||null,address:v('address')||null,site_area_m2:num('site_area_m2'),consent_pct:num('consent_pct'),owners_official:num('owners_official'),land_owners_times:num('land_owners_times'),bldg_owners_official:num('bldg_owners_official'),consent_threshold:num('consent_threshold'),legal_flags:chipVals('legal_flags'),bonus_est:v('bonus_est')||null,checklist:v('checklist')||null,notes:v('notes')||null};
+  if(TAB==='ur') return {name:v('name'),code:v('code')||null,kind:v('kind')||null,stage:v('stage')||null,address:v('address')||null,site_area_m2:num('site_area_m2'),consent_pct:num('consent_pct'),owners_official:num('owners_official'),land_owners_times:num('land_owners_times'),bldg_owners_official:num('bldg_owners_official'),consent_threshold:num('consent_threshold'),unreg_bldg_count:num('unreg_bldg_count'),unreg_bldg_notes:v('unreg_bldg_notes')||null,legal_flags:chipVals('legal_flags'),bonus_est:v('bonus_est')||null,checklist:v('checklist')||null,notes:v('notes')||null};
   if(TAB==='jc') return {name:v('name'),categories:chipVals('categories'),builder_name:v('builder_name')||null,owner:v('owner')||null,architect:v('architect')||null,designer:v('designer')||null,track_date:v('track_date')||null};
   return {name:v('name'),kind:v('kind')||null,group_name:v('group_name')||null,relation:v('relation')||null,company:v('company')||null,title:v('title')||null,phone:v('phone')||null,line_id:v('line_id')||null,background:v('background')||null,next_action:v('next_action')||null,next_date:v('next_date')||null};
 }
@@ -639,6 +640,7 @@ function parcelSection(pid){
       <span class="r" title="已建（去重）／案件官方去重總數；括號＝各地號官方人數直接相加（都更計算機不去重，只能當上限）">所有權人 <b>${c.owners}</b>${c.sumOfficial!=null?` <span class="sub">各地號加總 ${c.sumOfficial}（未去重）</span>`:''}${CUR.owners_official!=null?`/${CUR.owners_official} <span class="chk${c.owners===CUR.owners_official?' good':' bad'}">${c.owners===CUR.owners_official?'符合':'差 '+(CUR.owners_official-c.owners)}</span>`:' <span class="sub">官方數未填</span>'}</span>
       <span class="r${c.pctO>=TH?' ok':''}">人數比 <b>${pct(c.pctO)}</b> <span class="sub">${c.agree}/${c.owners} 人</span></span>
       <span class="r${c.pctA>=TH?' ok':''}" title="門檻 ${TH}%">面積比 <b>${pct(c.pctA)}</b> <span class="sub">${fmtM2(c.agreeM2)} m²</span></span>
+      ${CUR.unreg_bldg_count?`<span class="r" title="未登記建物不在建物登記簿裡，兩個工具都抓不到；需申請合法房屋證明才計入同意比例與原容積"><span class="chk bad">未登記建物 ${CUR.unreg_bldg_count} 棟 · 待合法認定</span></span>`:''}
       <button class="btn sm" id="btnApplyRatio" title="把土地總面積寫到「基地面積」、面積比寫到「整合同意比例」">套用到案件欄位</button>
     </div>
     <div style="font-size:11.5px;color:var(--muted);margin:-4px 0 8px">人數比＝同意人數／所有權人數（去重）；面積比＝Σ同意者（面積×持分）／私有地總面積。公有地（勾「公有」）面積算進基地，但人數與面積都不計入同意比例（都更條例 §37）。每筆地號右側「人 已建/官方」「面積 已建/登記」紅色＝與官方資料不符，請補 key 或查謄本。都更條例 §37 門檻通常 75%／75%（危老 100%）。勾掉「納入」的地號不計。</div>`;
