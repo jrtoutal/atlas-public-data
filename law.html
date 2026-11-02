@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#0e1012">
-<title>ATLAS 法規條文庫 v2.3.1</title>
+<title>ATLAS 法規條文庫 v2.4</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Space+Mono:wght@400;700&display=swap');
 :root{
@@ -54,6 +54,7 @@ a{color:var(--teal2)}
 .topbar{min-width:0}
 .stat b{color:var(--gold2);font-family:'Space Mono',monospace}
 
+.syncline{font-family:'Space Mono',monospace;font-size:10.5px;color:var(--muted);white-space:nowrap}.syncline b{color:var(--sub);font-weight:400}.syncline .old{color:var(--amber)}
 .toolbar{display:flex;gap:8px;padding:10px 14px;background:var(--panel);border-bottom:1px solid var(--border);flex-shrink:0;flex-wrap:wrap;align-items:center}
 .toolbar>*{min-width:0}
 .toolbar .row2{flex-basis:100%;display:flex;gap:6px;flex-wrap:wrap;align-items:center}
@@ -202,6 +203,8 @@ a{color:var(--teal2)}
       <span style="width:1px;height:16px;background:var(--border2);margin:0 4px"></span>
       <button class="chip tg" id="tgCore" title="只看核心法規">核心</button>
       <button class="chip tg" id="tgNoted" title="只看已註記的條文">已註記</button>
+      <span class="spacer" style="flex:1"></span>
+      <span class="syncline" id="syncLine" title="中央＝atlas_law_push_sb_v2.py 最後執行；地方＝law-pdf 最後上傳。首頁「備份與交接」讀同一筆">—</span>
     </div>
   </div>
   <div class="main">
@@ -279,7 +282,21 @@ async function loadPdfList() {
     }
     for (const v of PDFS.values()) v.sort((a, b) => (a.ver === '' ? -1 : b.ver === '' ? 1 : b.ver.localeCompare(a.ver))); // 現行版在前，再依年份新→舊
     if (PDFS.size) render();
+    // 地方法規 PDF 最後上傳時間 → sync_log.law_pdf（首頁讀同一筆）
+    const last=(data||[]).filter(f=>/^(TPE|NTPC)/.test(f.name)).map(f=>f.updated_at||f.created_at).filter(Boolean).sort().pop();
+    if(last){ const {data:cur}=await sb.from('sync_log').select('ran_at').eq('key','law_pdf').maybeSingle();
+      if(!cur||new Date(cur.ran_at).getTime()!==new Date(last).getTime()) await sb.from('sync_log').upsert({key:'law_pdf',ran_at:last,note:(data||[]).filter(f=>/^(TPE|NTPC)/.test(f.name)).length+' 份地方法規 PDF'},{onConflict:'key'}); }
+    renderSyncLine();
   } catch (e) { console.warn('PDF 清單讀取失敗：', e.message); }
+}
+
+// 最後更新時間（toolbar 右側）
+async function renderSyncLine(){
+  const el=document.getElementById('syncLine'); if(!el) return;
+  const {data,error}=await sb.from('sync_log').select('key,ran_at,note'); if(error){ el.textContent='（sync_log 未建：跑 supabase_31）'; return; }
+  const m=Object.fromEntries((data||[]).map(r=>[r.key,r])); const ago=d=>Math.round((Date.now()-new Date(d))/864e5);
+  const f=(r,lim)=>r?`<b class="${ago(r.ran_at)>lim?'old':''}">${new Date(r.ran_at).toLocaleDateString('zh-TW')}</b>`:'<b class="old">未記錄</b>';
+  el.innerHTML=`中央同步 ${f(m.law_central,100)} · 地方 PDF ${f(m.law_pdf,100)}`;
 }
 async function openPdf(file) {
   if (!/\.pdf$/i.test(file)) file += '.pdf';
