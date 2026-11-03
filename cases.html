@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#0e1012">
-<title>ATLAS 案件中心 v3.0</title>
+<title>ATLAS 案件中心 v3.1</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Space+Mono:wght@400;700&display=swap');
 :root{--bg:#0e1012;--sb:#141618;--panel:#1a1d21;--card:#1f2328;--border:#2a2f36;--border2:#353b44;--gold:#d4a843;--gold2:#f0cc7a;--teal:#3aaa8c;--teal2:#4dc9a8;--red:#e06c6c;--indigo:#7b8cff;--amber:#e8b04a;--text:#dde2ee;--sub:#8a94a6;--muted:#4a5566}
@@ -285,9 +285,10 @@ function renderList(){
   const cfg=T[TAB], q=$('#q').value.trim().toLowerCase(), f=$('#fStage').value;
   const rows=DATA[TAB].filter(r=>{ if(f){ if(cfg.filterKey==='_cat'){ if(!(r.categories||[]).includes(f)) return false; } else if(r[cfg.filterKey]!==f) return false; }
     return !q||JSON.stringify(r).toLowerCase().includes(q); });
-  const rowHtml=r=>`<div class="row${CUR&&CUR.id===r.id?' active':''}" data-id="${r.id}"><div class="n"><span>${esc(cfg.name(r))}</span><span class="id">${TAB==='ur'&&r.code?esc(r.code):'#'+r.id}</span></div><div class="m">${cfg.sub(r).map((s,i)=>`<span class="pill${TAB==='ur'&&i===0?(r.kind==='都市更新'?' k1':' k2'):''}">${esc(s)}</span>`).join('')}</div></div>`;
+  const rowHtml=r=>`<div class="row${CUR&&CUR.id===r.id?' active':''}" data-id="${r.id}"><div class="n"><span>${esc(cfg.name(r))}</span>${TAB==='ur'&&r.code?`<span class="id">${esc(r.code)}</span>`:''}</div><div class="m">${cfg.sub(r).map((s,i)=>`<span class="pill${TAB==='ur'&&i===0?(r.kind==='都市更新'?' k1':' k2'):''}">${esc(s)}</span>`).join('')}</div></div>`;
   if(TAB==='ct'){ $('#rows').className='tree'; $('#rows').innerHTML=renderCtTree(rows,!!q)||`<div class="empty">沒有資料</div>`; bindTreeDrag(); return; }
   if(TAB==='ur'){ $('#rows').className='tree'; $('#rows').innerHTML=renderUrTree(rows,!!q||!!f,rowHtml)||`<div class="empty">沒有資料</div>`; return; }
+  if(TAB==='jc'){ $('#rows').className='tree'; $('#rows').innerHTML=renderJcTree(rows,!!q||!!f,rowHtml)||`<div class="empty">沒有資料</div>`; return; }
   $('#rows').className='';
   $('#rows').innerHTML=rows.map(rowHtml).join('')||`<div class="empty">沒有資料</div>`;
 }
@@ -315,12 +316,19 @@ let CTORD={cases:[],groups:{},people:{}};
 async function ctOrdLoad(){ const {data}=await sb.from('ui_state').select('data').eq('key','ct_tree').maybeSingle(); if(data?.data) CTORD={cases:[],groups:{},people:{},...data.data}; }
 async function ctOrdSave(){ const {error}=await sb.from('ui_state').upsert({user_id:UID,key:'ct_tree',data:CTORD},{onConflict:'user_id,key'}); if(error) alert('順序儲存失敗：'+error.message); }
 const ordSort=(arr,order,key)=>{ const idx=x=>{ const i=order.indexOf(key(x)); return i<0?1e9:i; }; return [...arr].sort((a,b)=>idx(a)-idx(b)); };
+function renderJcTree(rows,searching,rowH){ // 建商 → 專案；最近更新的在最上面（選色表或案件中心改都算）
+  const by={}; for(const r of rows) (by[r.builder_name||'未填建商']??=[]).push(r);
+  const last=k=>Math.max(...by[k].map(r=>new Date(r.updated_at||0).getTime()));
+  const order=Object.keys(by).sort((a,b)=>last(b)-last(a));
+  return order.map(k=>{ const key='b:'+k, closed=!searching&&TOPEN.has(key); const list=[...by[k]].sort((a,b)=>new Date(b.updated_at||0)-new Date(a.updated_at||0));
+    return `<div class="g1${closed?' closed':''}" data-t="${esc(key)}"><span class="ar">▼</span>${esc(k)}<span class="c">${list.length}</span></div>`+(closed?'':list.map(rowH).join('')); }).join('');
+}
 function renderCtTree(rows,searching){
   const tree={}; for(const c of rows) for(const cs of ctCases(c)){ const k=c.kind||'未分類', g=c.group_name||'未分組'; (((tree[cs]??={})[k]??={})[g]??=[]).push(c); }
   let cases=Object.keys(tree).sort((a,b)=>a==='未歸案'?1:b==='未歸案'?-1:a.localeCompare(b,'zh-Hant')); cases=ordSort(cases,CTORD.cases,x=>x);
   const cnt=o=>Object.values(o).reduce((a,v)=>a+(Array.isArray(v)?v.length:cnt(v)),0);
   const node=(cls,key,label,n,closed,drag)=>`<div class="${cls}${closed?' closed':''}" data-t="${esc(key)}"${drag?` draggable="true" data-dk="${esc(drag.k)}" data-dv="${esc(drag.v)}"`:''}>${drag?'<span class="hd" title="拖曳調整順序">⋮⋮</span>':''}<span class="ar">▼</span>${esc(label)}<span class="c">${n}</span></div>`;
-  const rowH=(c,scope)=>`<div class="row${CUR&&CUR.id===c.id?' active':''}" data-id="${c.id}" draggable="true" data-dk="p:${esc(scope)}" data-dv="${c.id}"><div class="n"><span class="hd" title="拖曳調整順序">⋮⋮</span><span>${esc(c.name)}</span>${c.relation?`<span class="rel">${esc(c.relation)}</span>`:''}<span class="id">#${c.id}</span></div><div class="m">${[c.company,c.title,c.phone].filter(Boolean).map(s=>`<span class="pill">${esc(s)}</span>`).join('')}</div></div>`;
+  const rowH=(c,scope)=>`<div class="row${CUR&&CUR.id===c.id?' active':''}" data-id="${c.id}" draggable="true" data-dk="p:${esc(scope)}" data-dv="${c.id}"><div class="n"><span class="hd" title="拖曳調整順序">⋮⋮</span><span>${esc(c.name)}</span>${c.relation?`<span class="rel">${esc(c.relation)}</span>`:''}</div><div class="m">${[c.company,c.title,c.phone].filter(Boolean).map(s=>`<span class="pill">${esc(s)}</span>`).join('')}</div></div>`;
   return cases.map(cs=>{ const k1='c:'+cs, c1=!searching&&TOPEN.has(k1); const kinds=tree[cs];
     return node('g1',k1,cs,cnt(kinds),c1,{k:'c',v:cs})+(c1?'':[...CT_KIND,'未分類'].filter(k=>kinds[k]).map(k=>{ const k2='k:'+cs+'|'+k, c2=!searching&&TOPEN.has(k2); const groups=kinds[k]; const gscope=cs+'|'+k;
       let gs=Object.keys(groups).sort((a,b)=>a==='未分組'?1:b==='未分組'?-1:a.localeCompare(b,'zh-Hant')); gs=ordSort(gs,CTORD.groups[gscope]||[],x=>x);
@@ -400,7 +408,7 @@ const num=id=>{ const s=v(id); return s===''?null:Number(s); };
 
 function showForm(){
   const r=CUR||{}, isNew=!CUR; let h='';
-  if(TAB==='ur') h=`<div class="d-head"><h2>${isNew?'新增都更案件':esc(r.name)}</h2>${isNew?'':`<span class="id">${esc(r.code||'#'+r.id)} · 更新 ${fmtD(r.updated_at)}</span>`}</div><div class="grid g4">
+  if(TAB==='ur') h=`<div class="d-head"><h2>${isNew?'新增都更案件':esc(r.name)}</h2>${isNew?'':`<span class="id">${r.code?esc(r.code)+' · ':''}更新 ${fmtD(r.updated_at)}</span>`}</div><div class="grid g4">
     <div class="gh">基本</div>
     ${fld('name','案名（基地名）<b>＊</b>',r.name,'text','c2')}${fld('code','案件代號（留空自動 UR-年-流水號）',r.code)}${sel('kind','案件類型',UR_KIND,r.kind)}
     ${fld('address','基地地址／地段地號',r.address,'text','c3')}${sel('stage','推動階段',UR_STAGE,r.stage)}
@@ -417,13 +425,13 @@ function showForm(){
     ${fld('bonus_est','預估容積獎勵',r.bonus_est,'text','full')}
     ${txt('checklist','闖關檢核表',r.checklist,'c2')}${txt('notes','推動備註／說明會紀錄',r.notes,'c2')}
     ${isNew?`<div class="field full"><label>📄 放入都更計算機 PDF（選填：案件清單＋各地號單查，可多選；建立後自動讀取並出現預覽表）</label><input type="file" id="f-import_pdf" accept="application/pdf" multiple style="padding:8px"></div><div class="field full"><label>或貼上「本次分析地號清單」文字（建立時自動加入地號並加總基地面積）</label><textarea id="f-import_lots" placeholder="五股區	五股段	05840000	947.61	自然人100%&#10;五股區	五股段	05850000	195.61	自然人100%" style="font-family:'Space Mono',monospace;font-size:12px"></textarea></div>`:''}</div>`;
-  if(TAB==='jc') h=`<div class="d-head"><h2>${isNew?'新增建材專案':esc(r.name)}</h2>${isNew?'':`<span class="id">#${r.id} · 更新 ${fmtD(r.updated_at)}</span>`}</div><div class="grid">
+  if(TAB==='jc') h=`<div class="d-head"><h2>${isNew?'新增建材專案':esc(r.name)}</h2>${isNew?'':`<span class="id">更新 ${fmtD(r.updated_at)}</span>`}</div><div class="grid">
     ${fld('name','專案名稱<b>＊</b>（與選色表一致）',r.name,'text','full')}
     ${chips('categories','類別（可複選）',JC_CAT,r.categories)}
     ${fld('builder_name','建商',r.builder_name)}${fld('owner','業主',r.owner)}
     ${fld('architect','建築師',r.architect)}${fld('designer','設計單位',r.designer)}
     ${fld('track_date','追蹤／執行日',fmtD(r.track_date),'date')}</div>`;
-  if(TAB==='ct') h=`<div class="d-head"><h2>${isNew?'新增聯絡人':esc(r.name)}</h2>${isNew?'':`<span class="id">#${r.id}</span>`}</div><div class="grid">
+  if(TAB==='ct') h=`<div class="d-head"><h2>${isNew?'新增聯絡人':esc(r.name)}</h2></div><div class="grid">
     ${fld('name','姓名<b>＊</b>',r.name)}${sel('kind','類型',CT_KIND,r.kind)}
     <div class="field"><label>群組（家族／戶／公司）</label><input id="f-group_name" list="dl-group" value="${esc(r.group_name??'')}" placeholder="例：陳家三兄弟、41號公寓"><datalist id="dl-group">${[...new Set(DATA.ct.map(c=>c.group_name).filter(Boolean))].map(g=>`<option value="${esc(g)}">`).join('')}</datalist></div>
     ${fld('relation','關係／身分',r.relation)}

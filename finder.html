@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="ATLAS 選色表">
 <meta name="theme-color" content="#141618">
-<title>ATLAS 選色表 v6.9</title>
+<title>ATLAS 選色表 v6.9.2</title>
 <style>
 /* 大螢幕自動放大（外接螢幕）：1600px 以上 110%、2200px 以上 125% */
 @media (min-width:1600px){html{zoom:1.1}}
@@ -658,8 +658,8 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--text
 
   <!-- 品牌識別 -->
   <div class="rp-sec">
-    <div class="rp-lbl">品牌識別</div>
-    <div class="tog-row">
+    <div class="rp-lbl fold" data-fold="brand" onclick="toggleFold(this)"><span class="fold-ar">▼</span> 品牌識別</div>
+    <div class="fold-body" data-foldbody="brand">    <div class="tog-row">
       <button class="tog on" id="tog-logo" onclick="setBrand('logo',this)">Logo</button>
       <button class="tog" id="tog-text" onclick="setBrand('text',this)">文字</button>
       <button class="tog" id="tog-none" onclick="setBrand('none',this)">無</button>
@@ -678,27 +678,27 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--text
     <div id="text-sec" style="display:none">
       <div class="f"><label>公司名稱</label><input id="co-name" placeholder="ATLAS 建材顧問" oninput="render();brandSave()"></div>
       <div class="f"><label>聯絡資訊</label><textarea id="co-contact" placeholder="電話／Email" oninput="render();brandSave()"></textarea></div>
-    </div>
+    </div></div>
   </div>
 
   <!-- 文件資訊 -->
   <div class="rp-sec">
-    <div class="rp-lbl">文件資訊</div>
-    <div class="f"><label>文件標題</label><input id="doc-title" value="建材選色提案" oninput="render()"></div>
+    <div class="rp-lbl fold" data-fold="doc" onclick="toggleFold(this)"><span class="fold-ar">▼</span> 文件資訊</div>
+    <div class="fold-body" data-foldbody="doc">    <div class="f"><label>文件標題</label><input id="doc-title" value="建材選色提案" oninput="render()"></div>
     <div class="f"><label id="owner-lbl">業主姓名</label><input id="owner" placeholder="王先生" oninput="render()"></div>
     <div class="f"><label>案件名稱</label><input id="project-f" placeholder="南港國際-單元二" oninput="render()"></div>
     <div class="f"><label>空間說明</label><input id="spacedesc" placeholder="外牆、公共區域" oninput="render()"></div>
     <div class="f"><label>日期</label><input type="date" id="docdate" oninput="render()"></div>
-    <div class="f"><label>版本</label><input id="version" placeholder="V1.0" oninput="render()"></div>
+    <div class="f"><label>版本</label><input id="version" placeholder="V1.0" oninput="render()"></div></div>
   </div>
 
   <!-- 備注 -->
   <div class="rp-sec">
-    <div class="rp-lbl">備注</div>
-    <textarea id="notes" placeholder="色差以實際樣品為準..." style="width:100%;background:var(--card);border:1px solid var(--border2);border-radius:6px;color:var(--text);padding:6px 9px;font-family:inherit;font-size:11px;outline:none;resize:vertical;min-height:50px;" oninput="render()"></textarea>
+    <div class="rp-lbl fold" data-fold="notes" onclick="toggleFold(this)"><span class="fold-ar">▼</span> 備注</div>
+    <div class="fold-body" data-foldbody="notes">    <textarea id="notes" placeholder="色差以實際樣品為準..." style="width:100%;background:var(--card);border:1px solid var(--border2);border-radius:6px;color:var(--text);padding:6px 9px;font-family:inherit;font-size:11px;outline:none;resize:vertical;min-height:50px;" oninput="render()"></textarea>
     <label style="font-size:10px;color:var(--sub);display:flex;align-items:center;gap:4px;margin-top:5px">
       <input type="checkbox" id="show-notes" checked onchange="render()"> 顯示備注
-    </label>
+    </label></div>
   </div>
 
   <!-- 欄位設定 -->
@@ -1794,6 +1794,8 @@ async function cloudFlush(){
     }
     const {error}=await sb.from('finder_state').upsert({user_id:SB_UID,data:db},{onConflict:'user_id'});
     if(error) throw error;
+    // 讓案件中心「建材專案」知道這個專案剛被改過（排序用）
+    const ap=db.projects.find(p=>p.id===activeProjectId); if(ap?.jcId) sb.from('jc_projects').update({updated_at:new Date().toISOString()}).eq('id',ap.jcId).then(()=>{});
     updateNocoDot(true,'雲端已同步 '+new Date().toLocaleTimeString('zh-TW',{hour12:false}));
   }catch(e){ console.warn('雲端儲存失敗：',e.message); updateNocoDot(false,'雲端儲存失敗：'+e.message); _cloudDirty=true; if(!window._cloudWarned){ window._cloudWarned=true; alert('⚠️ 雲端儲存失敗：'+e.message+'\n\n資料仍在本機，修正後會自動重試。'); } }
   _cloudBusy=false;
