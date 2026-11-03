@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="ATLAS 選色表">
 <meta name="theme-color" content="#141618">
-<title>ATLAS 選色表 v6.3</title>
+<title>ATLAS 選色表 v6.4</title>
 <style>
 /* 大螢幕自動放大（外接螢幕）：1600px 以上 110%、2200px 以上 125% */
 @media (min-width:1600px){html{zoom:1.1}}
@@ -63,6 +63,7 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--text
 .finder-row.drag-over{border-top:2px solid var(--teal2);}
 .finder-row.dragging{opacity:.4;}
 .fr-icon{font-size:13px;flex-shrink:0;}
+.fr-kind{font-size:9px;letter-spacing:1.5px;color:var(--teal2);padding:6px 10px 2px;font-family:'Space Mono',monospace;border-top:1px solid var(--border)}.fr-kind:first-child{border-top:0}
 .fr-drag{color:var(--muted);cursor:grab;font-size:11px;flex-shrink:0;padding:0 2px;user-select:none;}
 .fr-drag:active{cursor:grabbing;}
 .fr-name{font-size:11px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
@@ -144,8 +145,8 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--text
 .item-sw{width:24px;height:24px;border-radius:4px;border:1px solid rgba(255,255,255,.08);flex-shrink:0;overflow:hidden;cursor:pointer;}
 .item-sw img{width:100%;height:100%;object-fit:cover;}
 .item-inf{flex:1;overflow:hidden;cursor:pointer;}
-.item-code{font-family:'Space Mono',monospace;font-size:11px;color:var(--sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.item-name{font-size:11.5px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.item-code{font-family:'Space Mono',monospace;font-size:11.5px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.item-name{font-size:11px;color:var(--sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}.item-name:empty{display:none}
 .item-grp{margin-bottom:6px}.item-grp-hd{display:flex;align-items:center;gap:6px;padding:4px 4px;font-size:11px;color:var(--teal2);cursor:pointer;user-select:none}.item-grp-hd .fold-ar{display:inline-block;font-size:8px;width:10px;transition:transform .15s;color:var(--muted)}.item-grp.closed .item-grp-hd .fold-ar{transform:rotate(-90deg)}.item-grp-hd .cnt{margin-left:auto;font-family:'Space Mono',monospace;font-size:9px;color:var(--muted)}.item-grp-body{display:flex;flex-direction:column;gap:4px;padding-left:6px}.item-grp.closed .item-grp-body{display:none}
 .item-arrows{display:flex;flex-direction:column;gap:0;flex-shrink:0;}
 .item-arr{background:none;border:none;color:var(--muted);cursor:pointer;font-size:9px;padding:1px 2px;border-radius:2px;line-height:1;transition:all .12s;}
@@ -682,7 +683,7 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--text
   <div class="rp-sec">
     <div class="rp-lbl">文件資訊</div>
     <div class="f"><label>文件標題</label><input id="doc-title" value="建材選色提案" oninput="render()"></div>
-    <div class="f"><label>業主姓名</label><input id="owner" placeholder="王先生" oninput="render()"></div>
+    <div class="f"><label id="owner-lbl">業主姓名</label><input id="owner" placeholder="王先生" oninput="render()"></div>
     <div class="f"><label>案件名稱</label><input id="project-f" placeholder="南港國際-單元二" oninput="render()"></div>
     <div class="f"><label>空間說明</label><input id="spacedesc" placeholder="外牆、公共區域" oninput="render()"></div>
     <div class="f"><label>日期</label><input type="date" id="docdate" oninput="render()"></div>
@@ -969,7 +970,8 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--text
   <div class="modal" style="width:360px">
     <h2 id="client-modal-h">🏢 新增建商</h2>
     <input type="hidden" id="client-edit-id">
-    <label>建商／營造名稱</label><input id="client-name" placeholder="e.g. 南港國際、富邦">
+    <label>類型</label><select id="client-kind"><option>建設</option><option>營造</option><option>建築師</option><option>設計師</option><option>其他</option></select>
+    <label>名稱</label><input id="client-name" placeholder="e.g. 南港國際、富邦">
     <div class="m-actions">
       <button class="btn-cancel" onclick="closeModal('client-modal')">取消</button>
       <button class="btn-ok" onclick="saveClient()">儲存</button>
@@ -1396,15 +1398,17 @@ function renderFinder(){
     }
   }
   // Col1：建商
-  document.getElementById('col1-list').innerHTML=db.clients.length
-    ? db.clients.map(c=>`
-      <div class="finder-row ${c.id===activeClientId?'active':''}" onclick="selectClient('${c.id}')" draggable="true" data-id="${c.id}" data-col="1" ondragstart="onDragStart(event,'1',this)" ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event,'1')">
+  const KINDS=['建設','營造','建築師','設計師','其他'];
+  const crow=c=>`
+      <div class="finder-row ${c.id===activeClientId?'active':''}" onclick="selectClient('${c.id}')" ondblclick="editClient('${c.id}')" title="雙擊編輯名稱／類型" draggable="true" data-id="${c.id}" data-col="1" ondragstart="onDragStart(event,'1',this)" ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event,'1',this)" ondragend="onDragEnd(event)">
         <span class="fr-drag" onclick="event.stopPropagation()">⠿</span>
-        <span class="fr-icon">🏢</span>
+        <span class="fr-icon">${{'建設':'🏢','營造':'🏗','建築師':'📐','設計師':'🎨'}[c.kind||'建設']||'📁'}</span>
         <span class="fr-name">${esc(c.name)}</span>
         <button class="fr-del" onclick="event.stopPropagation();deleteClient('${c.id}')">✕</button>
-      </div>`).join('')
-    : '<div class="finder-empty">點 ＋ 新增建商</div>';
+      </div>`;
+  document.getElementById('col1-list').innerHTML=db.clients.length
+    ? KINDS.filter(k=>db.clients.some(c=>(c.kind||'建設')===k)).map(k=>`<div class="fr-kind">${k}</div>`+db.clients.filter(c=>(c.kind||'建設')===k).map(crow).join('')).join('')
+    : '<div class="finder-empty">點 ＋ 新增</div>';
 
   // Col2：專案（只顯示選中建商的）
   const projs=db.projects.filter(p=>p.clientId===activeClientId);
@@ -1654,21 +1658,24 @@ function selectProject(id){
 // 新增建商
 function addClient(){
   document.getElementById('client-edit-id').value='';
-  document.getElementById('client-name').value='';
-  document.getElementById('client-modal-h').textContent='🏢 新增建商';
+  document.getElementById('client-name').value=''; document.getElementById('client-kind').value='建設';
+  document.getElementById('client-modal-h').textContent='🏢 新增';
   document.getElementById('client-modal').classList.add('open');
   setTimeout(()=>document.getElementById('client-name').focus(),80);
 }
+function editClient(id){ const c=db.clients.find(x=>x.id===id); if(!c) return;
+  document.getElementById('client-edit-id').value=id; document.getElementById('client-name').value=c.name; document.getElementById('client-kind').value=c.kind||'建設';
+  document.getElementById('client-modal-h').textContent='✏️ 編輯'; document.getElementById('client-modal').classList.add('open'); }
 function saveClient(){
   const name=document.getElementById('client-name').value.trim();
   if(!name)return;
-  const editId=document.getElementById('client-edit-id').value;
+  const editId=document.getElementById('client-edit-id').value, kind=document.getElementById('client-kind').value;
   if(editId){
     const c=db.clients.find(x=>x.id===editId);
-    if(c) c.name=name;
+    if(c){ c.name=name; c.kind=kind; }
   }else{
     const id='c'+Date.now();
-    db.clients.push({id,name});
+    db.clients.push({id,name,kind});
     activeClientId=id; activeProjectId=null;
   }
   saveDb(); closeModal('client-modal'); renderFinder(); syncJc();
@@ -2160,7 +2167,7 @@ function renderItemList(){
       <div class="item-sw" style="background:${bg};display:flex;align-items:center;justify-content:center;" onclick="openItemModal(${i})">${thumbHtml(it,24)}</div>
       <div class="item-inf" onclick="openItemModal(${i})">
         <div class="item-code">${esc(it.num||'')}${it.code?' · '+esc(it.code):''}</div>
-        <div class="item-name">${esc(it.name||'（未命名）')}${it.area&&it.area!==root(it.area)?` <span style="color:var(--muted);font-size:10px">${esc(it.area.slice(root(it.area).length).replace(/^[–—\-／/·‧,，、\s]+/,''))}</span>`:''}</div>
+        <div class="item-name">${esc(it.name||'')}${it.area&&it.area!==root(it.area)?` <span style="color:var(--muted);font-size:10px">${esc(it.area.slice(root(it.area).length).replace(/^[–—\-／/·‧,，、\s]+/,''))}</span>`:''}</div>
       </div>
       <div class="item-arrows">
         <button class="item-arr" onclick="moveItem(${i},${i-1})" ${i===0?'disabled':''}>▲</button>
@@ -2603,9 +2610,10 @@ function addGroup(){const l=prompt('分組標題：','');if(!l)return;proRows.pu
 // ════════════════════════════════════════════
 function chk(id){const e=document.getElementById(id);return e?e.checked:false;}
 function val(id){const e=document.getElementById(id);return e?e.value:'';}
+const ownerLabel=()=>{ const c=db.clients.find(x=>x.id===activeClientId); const k=c?(c.kind||'建設'):null; return (k&&k!=='其他')?k:'業主'; };
 function buildHdr(){
   const title=val('doc-title')||'建材選色提案';
-  const metas=[[val('owner'),'業主'],[val('project-f'),'案件'],[val('spacedesc'),'空間'],[val('docdate'),'日期'],[val('version'),'版本']].filter(([v])=>v);
+  const metas=[[val('owner'),ownerLabel()],[val('project-f'),'案件'],[val('spacedesc'),'空間'],[val('docdate'),'日期'],[val('version'),'版本']].filter(([v])=>v);
   let brand='';
   if(brandMode==='logo'&&logoUrl)brand=`<img class="brand-logo" src="${logoUrl}">`;
   else if(brandMode==='text')brand=`<div class="brand-name">${esc(val('co-name'))}</div><div class="brand-contact">${esc(val('co-contact')).replace(/\n/g,'<br>')}</div>`;
@@ -2704,7 +2712,7 @@ function buildFoot(){
   // 免責聲明單獨一行(頁碼改用瀏覽器列印對話框內建功能,最可靠)
   return `<div class="doc-footer"><span>色差以實際樣品為準，最終規格以簽約確認文件為準。</span></div>`;
 }
-function render(){
+function render(){ const ol=document.getElementById('owner-lbl'); if(ol) ol.textContent=ownerLabel()+'名稱';
   // 手機版 A4 縮放
   if(window.innerWidth<=768){
     const a4=document.querySelector('.a4');
