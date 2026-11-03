@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="ATLAS 選色表">
 <meta name="theme-color" content="#141618">
-<title>ATLAS 選色表 v6.4</title>
+<title>ATLAS 選色表 v6.4.1</title>
 <style>
 /* 大螢幕自動放大（外接螢幕）：1600px 以上 110%、2200px 以上 125% */
 @media (min-width:1600px){html{zoom:1.1}}
@@ -2166,8 +2166,8 @@ function renderItemList(){
       <span class="item-drag">⠿</span>
       <div class="item-sw" style="background:${bg};display:flex;align-items:center;justify-content:center;" onclick="openItemModal(${i})">${thumbHtml(it,24)}</div>
       <div class="item-inf" onclick="openItemModal(${i})">
-        <div class="item-code">${esc(it.num||'')}${it.code?' · '+esc(it.code):''}</div>
-        <div class="item-name">${esc(it.name||'')}${it.area&&it.area!==root(it.area)?` <span style="color:var(--muted);font-size:10px">${esc(it.area.slice(root(it.area).length).replace(/^[–—\-／/·‧,，、\s]+/,''))}</span>`:''}</div>
+        <div class="item-code">${esc(it.num||it.name||'')}</div>
+        <div class="item-name">${esc([it.code,it.size].filter(Boolean).join(' · '))}${it.area&&it.area!==root(it.area)?` <span style="color:var(--muted);font-size:10px">${esc(it.area.slice(root(it.area).length).replace(/^[–—\-／/·‧,，、\s]+/,''))}</span>`:''}</div>
       </div>
       <div class="item-arrows">
         <button class="item-arr" onclick="moveItem(${i},${i-1})" ${i===0?'disabled':''}>▲</button>
@@ -2483,8 +2483,8 @@ function thumbHtml(it, size){
     const imgH100 = Math.round(1/ctrl.cropRelH*100);
     const imgL = Math.round(-ctrl.cropRelX/ctrl.cropRelW*100);
     const imgT = Math.round(-ctrl.cropRelY/ctrl.cropRelH*100);
-    // 裁剪框比例決定縮圖形狀，最大邊=sz
-    const aspect = ctrl.cropRelH/ctrl.cropRelW;
+    // 裁剪框比例決定縮圖形狀，最大邊=sz（用裁剪框的實際 px 尺寸算，不能用相對比例——30×60 的圖裁 30×30 會被算成直的）
+    const aspect = (ctrl.cropW>0&&ctrl.cropH>0) ? ctrl.cropH/ctrl.cropW : (ctrl.naturalW>0&&ctrl.naturalH>0 ? (ctrl.cropRelH*ctrl.naturalH)/(ctrl.cropRelW*ctrl.naturalW) : 1);
     let w,h;
     if(aspect>1){h=sz;w=Math.round(sz/aspect);}
     else{w=sz;h=Math.round(sz*aspect);}
