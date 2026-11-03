@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="ATLAS 選色表">
 <meta name="theme-color" content="#141618">
-<title>ATLAS 選色表 v6.8</title>
+<title>ATLAS 選色表 v6.9</title>
 <style>
 /* 大螢幕自動放大（外接螢幕）：1600px 以上 110%、2200px 以上 125% */
 @media (min-width:1600px){html{zoom:1.1}}
@@ -147,7 +147,7 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--text
 .item-inf{flex:1;overflow:hidden;cursor:pointer;}
 .item-code{font-family:'Space Mono',monospace;font-size:11.5px;color:var(--text);white-space:normal;line-height:1.3}
 .item-name{font-size:11px;color:var(--sub);white-space:normal;word-break:break-all;line-height:1.3}.item-name:empty{display:none}.item-sub{color:var(--teal2);font-size:10px;font-weight:400;margin-left:3px}
-.item-grp{margin-bottom:6px}.item-grp-hd{display:flex;align-items:center;gap:6px;padding:4px 4px;font-size:11px;color:var(--teal2);cursor:pointer;user-select:none}.item-grp-hd .fold-ar{display:inline-block;font-size:8px;width:10px;transition:transform .15s;color:var(--muted)}.item-grp.closed .item-grp-hd .fold-ar{transform:rotate(-90deg)}.item-grp-hd .cnt{margin-left:auto;font-family:'Space Mono',monospace;font-size:9px;color:var(--muted)}.item-grp-body{display:flex;flex-direction:column;gap:4px;padding-left:6px}.item-grp.closed .item-grp-body{display:none}
+.item-grp{margin-bottom:6px}.item-grp-hd{display:flex;align-items:center;gap:6px;padding:4px 4px;font-size:11px;color:var(--teal2);cursor:pointer;user-select:none}.item-grp-hd .fold-ar{display:inline-block;font-size:8px;width:10px;transition:transform .15s;color:var(--muted)}.item-grp.closed .item-grp-hd .fold-ar{transform:rotate(-90deg)}.item-grp-hd .cnt{margin-left:auto;font-family:'Space Mono',monospace;font-size:9px;color:var(--muted)}.item-grp-hd .grp-arr{display:flex;flex-direction:column;gap:0;margin-left:4px}.item-grp-hd .grp-arr .item-arr{font-size:7px;line-height:8px;padding:0 2px}.item-grp-hd.drag-over{outline:1px solid var(--teal);border-radius:4px}.item-grp-hd .item-drag{font-size:11px}.item-grp-body{display:flex;flex-direction:column;gap:4px;padding-left:6px}.item-grp.closed .item-grp-body{display:none}
 .item-arrows{display:flex;flex-direction:column;gap:0;flex-shrink:0;}
 .item-arr{background:none;border:none;color:var(--muted);cursor:pointer;font-size:9px;padding:1px 2px;border-radius:2px;line-height:1;transition:all .12s;}
 .item-arr:hover{color:var(--accent);}
@@ -541,7 +541,6 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--text
   <input type="file" id="import-file" accept=".json" style="display:none" onchange="importJSON(this)">
   <span id="last-save-tip" style="font-size:10px;color:var(--sub);white-space:nowrap;"></span>
   <button class="t-btn gld" onclick="openItemModal(null)">＋ 新增建材</button>
-  <button class="t-btn" id="grp-btn" style="display:none" onclick="addGroup()">＋ 分組</button>
   <button class="t-btn pri" onclick="doPrint()">🖨 輸出 PDF</button>
   <button class="t-btn" onclick="cloudLogout()" title="登出">登出</button>
 </div>
@@ -744,7 +743,8 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--text
         <option value="140">特大 140px</option>
       </select>
     </div>
-    <label style="font-size:10px;color:var(--sub);display:flex;align-items:center;gap:4px;margin-bottom:5px"><input type="checkbox" id="show-sub" checked onchange="render()"> 分組小計</label>
+    <label style="font-size:10px;color:var(--sub);display:flex;align-items:center;gap:4px;margin-bottom:5px"><input type="checkbox" id="show-grp" checked onchange="render()"> 依區域分組（浴廁、樓梯…）</label>
+    <label style="font-size:10px;color:var(--sub);display:flex;align-items:center;gap:4px;margin-bottom:5px"><input type="checkbox" id="show-sub" checked onchange="render()"> 每組小計</label>
     <label style="font-size:10px;color:var(--sub);display:flex;align-items:center;gap:4px;margin-bottom:5px"><input type="checkbox" id="show-sum" checked onchange="render()"> 總計摘要</label>
     <label style="font-size:10px;color:var(--sub);display:flex;align-items:center;gap:4px"><input type="checkbox" id="show-footer-p" checked onchange="render()"> 頁尾聲明</label>
   </div>
@@ -2164,7 +2164,7 @@ function setMode(m,el){
   document.querySelectorAll('.mode-btn').forEach(b=>b.classList.remove('on'));el.classList.add('on');
   document.getElementById('card-opts').style.display=m==='card'?'block':'none';
   document.getElementById('pro-opts').style.display=m==='pro'?'block':'none';
-  document.getElementById('grp-btn').style.display=m==='pro'?'flex':'none';
+  { const gb=document.getElementById('grp-btn'); if(gb) gb.style.display='none'; }
   render();
 }
 function setBrand(m,el){
@@ -2219,8 +2219,15 @@ function renderItemList(){
       <button class="item-del" onclick="event.stopPropagation();deleteItem(${i})">✕</button>
     </div>`; };
   document.getElementById('item-list').innerHTML=groups.map(g=>{ const closed=ITEMFOLD.has(g.area);
-    return `<div class="item-grp${closed?' closed':''}"><div class="item-grp-hd" onclick="toggleItemFold('${esc(g.area).replace(/'/g,'&#39;')}')"><span class="fold-ar">▼</span><b>${esc(g.area)}</b><span class="cnt">${g.rows.length}</span></div><div class="item-grp-body">${g.rows.map(i=>row(items[i],i)).join('')}</div></div>`; }).join('');
+    const ga=esc(g.area).replace(/'/g,'&#39;');
+    return `<div class="item-grp${closed?' closed':''}" data-grp="${ga}"><div class="item-grp-hd" draggable="true" ondragstart="dragGrp='${ga}';event.dataTransfer.effectAllowed='move';event.stopPropagation()" ondragover="if(dragGrp!==null){event.preventDefault();this.classList.add('drag-over')}" ondragleave="this.classList.remove('drag-over')" ondrop="event.preventDefault();this.classList.remove('drag-over');if(dragGrp!==null){moveGroup(dragGrp,'${ga}');dragGrp=null}" ondragend="dragGrp=null"><span class="item-drag" title="拖曳整組排序">⠿</span><span class="fold-ar" onclick="event.stopPropagation();toggleItemFold('${ga}')">▼</span><b onclick="toggleItemFold('${ga}')">${esc(g.area)}</b><span class="cnt">${g.rows.length}</span><span class="grp-arr"><button class="item-arr" onclick="event.stopPropagation();moveGroupBy('${ga}',-1)">▲</button><button class="item-arr" onclick="event.stopPropagation();moveGroupBy('${ga}',1)">▼</button></span></div><div class="item-grp-body">${g.rows.map(i=>row(items[i],i)).join('')}</div></div>`; }).join('');
 }
+let dragGrp=null;
+function _grpOrder(){ const root=a=>(a||'').split(/[–—\-／/·‧,，、\s]/)[0].trim()||'（未分區）'; const order=[]; items.forEach(it=>{ const a=root(it.area); if(!order.includes(a)) order.push(a); }); return {root,order}; }
+function _applyGrpOrder(order){ const {root}=_grpOrder(); const idx=a=>order.indexOf(root(a)); const stable=items.map((it,i)=>({it,i})).sort((a,b)=>idx(a.it.area)-idx(b.it.area)||a.i-b.i); items=stable.map(x=>x.it);
+  proRows=[...proRows.filter(r=>r.type==='group'),...items.map((_,i)=>({type:'item',ref:i}))]; saveActiveProject(); renderItemList(); render(); }
+function moveGroup(src,dst){ if(src===dst) return; const {order}=_grpOrder(); const si=order.indexOf(src), di=order.indexOf(dst); if(si<0||di<0) return; order.splice(si,1); order.splice(di,0,src); _applyGrpOrder(order); }
+function moveGroupBy(g,dir){ const {order}=_grpOrder(); const i=order.indexOf(g), j=i+dir; if(i<0||j<0||j>=order.length) return; [order[i],order[j]]=[order[j],order[i]]; _applyGrpOrder(order); }
 function toggleItemFold(a){ ITEMFOLD.has(a)?ITEMFOLD.delete(a):ITEMFOLD.add(a); try{ localStorage.setItem('atlas-itemfold',JSON.stringify([...ITEMFOLD])); }catch{} renderItemList(); }
 function moveItem(from,to){
   if(to<0||to>=items.length||from===to)return;
@@ -2680,7 +2687,7 @@ function saveItem(){
   else{items[+idx]={...items[+idx],...item};}
   saveActiveProject(); closeItemModal(); renderItemList(); render();
 }
-function addGroup(){const l=prompt('分組標題：','');if(!l)return;proRows.push({type:'group',label:l});render();}
+
 
 // ════════════════════════════════════════════
 //  Render
@@ -2772,17 +2779,24 @@ function buildCards(){
   }).join('')}</div>`;
 }
 function buildPro(){
-  const showSub=chk('show-sub'),visCols=cols.filter(c=>c.vis),hdrs=['圖檔','編號',...visCols.map(c=>c.lbl)], TH=+val('pro-thumb')||72;
-  let html='',gStart=-1,gLbl='';
-  proRows.forEach((row,ri)=>{
-    if(row.type==='group'){if(showSub&&gLbl)html+=subtotRow(gStart,ri,hdrs.length);gLbl=row.label;gStart=ri;html+=`<tr class="grp-hd"><td colspan="${hdrs.length}" contenteditable="true" spellcheck="false" style="outline:none" oninput="proRows[${ri}].label=this.innerText">${esc(row.label)}</td></tr>`;}
-    else{const it=items[row.ref];if(!it)return;const pal=it.pal,g=pal===null?'transparent':`linear-gradient(135deg,${(pal||['#ccc']).join(',')})`;const sw=`<div class="pro-thumb" style="height:${TH}px;width:${TH}px;cursor:${it.imgUrl?'zoom-in':'default'}" title="點擊選擇表格顯示區域" onclick="openTblCrop(${row.ref})">${tblThumb(it,TH-8)}</div>`;const num=it.num||'TL-'+(row.ref+1).toString().padStart(2,'0');const tds=visCols.map(c=>`<td><div class="pro-edit" contenteditable="true" spellcheck="false" data-ph="${esc(c.lbl)}" oninput="items[${row.ref}]['${c.key}']=this.innerText;saveActiveProject()">${esc(String(it[c.key]||''))}</div></td>`).join('');html+=`<tr style="height:${TH}px"><td style="padding:0 5px">${sw}</td><td><div class="pro-edit" contenteditable="true" spellcheck="false" data-ph="編號" oninput="items[${row.ref}].num=this.innerText;saveActiveProject()">${esc(num)}</div></td>${tds}</tr>`;}
+  const showGrp=chk('show-grp'),showSub=chk('show-sub'),visCols=cols.filter(c=>c.vis),hdrs=['圖檔','編號',...visCols.map(c=>c.lbl)], TH=+val('pro-thumb')||72;
+  const root=a=>(a||'').split(/[–—\-／/·‧,，、\s]/)[0].trim()||'（未分區）';
+  // 依「區域」自動分組（與左側建材清單一致）；順序＝建材順序
+  let html='', cur=null, n=0;
+  const closeGrp=()=>{ if(showGrp&&showSub&&cur!==null) html+=`<tr class="subtot"><td colspan="${hdrs.length}">小計：${cur} ${n} 項</td></tr>`; };
+  items.forEach((it,i)=>{
+    const g=root(it.area);
+    if(showGrp&&g!==cur){ closeGrp(); cur=g; n=0; html+=`<tr class="grp-hd"><td colspan="${hdrs.length}">${esc(g)}</td></tr>`; }
+    n++;
+    const sw=`<div class="pro-thumb" style="height:${TH}px;width:${TH}px;cursor:${it.imgUrl?'zoom-in':'default'}" title="點擊選擇表格顯示區域" onclick="openTblCrop(${i})">${tblThumb(it,TH-8)}</div>`;
+    const num=it.num||'TL-'+(i+1).toString().padStart(2,'0');
+    const tds=visCols.map(c=>`<td><div class="pro-edit" contenteditable="true" spellcheck="false" data-ph="${esc(c.lbl)}" oninput="items[${i}]['${c.key}']=this.innerText;saveActiveProject()">${esc(String(it[c.key]||''))}</div></td>`).join('');
+    html+=`<tr style="height:${TH}px"><td style="padding:0 5px">${sw}</td><td><div class="pro-edit" contenteditable="true" spellcheck="false" data-ph="編號" oninput="items[${i}].num=this.innerText;saveActiveProject()">${esc(num)}</div></td>${tds}</tr>`;
   });
-  if(showSub&&gLbl)html+=subtotRow(gStart,proRows.length,hdrs.length);
+  closeGrp();
   return`<table class="pro-tbl"><thead><tr>${hdrs.map(h=>`<th>${esc(h)}</th>`).join('')}</tr></thead><tbody>${html}</tbody></table>`;
 }
-function subtotRow(from,to,cs){const n=proRows.slice(from+1,to).filter(r=>r.type==='item').length;return`<tr class="subtot"><td colspan="${cs}">小計：${n} 項建材</td></tr>`;}
-function buildSum(){const g=proRows.filter(r=>r.type==='group').length;return`<div class="doc-sum"><div class="ds-ttl">摘要</div>${g?`<div class="ds-row"><span>分組數</span><span>${g} 組</span></div>`:''}<div class="ds-row"><span>建材項目</span><span>${items.length} 件</span></div><div class="ds-row tot"><span>合計</span><span>${items.length} 件</span></div></div>`;}
+function buildSum(){const root=a=>(a||'').split(/[–—\-／/·‧,，、\s]/)[0].trim()||'（未分區）';const gs=[...new Set(items.map(it=>root(it.area)))];return`<div class="doc-sum"><div class="ds-ttl">摘要</div>${gs.map(g=>`<div class="ds-row"><span>${esc(g)}</span><span>${items.filter(it=>root(it.area)===g).length} 件</span></div>`).join('')}<div class="ds-row tot"><span>合計</span><span>${items.length} 件</span></div></div>`;}
 function buildFoot(){
   const showId=mode==='card'?'show-footer':'show-footer-p';
   if(!chk(showId)) return '';
