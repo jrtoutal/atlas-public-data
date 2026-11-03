@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="ATLAS 選色表">
 <meta name="theme-color" content="#141618">
-<title>ATLAS 選色表 v6.7</title>
+<title>ATLAS 選色表 v6.8</title>
 <style>
 /* 大螢幕自動放大（外接螢幕）：1600px 以上 110%、2200px 以上 125% */
 @media (min-width:1600px){html{zoom:1.1}}
@@ -673,10 +673,12 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--text
         <img id="logo-img" style="max-height:40px;max-width:150px;object-fit:contain;display:none">
         <button class="logo-clr" id="logo-clr" style="display:none" onclick="event.stopPropagation();clearLogo()">✕</button>
       </div>
+      <div class="img-ctrl-row" style="margin-top:6px"><span class="img-ctrl-label">Logo 高度</span><input type="range" id="logo-h" min="24" max="90" value="46" oninput="brandSave();render()"><span class="img-ctrl-val" id="logo-h-v">46px</span></div>
+      <div style="font-size:9px;color:var(--muted);margin-top:4px">公司識別設定一次即可：存在雲端，所有建商／專案／版本共用，PDF 頁首自動帶入。</div>
     </div>
     <div id="text-sec" style="display:none">
-      <div class="f"><label>公司名稱</label><input id="co-name" placeholder="ATLAS 建材顧問" oninput="render()"></div>
-      <div class="f"><label>聯絡資訊</label><textarea id="co-contact" placeholder="電話／Email" oninput="render()"></textarea></div>
+      <div class="f"><label>公司名稱</label><input id="co-name" placeholder="ATLAS 建材顧問" oninput="render();brandSave()"></div>
+      <div class="f"><label>聯絡資訊</label><textarea id="co-contact" placeholder="電話／Email" oninput="render();brandSave()"></textarea></div>
     </div>
   </div>
 
@@ -2166,15 +2168,28 @@ function setMode(m,el){
   render();
 }
 function setBrand(m,el){
-  brandMode=m;
+  brandMode=m; setTimeout(brandSave,0);
   document.querySelectorAll('.tog').forEach(b=>b.classList.remove('on'));el.classList.add('on');
   document.getElementById('logo-sec').style.display=m==='logo'?'block':'none';
   document.getElementById('text-sec').style.display=m==='text'?'block':'none';
   render();
 }
-function handleLogoFile(i){const f=i.files[0];if(!f)return;const r=new FileReader();r.onload=e=>{logoUrl=e.target.result;document.getElementById('logo-ph').style.display='none';const img=document.getElementById('logo-img');img.src=logoUrl;img.style.display='block';document.getElementById('logo-clr').style.display='flex';document.getElementById('logo-drop').classList.add('has');render();};r.readAsDataURL(f);}
+
+// ════════════════════════════════════════════
+//  公司識別（Logo／文字）：設定一次存 db.ui.brand（雲端），所有專案共用
+// ════════════════════════════════════════════
+function brandSave(){ db.ui=db.ui||{}; const h=+document.getElementById('logo-h').value||46; document.getElementById('logo-h-v').textContent=h+'px';
+  db.ui.brand={mode:brandMode,logoUrl,logoH:h,coName:val('co-name'),coContact:val('co-contact')}; saveDb(); }
+function brandApply(){ const b=db.ui?.brand; if(!b) return;
+  brandMode=b.mode||'logo'; logoUrl=b.logoUrl||null; document.getElementById('logo-h').value=b.logoH||46; document.getElementById('logo-h-v').textContent=(b.logoH||46)+'px';
+  const cn=document.getElementById('co-name'), cc=document.getElementById('co-contact'); if(cn) cn.value=b.coName||''; if(cc) cc.value=b.coContact||'';
+  ['logo','text','none'].forEach(m=>document.getElementById('tog-'+m)?.classList.toggle('on',m===brandMode)); document.getElementById('logo-sec').style.display=brandMode==='logo'?'':'none'; document.getElementById('text-sec').style.display=brandMode==='text'?'':'none';
+  if(logoUrl){ document.getElementById('logo-ph').style.display='none'; const img=document.getElementById('logo-img'); img.src=logoUrl; img.style.display='block'; document.getElementById('logo-clr').style.display='flex'; document.getElementById('logo-drop').classList.add('has'); }
+}
+function handleLogoFile(i){const f=i.files[0];if(!f)return;const r=new FileReader();r.onload=e=>{logoUrl=e.target.result;document.getElementById('logo-ph').style.display='none';const img=document.getElementById('logo-img');img.src=logoUrl;img.style.display='block';document.getElementById('logo-clr').style.display='flex';document.getElementById('logo-drop').classList.add('has');render();
+  const _l=logoUrl; uploadImage(_l).then(url=>{ if(logoUrl===_l){ logoUrl=url; brandSave(); render(); } }).catch(()=>brandSave()); };r.readAsDataURL(f);}
 function handleLogoDrop(e){e.preventDefault();const f=e.dataTransfer.files[0];if(!f||!f.type.startsWith('image/'))return;const dt=new DataTransfer();dt.items.add(f);document.getElementById('logo-file').files=dt.files;handleLogoFile(document.getElementById('logo-file'));}
-function clearLogo(){logoUrl=null;document.getElementById('logo-ph').style.display='block';document.getElementById('logo-img').style.display='none';document.getElementById('logo-clr').style.display='none';document.getElementById('logo-drop').classList.remove('has');render();}
+function clearLogo(){logoUrl=null;document.getElementById('logo-ph').style.display='block';document.getElementById('logo-img').style.display='none';document.getElementById('logo-clr').style.display='none';document.getElementById('logo-drop').classList.remove('has');brandSave();render();}
 
 // ════════════════════════════════════════════
 //  建材清單
@@ -2677,7 +2692,7 @@ function buildHdr(){
   const title=val('doc-title')||'建材選色提案';
   const metas=[[val('owner'),ownerLabel()],[val('project-f'),'案件'],[val('spacedesc'),'空間'],[val('docdate'),'日期'],[val('version'),'版本']].filter(([v])=>v);
   let brand='';
-  if(brandMode==='logo'&&logoUrl)brand=`<img class="brand-logo" src="${logoUrl}">`;
+  if(brandMode==='logo'&&logoUrl)brand=`<img class="brand-logo" src="${logoUrl}" style="max-height:${+val('logo-h')||46}px;max-width:${Math.round((+val('logo-h')||46)*3.2)}px">`;
   else if(brandMode==='text')brand=`<div class="brand-name">${esc(val('co-name'))}</div><div class="brand-contact">${esc(val('co-contact')).replace(/\n/g,'<br>')}</div>`;
   return`<div class="doc-hd"><div class="dh-brand">${brand}</div><div class="dh-r"><div class="doc-title">${esc(title)}</div><div class="meta-grid">${metas.map(([v,k])=>`<span class="mk">${esc(k)}</span><span class="mv">${esc(v)}</span>`).join('')}</div></div></div>`;
 }
@@ -2984,7 +2999,7 @@ async function boot(){
   SB_UID=session.user.id;
   document.getElementById('gate').style.display='none'; document.body.classList.remove('locked');
   const hadCloud=await cloudLoad();
-  initApp(); uiApplyCols(); renderColList(); if(uiRestoreActive()){ loadActiveProject(); renderFinder(); } UNDO.length=0; undoSnapshot();
+  initApp(); uiApplyCols(); renderColList(); brandApply(); if(uiRestoreActive()){ loadActiveProject(); renderFinder(); } UNDO.length=0; undoSnapshot();
   if(!hadCloud && db.clients.length){ cloudSave(); }   // 第一次：把本機資料推上雲端
   migrateDataUrls();                                   // 把 base64 圖片搬到 Storage
   await syncJc();                                      // 建商／專案 → 表二 jc_projects（案件中心看得到）
