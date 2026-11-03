@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#0e1012">
-<title>ATLAS 案件中心 v3.2</title>
+<title>ATLAS 案件中心 v3.4</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Space+Mono:wght@400;700&display=swap');
 :root{--bg:#0e1012;--sb:#141618;--panel:#1a1d21;--card:#1f2328;--border:#2a2f36;--border2:#353b44;--gold:#d4a843;--gold2:#f0cc7a;--teal:#3aaa8c;--teal2:#4dc9a8;--red:#e06c6c;--indigo:#7b8cff;--amber:#e8b04a;--text:#dde2ee;--sub:#8a94a6;--muted:#4a5566}
@@ -81,6 +81,7 @@ a{color:var(--teal2)}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:4px 16px;max-width:860px}
 .grid.g4{grid-template-columns:repeat(4,minmax(0,1fr));max-width:1000px;gap:2px 14px}
 .grid .c2{grid-column:span 2}.grid .c3{grid-column:span 3}.grid .full{grid-column:1/-1}
+.jcsel{padding:4px 6px 8px}.jcsel select{width:100%;font-size:12px;padding:5px 8px}
 .grid .gh{grid-column:1/-1;font-size:11px;letter-spacing:.14em;color:var(--gold);margin:10px 0 4px;padding-bottom:4px;border-bottom:1px solid var(--border);display:flex;gap:8px;align-items:baseline}.grid .gh small{font-size:10.5px;color:var(--muted);letter-spacing:.04em}
 .grid.g4 .field{margin-bottom:8px}.grid.g4 .field label{font-size:11px;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.grid.g4 .field input,.grid.g4 .field select{padding:7px 9px}
 @media (max-width:900px){ .grid.g4{grid-template-columns:1fr 1fr} .grid .c3{grid-column:span 2} }
@@ -241,7 +242,7 @@ const secSave=()=>{ try{ localStorage.setItem('atlas-sec-closed',JSON.stringify(
 const pclSave=()=>{ try{ localStorage.setItem('atlas-pcl-open',JSON.stringify([...PCLOPEN])); }catch(e){} };
 const T={
   ur:{table:'ur_projects',label:'都更案件',name:r=>r.name,sub:r=>[r.kind,r.consent_pct!=null?`同意 ${r.consent_pct}%`:'',r.site_area_m2?`${Number(r.site_area_m2).toLocaleString()} m²`:''].filter(Boolean),filterKey:'stage',filterOpts:UR_STAGE,filterLabel:'全部階段'},
-  jc:{table:'jc_projects',label:'建材專案',name:r=>r.name,sub:r=>[r.permit_no,r.applicant,(r.categories||[]).join('·'),fmtD(r.track_date),finderVers(r.id).length?`選色 ${finderVers(r.id).length} 版`:''].filter(Boolean),filterKey:'_cat',filterOpts:JC_CAT,filterLabel:'全部類別'},
+  jc:{table:'jc_projects',label:'建材專案',name:r=>r.name,sub:r=>[r.permit_no,(r.categories||[]).join('·'),'建檔 '+fmtD(r.created_at),'更新 '+fmtD(r.updated_at),finderVers(r.id).length?`選色 ${finderVers(r.id).length} 版`:''].filter(Boolean),filterKey:'_cat',filterOpts:JC_CAT,filterLabel:'全部類別'},
   ct:{table:'contacts',label:'聯絡人',name:r=>r.name,sub:r=>[r.relation,r.company,r.title,r.phone].filter(Boolean),filterKey:'kind',filterOpts:CT_KIND,filterLabel:'全部類型'},
 };
 
@@ -316,14 +317,20 @@ let CTORD={cases:[],groups:{},people:{}};
 async function ctOrdLoad(){ const {data}=await sb.from('ui_state').select('data').eq('key','ct_tree').maybeSingle(); if(data?.data) CTORD={cases:[],groups:{},people:{},...data.data}; }
 async function ctOrdSave(){ const {error}=await sb.from('ui_state').upsert({user_id:UID,key:'ct_tree',data:CTORD},{onConflict:'user_id,key'}); if(error) alert('順序儲存失敗：'+error.message); }
 const ordSort=(arr,order,key)=>{ const idx=x=>{ const i=order.indexOf(key(x)); return i<0?1e9:i; }; return [...arr].sort((a,b)=>idx(a)-idx(b)); };
-function renderJcTree(rows,searching,rowH){ // 起造人 → 工程；預設最近更新的在最上面（選色表或案件中心改都算），拖曳過就照拖曳順序
-  const by={}; for(const r of rows) (by[r.applicant||'未填起造人']??=[]).push(r);
-  const last=k=>Math.max(...by[k].map(r=>new Date(r.updated_at||0).getTime()));
-  const order=ordSort(Object.keys(by).sort((a,b)=>last(b)-last(a)),CTORD.jcGroups||[],x=>x);
-  return order.map(k=>{ const key='b:'+k, closed=!searching&&TOPEN.has(key);
-    const list=ordSort([...by[k]].sort((a,b)=>new Date(b.updated_at||0)-new Date(a.updated_at||0)),CTORD.jcProjects?.[k]||[],x=>x.id);
-    return `<div class="g1${closed?' closed':''}" data-t="${esc(key)}" draggable="true" data-dk="jb" data-dv="${esc(k)}"><span class="hd" title="拖曳調整順序">⋮⋮</span><span class="ar">▼</span>${esc(k)}<span class="c">${list.length}</span></div>`
-      +(closed?'':list.map(r=>rowH(r).replace('<div class="n">',`<div class="n"><span class="hd" title="拖曳調整順序">⋮⋮</span>`).replace('class="row','draggable="true" data-dk="jp:'+esc(k)+'" data-dv="'+r.id+'" class="row')).join('')); }).join('');
+const JC_ROLES=[['applicant','建設（起造人）'],['contractor','營造（承造人）'],['architect','建築師（設計人）'],['supervisor','設計師（監造人）']];
+let JCROLE=''; try{ JCROLE=localStorage.getItem('atlas-jc-role')||''; }catch(e){}
+function renderJcTree(rows,searching,rowH){ // 角色 → 公司／人 → 工程；預設最近更新在上，拖曳過就照拖曳順序；同一工程會出現在它填過的每個角色下
+  const roles=JC_ROLES.filter(([k])=>!JCROLE||k===JCROLE);
+  const last=list=>Math.max(...list.map(r=>new Date(r.updated_at||0).getTime()));
+  const byT=(a,b)=>new Date(b.updated_at||0)-new Date(a.updated_at||0);
+  const row=(r,scope)=>rowH(r).replace('<div class="n">',`<div class="n"><span class="hd" title="拖曳調整順序">⋮⋮</span>`).replace('class="row','draggable="true" data-dk="jp:'+esc(scope)+'" data-dv="'+r.id+'" class="row');
+  const sel=`<div class="jcsel"><select id="jcRole"><option value="">四種角色都顯示</option>${JC_ROLES.map(([k,l])=>`<option value="${k}"${JCROLE===k?' selected':''}>只看 ${l}</option>`).join('')}</select></div>`;
+  return sel+roles.map(([rk,rl])=>{ const by={}; for(const r of rows) if(r[rk]) (by[r[rk]]??=[]).push(r); const n=Object.values(by).reduce((a,v)=>a+v.length,0); if(!n) return '';
+    const k1='r:'+rk, c1=!searching&&TOPEN.has(k1);
+    const names=ordSort(Object.keys(by).sort((a,b)=>last(by[b])-last(by[a])),CTORD.jcGroups?.[rk]||[],x=>x);
+    return `<div class="g1${c1?' closed':''}" data-t="${k1}"><span class="ar">▼</span>${rl}<span class="c">${n}</span></div>`+(c1?'':names.map(nm=>{ const k2='b:'+rk+'|'+nm, c2=!searching&&TOPEN.has(k2); const scope=rk+'|'+nm;
+      const list=ordSort([...by[nm]].sort(byT),CTORD.jcProjects?.[scope]||[],x=>x.id);
+      return `<div class="g2${c2?' closed':''}" data-t="${esc(k2)}" draggable="true" data-dk="jb:${rk}" data-dv="${esc(nm)}"><span class="hd" title="拖曳調整順序">⋮⋮</span><span class="ar">▼</span>${esc(nm)}<span class="c">${list.length}</span></div>`+(c2?'':list.map(r=>row(r,scope)).join('')); }).join('')); }).join('');
 }
 function renderCtTree(rows,searching){
   const tree={}; for(const c of rows) for(const cs of ctCases(c)){ const k=c.kind||'未分類', g=c.group_name||'未分組'; (((tree[cs]??={})[k]??={})[g]??=[]).push(c); }
@@ -348,12 +355,13 @@ function bindTreeDrag(){
     el.addEventListener('dragleave',()=>el.classList.remove('over','over-b'));
     el.addEventListener('drop',async e=>{ if(!D||D===el||D.dataset.dk!==el.dataset.dk) return; e.preventDefault(); e.stopPropagation(); const after=el.classList.contains('over-b'); el.classList.remove('over','over-b');
       const dk=D.dataset.dk; const sib=els.filter(x=>x.dataset.dk===dk).map(x=>x.dataset.dv).filter(v=>v!==D.dataset.dv); let j=sib.indexOf(el.dataset.dv); if(after) j++; sib.splice(j,0,D.dataset.dv);
-      if(dk==='c') CTORD.cases=sib; else if(dk==='jb') CTORD.jcGroups=sib; else if(dk.startsWith('jp:')) (CTORD.jcProjects??={})[dk.slice(3)]=sib.map(Number); else if(dk.startsWith('g:')) CTORD.groups[dk.slice(2)]=sib; else if(dk.startsWith('p:')) CTORD.people[dk.slice(2)]=sib.map(Number);
+      if(dk==='c') CTORD.cases=sib; else if(dk.startsWith('jb:')) (CTORD.jcGroups??={})[dk.slice(3)]=sib; else if(dk.startsWith('jp:')) (CTORD.jcProjects??={})[dk.slice(3)]=sib.map(Number); else if(dk.startsWith('g:')) CTORD.groups[dk.slice(2)]=sib; else if(dk.startsWith('p:')) CTORD.people[dk.slice(2)]=sib.map(Number);
       await ctOrdSave(); renderList(); });
   });
 }
 $('#q').addEventListener('input',renderList); $('#fStage').addEventListener('change',renderList);
-$('#rows').addEventListener('click',e=>{ if(e.target.closest('.hd')) return; const g=e.target.closest('[data-t]'); if(g){ const k=g.dataset.t; TOPEN.has(k)?TOPEN.delete(k):TOPEN.add(k); tSave(); renderList(); return; }
+$('#rows').addEventListener('change',e=>{ if(e.target.id==='jcRole'){ JCROLE=e.target.value; try{ localStorage.setItem('atlas-jc-role',JCROLE); }catch(_){} renderList(); } });
+$('#rows').addEventListener('click',e=>{ if(e.target.closest('.hd')||e.target.closest('.jcsel')) return; const g=e.target.closest('[data-t]'); if(g){ const k=g.dataset.t; TOPEN.has(k)?TOPEN.delete(k):TOPEN.add(k); tSave(); renderList(); return; }
   const r=e.target.closest('.row'); if(!r) return; CUR=DATA[TAB].find(x=>x.id===+r.dataset.id); renderList(); showForm(); });
 $('#btnNew').addEventListener('click',()=>{ CUR=null; renderList(); showForm(); });
 // 聯絡人分頁：貼謄本（個資在這裡處理）
@@ -429,10 +437,10 @@ function showForm(){
     ${isNew?`<div class="field full"><label>📄 放入都更計算機 PDF（選填：案件清單＋各地號單查，可多選；建立後自動讀取並出現預覽表）</label><input type="file" id="f-import_pdf" accept="application/pdf" multiple style="padding:8px"></div><div class="field full"><label>或貼上「本次分析地號清單」文字（建立時自動加入地號並加總基地面積）</label><textarea id="f-import_lots" placeholder="五股區	五股段	05840000	947.61	自然人100%&#10;五股區	五股段	05850000	195.61	自然人100%" style="font-family:'Space Mono',monospace;font-size:12px"></textarea></div>`:''}</div>`;
   if(TAB==='jc') h=`<div class="d-head"><h2>${isNew?'新增建材專案':esc(r.name)}</h2>${isNew?'':`<span class="id">更新 ${fmtD(r.updated_at)}</span>`}</div><div class="grid">
     ${fld('name','工程名稱<b>＊</b>（與選色表一致）',r.name,'text','full')}
-    ${fld('permit_no','建造執照',r.permit_no,'text','c2')}${fld('track_date','追蹤／執行日',fmtD(r.track_date),'date')}
+    ${fld('permit_no','建造執照',r.permit_no)}${fld('summary','工程概要（例：地下2層、地上7層、2棟1幢）',r.summary)}
     ${chips('categories','類別（可複選）',JC_CAT,r.categories)}</div><div class="grid g4" style="margin-top:4px">
     ${fld('applicant','起造人',r.applicant)}${fld('architect','設計人',r.architect)}${fld('supervisor','監造人',r.supervisor)}${fld('contractor','承造人',r.contractor)}
-    ${txt('summary','工程概要',r.summary,'full')}</div>`;
+    ${fld('track_date','追蹤／執行日',fmtD(r.track_date),'date')}</div>`;
   if(TAB==='ct') h=`<div class="d-head"><h2>${isNew?'新增聯絡人':esc(r.name)}</h2></div><div class="grid">
     ${fld('name','姓名<b>＊</b>',r.name)}${sel('kind','類型',CT_KIND,r.kind)}
     <div class="field"><label>群組（家族／戶／公司）</label><input id="f-group_name" list="dl-group" value="${esc(r.group_name??'')}" placeholder="例：陳家三兄弟、41號公寓"><datalist id="dl-group">${[...new Set(DATA.ct.map(c=>c.group_name).filter(Boolean))].map(g=>`<option value="${esc(g)}">`).join('')}</datalist></div>
