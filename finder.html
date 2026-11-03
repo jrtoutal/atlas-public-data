@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="ATLAS 選色表">
 <meta name="theme-color" content="#141618">
-<title>ATLAS 選色表 v6.1</title>
+<title>ATLAS 選色表 v6.2</title>
 <style>
 /* 大螢幕自動放大（外接螢幕）：1600px 以上 110%、2200px 以上 125% */
 @media (min-width:1600px){html{zoom:1.1}}
@@ -45,6 +45,8 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--text
 
 /* ── Finder sidebar (col1 + col2) ── */
 .finder{display:flex;flex-shrink:0;border-right:1px solid var(--border);}
+.finder.dock{display:flex;position:fixed;left:14px;top:46px;bottom:0;z-index:60;transform:translateX(-110%);opacity:0;transition:transform .18s ease,opacity .18s ease;box-shadow:8px 0 24px rgba(0,0,0,.35);background:var(--sb);pointer-events:none}
+.finder.dock.dock-show{transform:none;opacity:1;pointer-events:auto}
 .finder-col{display:flex;flex-direction:column;overflow:hidden;}
 .finder-col1{width:var(--col1-w);border-right:1px solid var(--border);background:var(--sb);}
 .finder-col2{width:var(--col2-w);background:var(--sb2);}
@@ -84,6 +86,7 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--text
 /* ── Right panel (settings) ── */
 .rp{width:272px;min-width:272px;background:var(--sb);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow-y:auto;}
 .rp-sec{padding:10px 12px;border-bottom:1px solid var(--border);}
+.rp-lbl.fold{cursor:pointer;user-select:none}.rp-lbl .fold-ar{display:inline-block;font-size:8px;transition:transform .15s;width:10px}.rp-lbl.fold.closed .fold-ar{transform:rotate(-90deg)}.fold-body.closed{display:none}
 .rp-lbl{font-size:9px;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase;font-weight:700;font-family:'Space Mono',monospace;margin-bottom:7px;}
 .f{margin-bottom:7px;}
 .f label{display:block;font-size:10px;color:var(--sub);margin-bottom:2px;}
@@ -141,8 +144,9 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--text
 .item-sw{width:24px;height:24px;border-radius:4px;border:1px solid rgba(255,255,255,.08);flex-shrink:0;overflow:hidden;cursor:pointer;}
 .item-sw img{width:100%;height:100%;object-fit:cover;}
 .item-inf{flex:1;overflow:hidden;cursor:pointer;}
-.item-code{font-family:'Space Mono',monospace;font-size:8px;color:var(--sub);}
-.item-name{font-size:10px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.item-code{font-family:'Space Mono',monospace;font-size:11px;color:var(--sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.item-name{font-size:11.5px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.item-grp{margin-bottom:6px}.item-grp-hd{display:flex;align-items:center;gap:6px;padding:4px 4px;font-size:11px;color:var(--teal2);cursor:pointer;user-select:none}.item-grp-hd .fold-ar{display:inline-block;font-size:8px;width:10px;transition:transform .15s;color:var(--muted)}.item-grp.closed .item-grp-hd .fold-ar{transform:rotate(-90deg)}.item-grp-hd .cnt{margin-left:auto;font-family:'Space Mono',monospace;font-size:9px;color:var(--muted)}.item-grp-body{display:flex;flex-direction:column;gap:4px;padding-left:6px}.item-grp.closed .item-grp-body{display:none}
 .item-arrows{display:flex;flex-direction:column;gap:0;flex-shrink:0;}
 .item-arr{background:none;border:none;color:var(--muted);cursor:pointer;font-size:9px;padding:1px 2px;border-radius:2px;line-height:1;transition:all .12s;}
 .item-arr:hover{color:var(--accent);}
@@ -531,15 +535,16 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--text
   </div>
   <div class="spacer"></div>
   <button class="t-btn teal" onclick="cloudInfo()" title="雲端同步狀態">☁ 雲端<span class="noco-dot" id="noco-dot"></span></button>
-  <button class="t-btn" onclick="exportJSON()" title="儲存到選定資料夾">💾 存檔</button>
+  <button class="t-btn" id="undo-btn" onclick="undoLast()" title="復原上一步" disabled>↶ 上一步</button>
+  <button class="t-btn" onclick="exportJSON()" title="另存一份 JSON 到電腦（本機備份；平常靠雲端自動同步）">💾 存檔</button>
   <span id="dir-tip" onclick="changeSaveDir()" title="點擊更換存檔資料夾" style="font-size:10px;color:var(--teal2);cursor:pointer;white-space:nowrap;max-width:120px;overflow:hidden;text-overflow:ellipsis;"></span>
-  <button class="t-btn" onclick="document.getElementById('import-file').click()" title="載入之前儲存的 JSON 繼續編輯">📂 讀檔</button>
+  <button class="t-btn" onclick="document.getElementById('import-file').click()" title="從電腦的 JSON 備份還原（會覆蓋目前資料，先存一份再讀）">📂 讀檔</button>
   <input type="file" id="import-file" accept=".json" style="display:none" onchange="importJSON(this)">
   <span id="last-save-tip" style="font-size:10px;color:var(--sub);white-space:nowrap;"></span>
   <button class="t-btn gld" onclick="openItemModal(null)">＋ 新增建材</button>
   <button class="t-btn" id="grp-btn" style="display:none" onclick="addGroup()">＋ 分組</button>
   <button class="t-btn pri" onclick="doPrint()">🖨 輸出 PDF</button>
-  <button class="t-btn" onclick="cloudLogout()" title="登出">⎋</button>
+  <button class="t-btn" onclick="cloudLogout()" title="登出">登出</button>
 </div>
 
 <div class="workspace">
@@ -549,7 +554,7 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--text
   <!-- Col1：建商/營造 -->
   <div class="finder-col finder-col1">
     <div class="finder-hd">
-      <span class="finder-lbl">建商</span>
+      <span class="finder-lbl" style="line-height:1.25">建設／營造<br>建築師／設計師</span>
       <button class="finder-add" onclick="addClient()" title="手動新增建商">＋</button>
     </div>
     <div class="finder-list" id="col1-list"></div>
@@ -698,14 +703,14 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--text
 
   <!-- 欄位設定 -->
   <div class="rp-sec">
-    <div class="rp-lbl">欄位設定</div>
-    <div class="col-list" id="col-list"></div>
-    <button class="add-col" onclick="addCol()">＋ 新增欄位</button>
+    <div class="rp-lbl fold" data-fold="cols" onclick="toggleFold(this)"><span class="fold-ar">▼</span> 欄位設定</div>
+    <div class="fold-body" data-foldbody="cols"><div class="col-list" id="col-list"></div>
+    <button class="add-col" onclick="addCol()">＋ 新增欄位</button></div>
   </div>
 
   <!-- 卡片設定 -->
   <div class="rp-sec" id="card-opts">
-    <div class="rp-lbl">卡片設定</div>
+    <div class="rp-lbl fold" data-fold="card" onclick="toggleFold(this)"><span class="fold-ar">▼</span> 卡片設定</div><div class="fold-body" data-foldbody="card">
     <div class="f"><label>每行張數</label>
       <select id="ncols" onchange="onNcolsChange()">
         <option value="1">1 張</option>
@@ -725,7 +730,7 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--text
     <label style="font-size:10px;color:var(--sub);display:flex;align-items:center;gap:4px">
       <input type="checkbox" id="show-footer" checked onchange="render()"> 頁尾聲明
     </label>
-  </div>
+  </div></div>
 
   <!-- 表格設定 -->
   <div class="rp-sec" id="pro-opts" style="display:none">
@@ -1109,7 +1114,20 @@ function initApp(){
 // ════════════════════════════════════════════
 //  資料庫
 // ════════════════════════════════════════════
+
+// ════════════════════════════════════════════
+//  上一步（復原）：每次存檔前留一份快照，最多 30 步；Cmd/Ctrl+Z（非輸入框時）或工具列 ↶
+// ════════════════════════════════════════════
+const UNDO=[]; let _undoSkip=false;
+function undoSnapshot(){ if(_undoSkip) return; try{ const snap=JSON.stringify({db,activeClientId,activeProjectId,activeVersionId}); if(UNDO.length&&UNDO[UNDO.length-1]===snap) return; UNDO.push(snap); if(UNDO.length>30) UNDO.shift(); updateUndoBtn(); }catch{} }
+function undoLast(){ if(UNDO.length<2){ alert('沒有可復原的步驟'); return; } UNDO.pop(); const snap=JSON.parse(UNDO[UNDO.length-1]);
+  _undoSkip=true; try{ db=snap.db; activeClientId=snap.activeClientId; activeProjectId=snap.activeProjectId; activeVersionId=snap.activeVersionId;
+    const ver=db.versions?.find(v=>v.id===activeVersionId); items=ver?JSON.parse(JSON.stringify(ver.items||[])):[]; proRows=ver?JSON.parse(JSON.stringify(ver.proRows||[])):[];
+    saveDb(); renderFinder(); renderItemList(); render(); } finally { _undoSkip=false; } updateUndoBtn(); }
+function updateUndoBtn(){ const b=document.getElementById('undo-btn'); if(b){ b.disabled=UNDO.length<2; b.title=UNDO.length<2?'沒有可復原的步驟':`復原上一步（還有 ${UNDO.length-1} 步）`; } }
+document.addEventListener('keydown',e=>{ if((e.metaKey||e.ctrlKey)&&!e.shiftKey&&e.key.toLowerCase()==='z'){ const t=e.target; if(t&&(t.tagName==='INPUT'||t.tagName==='TEXTAREA'||t.isContentEditable)) return; e.preventDefault(); undoLast(); } });
 function saveDb(){
+  undoSnapshot();
   try{
     localStorage.setItem('atlas-db-v1',JSON.stringify(db));
     localStorage.setItem('atlas-last-save', new Date().toISOString());
@@ -1814,13 +1832,36 @@ async function cloudLogout(){ await cloudFlush(); await sb.auth.signOut(); locat
 //  Finder 收折
 // ════════════════════════════════════════════
 let finderVisible=true;
+
+// 右欄區塊收合（記在瀏覽器）
+let FOLDS={}; try{ FOLDS=JSON.parse(localStorage.getItem('atlas-folds')||'{}'); }catch{}
+function toggleFold(el){ const k=el.dataset.fold; FOLDS[k]=!FOLDS[k]; try{ localStorage.setItem('atlas-folds',JSON.stringify(FOLDS)); }catch{} applyFolds(); }
+function applyFolds(){ document.querySelectorAll('[data-fold]').forEach(el=>{ const c=!!FOLDS[el.dataset.fold]; el.classList.toggle('closed',c); const b=document.querySelector(`[data-foldbody="${el.dataset.fold}"]`); if(b) b.classList.toggle('closed',c); }); }
+document.addEventListener('DOMContentLoaded',applyFolds);
 function toggleFinder(){
   finderVisible=!finderVisible;
-  const panel=document.getElementById('finder-panel');
-  const icon=document.getElementById('finder-tab-icon');
-  panel.style.display=finderVisible?'flex':'none';
-  icon.textContent=finderVisible?'◀':'▶';
+  try{ localStorage.setItem('atlas-finder-pinned',finderVisible?'1':'0'); }catch{}
+  applyFinderVis();
 }
+// Dock 式：收起時滑鼠移到左緣停一下自動浮出，移開即收回；按 tab 固定／取消固定
+let _dockT=null, _dockShown=false;
+function applyFinderVis(){
+  const panel=document.getElementById('finder-panel'), icon=document.getElementById('finder-tab-icon');
+  panel.classList.toggle('dock',!finderVisible); panel.classList.remove('dock-show');
+  panel.style.display=finderVisible?'flex':'';
+  icon.textContent=finderVisible?'◀':'▶';
+  document.getElementById('finder-tab').title=finderVisible?'收起案件列表（收起後滑鼠靠左緣會自動浮出）':'展開並固定案件列表';
+}
+function dockShow(){ if(finderVisible) return; clearTimeout(_dockT); _dockT=setTimeout(()=>{ document.getElementById('finder-panel').classList.add('dock-show'); _dockShown=true; },260); }
+function dockHide(){ clearTimeout(_dockT); _dockT=setTimeout(()=>{ document.getElementById('finder-panel').classList.remove('dock-show'); _dockShown=false; },320); }
+(function initDock(){
+  document.addEventListener('DOMContentLoaded',()=>{ try{ const v=localStorage.getItem('atlas-finder-pinned'); if(v==='0') finderVisible=false; }catch{} applyFinderVis();
+    const tab=document.getElementById('finder-tab'), panel=document.getElementById('finder-panel');
+    tab.addEventListener('mouseenter',dockShow); tab.addEventListener('mouseleave',dockHide);
+    panel.addEventListener('mouseenter',()=>{ if(!finderVisible){ clearTimeout(_dockT); } }); panel.addEventListener('mouseleave',()=>{ if(!finderVisible) dockHide(); });
+    document.addEventListener('mousemove',e=>{ if(!finderVisible&&e.clientX<=6) dockShow(); });
+  });
+})();
 
 // ════════════════════════════════════════════
 //  浮動篩選下拉
@@ -2110,10 +2151,11 @@ function clearLogo(){logoUrl=null;document.getElementById('logo-ph').style.displ
 // ════════════════════════════════════════════
 //  建材清單
 // ════════════════════════════════════════════
+let ITEMFOLD=new Set(); try{ ITEMFOLD=new Set(JSON.parse(localStorage.getItem('atlas-itemfold')||'[]')); }catch{}
 function renderItemList(){
   document.getElementById('item-count').textContent=`(${items.length})`;
-  document.getElementById('item-list').innerHTML=items.map((it,i)=>{
-    const bg=it.imgUrl?'':(it.pal===null?'transparent':`linear-gradient(135deg,${(it.pal||['#ccc']).join(',')})`);
+  const groups=[]; items.forEach((it,i)=>{ const a=it.area||'（未分區）'; let g=groups.find(x=>x.area===a); if(!g){ g={area:a,rows:[]}; groups.push(g); } g.rows.push(i); });
+  const row=(it,i)=>{ const bg=it.imgUrl?'':(it.pal===null?'transparent':`linear-gradient(135deg,${(it.pal||['#ccc']).join(',')})`);
     return`<div class="item-row" draggable="true"
       ondragstart="dragItemIdx=${i};event.dataTransfer.effectAllowed='move'"
       ondragover="event.preventDefault();document.querySelectorAll('.item-row').forEach(r=>r.classList.remove('drag-over'));this.classList.add('drag-over')"
@@ -2122,8 +2164,8 @@ function renderItemList(){
       <span class="item-drag">⠿</span>
       <div class="item-sw" style="background:${bg};display:flex;align-items:center;justify-content:center;" onclick="openItemModal(${i})">${thumbHtml(it,24)}</div>
       <div class="item-inf" onclick="openItemModal(${i})">
-        <div class="item-code">${esc(it.num||'')} ${esc(it.code||'')}</div>
-        <div class="item-name">${esc(it.area||it.name||'（未命名）')}</div>
+        <div class="item-code">${esc(it.num||'')}${it.code?' · '+esc(it.code):''}</div>
+        <div class="item-name">${esc(it.name||'（未命名）')}</div>
       </div>
       <div class="item-arrows">
         <button class="item-arr" onclick="moveItem(${i},${i-1})" ${i===0?'disabled':''}>▲</button>
@@ -2131,9 +2173,11 @@ function renderItemList(){
       </div>
       <button class="item-copy" onclick="event.stopPropagation();copyItem(${i})" title="複製此建材">⧉</button>
       <button class="item-del" onclick="event.stopPropagation();deleteItem(${i})">✕</button>
-    </div>`;
-  }).join('');
+    </div>`; };
+  document.getElementById('item-list').innerHTML=groups.map(g=>{ const closed=ITEMFOLD.has(g.area);
+    return `<div class="item-grp${closed?' closed':''}"><div class="item-grp-hd" onclick="toggleItemFold('${esc(g.area).replace(/'/g,'&#39;')}')"><span class="fold-ar">▼</span><b>${esc(g.area)}</b><span class="cnt">${g.rows.length}</span></div><div class="item-grp-body">${g.rows.map(i=>row(items[i],i)).join('')}</div></div>`; }).join('');
 }
+function toggleItemFold(a){ ITEMFOLD.has(a)?ITEMFOLD.delete(a):ITEMFOLD.add(a); try{ localStorage.setItem('atlas-itemfold',JSON.stringify([...ITEMFOLD])); }catch{} renderItemList(); }
 function moveItem(from,to){
   if(to<0||to>=items.length||from===to)return;
   const m=items.splice(from,1)[0];items.splice(to,0,m);
@@ -2852,7 +2896,7 @@ async function boot(){
   SB_UID=session.user.id;
   document.getElementById('gate').style.display='none'; document.body.classList.remove('locked');
   const hadCloud=await cloudLoad();
-  initApp();
+  initApp(); UNDO.length=0; undoSnapshot();
   if(!hadCloud && db.clients.length){ cloudSave(); }   // 第一次：把本機資料推上雲端
   migrateDataUrls();                                   // 把 base64 圖片搬到 Storage
   await syncJc();                                      // 建商／專案 → 表二 jc_projects（案件中心看得到）
