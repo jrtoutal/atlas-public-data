@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="ATLAS 選色表">
 <meta name="theme-color" content="#141618">
-<title>ATLAS 選色表 v6.2</title>
+<title>ATLAS 選色表 v6.3</title>
 <style>
 /* 大螢幕自動放大（外接螢幕）：1600px 以上 110%、2200px 以上 125% */
 @media (min-width:1600px){html{zoom:1.1}}
@@ -536,9 +536,6 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--text
   <div class="spacer"></div>
   <button class="t-btn teal" onclick="cloudInfo()" title="雲端同步狀態">☁ 雲端<span class="noco-dot" id="noco-dot"></span></button>
   <button class="t-btn" id="undo-btn" onclick="undoLast()" title="復原上一步" disabled>↶ 上一步</button>
-  <button class="t-btn" onclick="exportJSON()" title="另存一份 JSON 到電腦（本機備份；平常靠雲端自動同步）">💾 存檔</button>
-  <span id="dir-tip" onclick="changeSaveDir()" title="點擊更換存檔資料夾" style="font-size:10px;color:var(--teal2);cursor:pointer;white-space:nowrap;max-width:120px;overflow:hidden;text-overflow:ellipsis;"></span>
-  <button class="t-btn" onclick="document.getElementById('import-file').click()" title="從電腦的 JSON 備份還原（會覆蓋目前資料，先存一份再讀）">📂 讀檔</button>
   <input type="file" id="import-file" accept=".json" style="display:none" onchange="importJSON(this)">
   <span id="last-save-tip" style="font-size:10px;color:var(--sub);white-space:nowrap;"></span>
   <button class="t-btn gld" onclick="openItemModal(null)">＋ 新增建材</button>
@@ -766,9 +763,9 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--text
     <span class="icon">＋</span>
     <span class="lbl">建材</span>
   </button>
-  <button onclick="exportJSON()">
-    <span class="icon">💾</span>
-    <span class="lbl">存檔</span>
+  <button onclick="undoLast()">
+    <span class="icon">↶</span>
+    <span class="lbl">上一步</span>
   </button>
   <button class="pri" onclick="doPrint()">
     <span class="icon">🖨</span>
@@ -859,16 +856,6 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--text
           </select>
         </div>
       </div>
-      <div style="display:flex;gap:8px">
-        <button onclick="exportJSON();closeDrawer('right')"
-          style="flex:1;padding:12px;border-radius:8px;background:var(--card);border:1px solid var(--border2);color:var(--text);cursor:pointer;font-size:12px;font-family:inherit">
-          💾 存檔
-        </button>
-        <button onclick="document.getElementById('import-file').click();closeDrawer('right')"
-          style="flex:1;padding:12px;border-radius:8px;background:var(--card);border:1px solid var(--border2);color:var(--text);cursor:pointer;font-size:12px;font-family:inherit">
-          📂 讀檔
-        </button>
-      </div>
       <button onclick="cloudLogout()"
         style="width:100%;padding:12px;border-radius:8px;background:rgba(58,170,140,.1);border:1px solid rgba(58,170,140,.3);color:var(--teal2);cursor:pointer;font-size:12px;font-family:inherit">
         ⎋ 登出
@@ -924,15 +911,15 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--text
       <div style="display:flex;align-items:center;gap:6px;margin-bottom:7px">
         <span style="font-size:10px;color:var(--sub);width:36px;flex-shrink:0">邊框</span>
         <div style="display:flex;gap:4px;align-items:center;flex:1">
-          <div class="border-swatch on" data-bw="0" title="無框" onclick="setImgBorder(this,0)"
+          <div class="border-swatch" data-bw="0" title="無框" onclick="setImgBorder(this,0)"
             style="width:22px;height:22px;border-radius:4px;background:var(--card);border:1px dashed var(--sub);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--sub)">∅</div>
-          <div class="border-swatch" data-bw="1" title="細框 1px" onclick="setImgBorder(this,1)"
+          <div class="border-swatch on" data-bw="1" title="細框 1px" onclick="setImgBorder(this,1)"
             style="width:22px;height:22px;border-radius:4px;background:var(--card);border:1px solid #aaa;cursor:pointer"></div>
           <div class="border-swatch" data-bw="2" title="框 2px" onclick="setImgBorder(this,2)"
             style="width:22px;height:22px;border-radius:4px;background:var(--card);border:2px solid #aaa;cursor:pointer"></div>
           <div class="border-swatch" data-bw="4" title="粗框 4px" onclick="setImgBorder(this,4)"
             style="width:22px;height:22px;border-radius:4px;background:var(--card);border:4px solid #aaa;cursor:pointer"></div>
-          <input type="color" id="ic-border-color" value="#dddddd" title="邊框顏色"
+          <input type="color" id="ic-border-color" value="#111111" title="邊框顏色"
             style="width:28px;height:22px;border:1px solid var(--border2);border-radius:4px;cursor:pointer;padding:1px 2px;background:none"
             oninput="editImgCtrl.borderColor=this.value;updateImgPreview()">
           <span style="font-size:9px;color:var(--muted)">顏色</span>
@@ -952,6 +939,13 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--text
           <div class="img-crop-handle bc" data-handle="bc"></div>
           <div class="img-crop-handle br" data-handle="br"></div>
         </div>
+      </div>
+      <div class="img-ctrl-row" style="gap:6px">
+        <span class="img-ctrl-label">旋轉</span>
+        <button type="button" class="img-mode-btn" onclick="rotateImg(-90)" title="逆時針 90°">↺ 90°</button>
+        <button type="button" class="img-mode-btn" onclick="rotateImg(90)" title="順時針 90°">↻ 90°</button>
+        <button type="button" class="img-mode-btn" onclick="rotateImg(180)" title="180°">180°</button>
+        <span style="font-size:9px;color:var(--muted)">旋轉後裁剪範圍會重設</span>
       </div>
       <div class="img-ctrl-row">
         <span class="img-ctrl-label">圖片縮放</span>
@@ -1012,7 +1006,7 @@ let cols=[
 ];
 let mode='card',brandMode='logo',logoUrl=null;
 let editImgUrl=null,editPal=null;
-let editImgCtrl={mode:'cover',zoom:100,offsetX:0,offsetY:0,cropX:undefined,cropY:undefined,cropW:undefined,cropH:undefined,bg:'transparent',borderWidth:0,borderColor:'#dddddd'};
+let editImgCtrl={mode:'cover',zoom:100,offsetX:0,offsetY:0,cropX:undefined,cropY:undefined,cropW:undefined,cropH:undefined,bg:'transparent',borderWidth:1,borderColor:'#111111'};
 let items=[],proRows=[];
 let dragCI=null,dragItemIdx=null;
 
@@ -2154,7 +2148,8 @@ function clearLogo(){logoUrl=null;document.getElementById('logo-ph').style.displ
 let ITEMFOLD=new Set(); try{ ITEMFOLD=new Set(JSON.parse(localStorage.getItem('atlas-itemfold')||'[]')); }catch{}
 function renderItemList(){
   document.getElementById('item-count').textContent=`(${items.length})`;
-  const groups=[]; items.forEach((it,i)=>{ const a=it.area||'（未分區）'; let g=groups.find(x=>x.area===a); if(!g){ g={area:a,rows:[]}; groups.push(g); } g.rows.push(i); });
+  const root=a=>(a||'').split(/[–—\-／/·‧,，、\s]/)[0].trim()||'（未分區）'; // 「浴廁–牆」「浴廁–地」→ 浴廁
+  const groups=[]; items.forEach((it,i)=>{ const a=root(it.area); let g=groups.find(x=>x.area===a); if(!g){ g={area:a,rows:[]}; groups.push(g); } g.rows.push(i); });
   const row=(it,i)=>{ const bg=it.imgUrl?'':(it.pal===null?'transparent':`linear-gradient(135deg,${(it.pal||['#ccc']).join(',')})`);
     return`<div class="item-row" draggable="true"
       ondragstart="dragItemIdx=${i};event.dataTransfer.effectAllowed='move'"
@@ -2165,7 +2160,7 @@ function renderItemList(){
       <div class="item-sw" style="background:${bg};display:flex;align-items:center;justify-content:center;" onclick="openItemModal(${i})">${thumbHtml(it,24)}</div>
       <div class="item-inf" onclick="openItemModal(${i})">
         <div class="item-code">${esc(it.num||'')}${it.code?' · '+esc(it.code):''}</div>
-        <div class="item-name">${esc(it.name||'（未命名）')}</div>
+        <div class="item-name">${esc(it.name||'（未命名）')}${it.area&&it.area!==root(it.area)?` <span style="color:var(--muted);font-size:10px">${esc(it.area.slice(root(it.area).length).replace(/^[–—\-／/·‧,，、\s]+/,''))}</span>`:''}</div>
       </div>
       <div class="item-arrows">
         <button class="item-arr" onclick="moveItem(${i},${i-1})" ${i===0?'disabled':''}>▲</button>
@@ -2219,7 +2214,7 @@ function showImgCtrl(url){
   document.getElementById('ic-zoom-v').textContent=(c.zoom||100)+'%';
   document.querySelectorAll('.bg-swatch').forEach(s=>s.classList.toggle('on',s.dataset.bg===(c.bg||'transparent')));
   document.querySelectorAll('.border-swatch').forEach(s=>s.classList.toggle('on',+s.dataset.bw===(c.borderWidth||0)));
-  document.getElementById('ic-border-color').value=c.borderColor||'#dddddd';
+  document.getElementById('ic-border-color').value=c.borderColor||'#111111';
   const img=document.getElementById('img-crop-img');
   img.onload=()=>initCropUI();
   img.src=url;
@@ -2446,6 +2441,20 @@ function setImgBg(el,bg){
   applyCropUI();
 }
 
+
+// 圖片旋轉：把原圖轉成新的圖再重新上傳；裁剪參數重設
+async function rotateImg(deg){
+  if(!editImgUrl) return;
+  const src=editImgUrl; const img=await new Promise((ok,no)=>{ const i=new Image(); i.crossOrigin='anonymous'; i.onload=()=>ok(i); i.onerror=no; i.src=src; }).catch(()=>null);
+  if(!img){ alert('圖片無法讀取（可能是舊圖網址不允許跨網域），請重新上傳一次再旋轉'); return; }
+  const w=img.naturalWidth, h=img.naturalHeight, swap=Math.abs(deg)===90;
+  const c=document.createElement('canvas'); c.width=swap?h:w; c.height=swap?w:h; const ctx=c.getContext('2d');
+  ctx.translate(c.width/2,c.height/2); ctx.rotate(deg*Math.PI/180); ctx.drawImage(img,-w/2,-h/2);
+  const dataUrl=c.toDataURL('image/jpeg',0.9); editImgUrl=dataUrl;
+  editImgCtrl.cropX=editImgCtrl.cropY=editImgCtrl.cropW=editImgCtrl.cropH=undefined; editImgCtrl.offsetX=0; editImgCtrl.offsetY=0; editImgCtrl.naturalW=c.width; editImgCtrl.naturalH=c.height;
+  const prev=document.getElementById('img-prev'); prev.src=dataUrl; showImgCtrl(dataUrl);
+  const _local=dataUrl; uploadImage(_local).then(url=>{ if(editImgUrl===_local) editImgUrl=url; }).catch(err=>console.warn('圖片上傳失敗：',err.message));
+}
 function setImgBorder(el,w){
   editImgCtrl.borderWidth=w;
   document.querySelectorAll('.border-swatch').forEach(s=>s.classList.remove('on'));
@@ -2531,12 +2540,12 @@ function openItemModal(idx){
   document.getElementById('edit-idx').value=idx!==null?idx:'';
   document.getElementById('f-num').value=it?it.num:'';
   editPal=it?it.pal||PALS[1]:PALS[1];
-  editImgCtrl=it&&it.imgCtrl?{...it.imgCtrl}:{mode:'cover',zoom:100,offsetX:0,offsetY:0,cropX:undefined,cropY:undefined,cropW:undefined,cropH:undefined,bg:'transparent',borderWidth:0,borderColor:'#dddddd'};
+  editImgCtrl=it&&it.imgCtrl?{...it.imgCtrl}:{mode:'cover',zoom:100,offsetX:0,offsetY:0,cropX:undefined,cropY:undefined,cropW:undefined,cropH:undefined,bg:'transparent',borderWidth:1,borderColor:'#111111'};
   editImgUrl=it?it.imgUrl||null:null;
   if(editImgUrl){document.getElementById('img-ph').style.display='none';document.getElementById('img-prev').src=editImgUrl;document.getElementById('img-prev').style.display='block';document.getElementById('img-clr').style.display='flex';document.getElementById('img-drop').classList.add('has');showImgCtrl(editImgUrl);}
   else clearImgPrev();
   buildPalPicker();
-  document.getElementById('modal-fields').innerHTML=cols.map(c=>{
+  document.getElementById('modal-fields').innerHTML=cols.filter(c=>c.vis).map(c=>{
     const v=esc(it?it[c.key]||'':'');
     if(c.key==='note'){
       return `<label>${esc(c.lbl)}</label><textarea id="mf-${c.key}" placeholder="${esc(c.lbl)}..." style="min-height:60px;resize:vertical">${v}</textarea>`;
