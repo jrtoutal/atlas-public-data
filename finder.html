@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="ATLAS 選色表">
 <meta name="theme-color" content="#141618">
-<title>ATLAS 選色表 v6.5.1</title>
+<title>ATLAS 選色表 v6.6</title>
 <style>
 /* 大螢幕自動放大（外接螢幕）：1600px 以上 110%、2200px 以上 125% */
 @media (min-width:1600px){html{zoom:1.1}}
@@ -260,6 +260,7 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--text
 .pro-tbl tr.subtot td{background:#f5f3ee;font-size:9px;color:#999;padding:4px 10px;font-style:italic;border-top:1px dashed #ccc;}
 .pro-sw{border-radius:4px;border:1px solid rgba(0,0,0,.08);display:block;}
 .pro-edit{padding:5px 7px;min-height:28px;cursor:text;line-height:1.4;}
+.pro-thumb{display:flex;align-items:center;justify-content:center;margin:2px auto}.pro-thumb img{image-rendering:auto}
 .pro-edit:focus{outline:none;background:rgba(91,140,245,.04);}
 .pro-edit:empty::before{content:attr(data-ph);color:#ccc;font-style:italic;}
 .doc-footer{margin-top:12px;padding-top:9px;border-top:1px solid #ddd;display:flex;justify-content:space-between;font-size:9px;color:#bbb;}
@@ -733,6 +734,14 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--text
   <!-- 表格設定 -->
   <div class="rp-sec" id="pro-opts" style="display:none">
     <div class="rp-lbl">表格設定</div>
+    <div class="f"><label>圖檔大小（列高）</label>
+      <select id="pro-thumb" onchange="render()">
+        <option value="44">小 44px</option>
+        <option value="72" selected>中 72px</option>
+        <option value="100">大 100px</option>
+        <option value="140">特大 140px</option>
+      </select>
+    </div>
     <label style="font-size:10px;color:var(--sub);display:flex;align-items:center;gap:4px;margin-bottom:5px"><input type="checkbox" id="show-sub" checked onchange="render()"> 分組小計</label>
     <label style="font-size:10px;color:var(--sub);display:flex;align-items:center;gap:4px;margin-bottom:5px"><input type="checkbox" id="show-sum" checked onchange="render()"> 總計摘要</label>
     <label style="font-size:10px;color:var(--sub);display:flex;align-items:center;gap:4px"><input type="checkbox" id="show-footer-p" checked onchange="render()"> 頁尾聲明</label>
@@ -2696,11 +2705,11 @@ function buildCards(){
   }).join('')}</div>`;
 }
 function buildPro(){
-  const showSub=chk('show-sub'),visCols=cols.filter(c=>c.vis),hdrs=['色票','編號',...visCols.map(c=>c.lbl)];
+  const showSub=chk('show-sub'),visCols=cols.filter(c=>c.vis),hdrs=['圖檔','編號',...visCols.map(c=>c.lbl)], TH=+val('pro-thumb')||72;
   let html='',gStart=-1,gLbl='';
   proRows.forEach((row,ri)=>{
     if(row.type==='group'){if(showSub&&gLbl)html+=subtotRow(gStart,ri,hdrs.length);gLbl=row.label;gStart=ri;html+=`<tr class="grp-hd"><td colspan="${hdrs.length}" contenteditable="true" spellcheck="false" style="outline:none" oninput="proRows[${ri}].label=this.innerText">${esc(row.label)}</td></tr>`;}
-    else{const it=items[row.ref];if(!it)return;const pal=it.pal,g=pal===null?'transparent':`linear-gradient(135deg,${(pal||['#ccc']).join(',')})`;const sw=thumbHtml(it,40);const num=it.num||'TL-'+(row.ref+1).toString().padStart(2,'0');const tds=visCols.map(c=>`<td><div class="pro-edit" contenteditable="true" spellcheck="false" data-ph="${esc(c.lbl)}" oninput="items[${row.ref}]['${c.key}']=this.innerText;saveActiveProject()">${esc(String(it[c.key]||''))}</div></td>`).join('');html+=`<tr><td style="padding:4px 5px">${sw}</td><td><div class="pro-edit" contenteditable="true" spellcheck="false" data-ph="編號" oninput="items[${row.ref}].num=this.innerText;saveActiveProject()">${esc(num)}</div></td>${tds}</tr>`;}
+    else{const it=items[row.ref];if(!it)return;const pal=it.pal,g=pal===null?'transparent':`linear-gradient(135deg,${(pal||['#ccc']).join(',')})`;const sw=`<div class="pro-thumb" style="height:${TH}px;width:${TH}px">${thumbHtml(it,TH-8)}</div>`;const num=it.num||'TL-'+(row.ref+1).toString().padStart(2,'0');const tds=visCols.map(c=>`<td><div class="pro-edit" contenteditable="true" spellcheck="false" data-ph="${esc(c.lbl)}" oninput="items[${row.ref}]['${c.key}']=this.innerText;saveActiveProject()">${esc(String(it[c.key]||''))}</div></td>`).join('');html+=`<tr style="height:${TH}px"><td style="padding:0 5px">${sw}</td><td><div class="pro-edit" contenteditable="true" spellcheck="false" data-ph="編號" oninput="items[${row.ref}].num=this.innerText;saveActiveProject()">${esc(num)}</div></td>${tds}</tr>`;}
   });
   if(showSub&&gLbl)html+=subtotRow(gStart,proRows.length,hdrs.length);
   return`<table class="pro-tbl"><thead><tr>${hdrs.map(h=>`<th>${esc(h)}</th>`).join('')}</tr></thead><tbody>${html}</tbody></table>`;
