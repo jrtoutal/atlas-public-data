@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#0e1012">
-<title>ATLAS 案件中心 v3.5</title>
+<title>ATLAS 案件中心 v3.6</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Space+Mono:wght@400;700&display=swap');
 :root{--bg:#0e1012;--sb:#141618;--panel:#1a1d21;--card:#1f2328;--border:#2a2f36;--border2:#353b44;--gold:#d4a843;--gold2:#f0cc7a;--teal:#3aaa8c;--teal2:#4dc9a8;--red:#e06c6c;--indigo:#7b8cff;--amber:#e8b04a;--text:#dde2ee;--sub:#8a94a6;--muted:#4a5566}
@@ -81,8 +81,6 @@ a{color:var(--teal2)}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:4px 16px;max-width:860px}
 .grid.g4{grid-template-columns:repeat(4,minmax(0,1fr));max-width:1000px;gap:2px 14px}
 .grid .c2{grid-column:span 2}.grid .c3{grid-column:span 3}.grid .full{grid-column:1/-1}
-.grid.g5{grid-template-columns:1fr 1fr 1fr 1fr 2.2fr;max-width:1100px}@media (max-width:900px){.grid.g5{grid-template-columns:1fr 1fr}}
-.jcsel{padding:4px 6px 8px}.jcsel select{width:100%;font-size:12px;padding:5px 8px}
 .grid .gh{grid-column:1/-1;font-size:11px;letter-spacing:.14em;color:var(--gold);margin:10px 0 4px;padding-bottom:4px;border-bottom:1px solid var(--border);display:flex;gap:8px;align-items:baseline}.grid .gh small{font-size:10.5px;color:var(--muted);letter-spacing:.04em}
 .grid.g4 .field{margin-bottom:8px}.grid.g4 .field label{font-size:11px;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.grid.g4 .field input,.grid.g4 .field select{padding:7px 9px}
 @media (max-width:900px){ .grid.g4{grid-template-columns:1fr 1fr} .grid .c3{grid-column:span 2} }
@@ -226,6 +224,7 @@ const UR_STAGE=['0.潛在評估與產權調閱','1.意願整合中','2.更新單
 const UR_FLAGS=['產權調閱完成','合法建築物證明已取得','耐震初評完成','耐震詳評完成','危老資格認定通過','更新單元已劃定','事業概要核准','說明會已辦','海砂屋／輻射屋','公有地佔比高','有未登記建物'];
 const UR_ROLE=['地主','地主代表/管委會','建築師/團隊','代書/估價師','其他'];
 const JC_CAT=['指定','採購','規劃','結案'];
+const JC_KIND=['建設','營造','建築師','設計師','其他'];
 const CT_KIND=['地主/住戶','建築師/設計師','營造廠/工程行','建設公司/業主','合作夥伴/代書'];
 const TASK_TAG=['送件審議','內部作業','協調會議','送樣','其他'];
 const CONSENT=['未接觸','同意','未同意','拒絕'];
@@ -243,7 +242,7 @@ const secSave=()=>{ try{ localStorage.setItem('atlas-sec-closed',JSON.stringify(
 const pclSave=()=>{ try{ localStorage.setItem('atlas-pcl-open',JSON.stringify([...PCLOPEN])); }catch(e){} };
 const T={
   ur:{table:'ur_projects',label:'都更案件',name:r=>r.name,sub:r=>[r.kind,r.consent_pct!=null?`同意 ${r.consent_pct}%`:'',r.site_area_m2?`${Number(r.site_area_m2).toLocaleString()} m²`:''].filter(Boolean),filterKey:'stage',filterOpts:UR_STAGE,filterLabel:'全部階段'},
-  jc:{table:'jc_projects',label:'建材專案',name:r=>r.name,sub:r=>[r.permit_no,(r.categories||[]).join('·'),'建檔 '+fmtD(r.created_at),'更新 '+fmtD(r.updated_at),finderVers(r.id).length?`選色 ${finderVers(r.id).length} 版`:''].filter(Boolean),filterKey:'_cat',filterOpts:JC_CAT,filterLabel:'全部類別'},
+  jc:{table:'jc_projects',label:'建材專案',name:r=>r.short_name||r.name,sub:r=>[r.permit_no,(r.categories||[]).join('·'),'建檔 '+fmtD(r.created_at),'更新 '+fmtD(r.updated_at),finderVers(r.id).length?`選色 ${finderVers(r.id).length} 版`:''].filter(Boolean),filterKey:'_cat',filterOpts:JC_CAT,filterLabel:'全部類別'},
   ct:{table:'contacts',label:'聯絡人',name:r=>r.name,sub:r=>[r.relation,r.company,r.title,r.phone].filter(Boolean),filterKey:'kind',filterOpts:CT_KIND,filterLabel:'全部類型'},
 };
 
@@ -318,20 +317,22 @@ let CTORD={cases:[],groups:{},people:{}};
 async function ctOrdLoad(){ const {data}=await sb.from('ui_state').select('data').eq('key','ct_tree').maybeSingle(); if(data?.data) CTORD={cases:[],groups:{},people:{},...data.data}; }
 async function ctOrdSave(){ const {error}=await sb.from('ui_state').upsert({user_id:UID,key:'ct_tree',data:CTORD},{onConflict:'user_id,key'}); if(error) alert('順序儲存失敗：'+error.message); }
 const ordSort=(arr,order,key)=>{ const idx=x=>{ const i=order.indexOf(key(x)); return i<0?1e9:i; }; return [...arr].sort((a,b)=>idx(a)-idx(b)); };
-const JC_ROLES=[['applicant','建設（起造人）'],['contractor','營造（承造人）'],['architect','建築師（設計人）'],['supervisor','設計師（監造人）']];
-let JCROLE=''; try{ JCROLE=localStorage.getItem('atlas-jc-role')||''; }catch(e){}
-function renderJcTree(rows,searching,rowH){ // 角色 → 公司／人 → 工程；預設最近更新在上，拖曳過就照拖曳順序；同一工程會出現在它填過的每個角色下
-  const roles=JC_ROLES.filter(([k])=>!JCROLE||k===JCROLE);
+function jcClient(r){ // 業主：表單沒填就用選色表那邊的業主
+  if(r.client_name) return {kind:r.client_kind||'建設',name:r.client_name};
+  const fp=finderProj(r.id), cl=fp?(DATA.finder?.clients||[]).find(c=>c.id===fp.clientId):null;
+  return cl?{kind:cl.kind||'建設',name:cl.name}:{kind:r.client_kind||'其他',name:'未填業主'};
+}
+function renderJcTree(rows,searching,rowH){ // 業主類型 → 業主（公司） → 工程；預設最近更新在上，拖曳過就照拖曳順序
+  const tree={}; for(const r of rows){ const c=jcClient(r); ((tree[c.kind]??={})[c.name]??=[]).push(r); }
   const last=list=>Math.max(...list.map(r=>new Date(r.updated_at||0).getTime()));
   const byT=(a,b)=>new Date(b.updated_at||0)-new Date(a.updated_at||0);
   const row=(r,scope)=>rowH(r).replace('<div class="n">',`<div class="n"><span class="hd" title="拖曳調整順序">⋮⋮</span>`).replace('class="row','draggable="true" data-dk="jp:'+esc(scope)+'" data-dv="'+r.id+'" class="row');
-  const sel=`<div class="jcsel"><select id="jcRole"><option value="">四種角色都顯示</option>${JC_ROLES.map(([k,l])=>`<option value="${k}"${JCROLE===k?' selected':''}>只看 ${l}</option>`).join('')}</select></div>`;
-  return sel+roles.map(([rk,rl])=>{ const by={}; for(const r of rows) if(r[rk]) (by[r[rk]]??=[]).push(r); const n=Object.values(by).reduce((a,v)=>a+v.length,0); if(!n) return '';
-    const k1='r:'+rk, c1=!searching&&TOPEN.has(k1);
-    const names=ordSort(Object.keys(by).sort((a,b)=>last(by[b])-last(by[a])),CTORD.jcGroups?.[rk]||[],x=>x);
-    return `<div class="g1${c1?' closed':''}" data-t="${k1}"><span class="ar">▼</span>${rl}<span class="c">${n}</span></div>`+(c1?'':names.map(nm=>{ const k2='b:'+rk+'|'+nm, c2=!searching&&TOPEN.has(k2); const scope=rk+'|'+nm;
+  return [...JC_KIND,...Object.keys(tree).filter(k=>!JC_KIND.includes(k))].filter(k=>tree[k]).map(kind=>{ const by=tree[kind]; const n=Object.values(by).reduce((a,v)=>a+v.length,0);
+    const k1='r:'+kind, c1=!searching&&TOPEN.has(k1);
+    const names=ordSort(Object.keys(by).sort((a,b)=>last(by[b])-last(by[a])),CTORD.jcGroups?.[kind]||[],x=>x);
+    return `<div class="g1${c1?' closed':''}" data-t="${esc(k1)}"><span class="ar">▼</span>${esc(kind)}<span class="c">${n}</span></div>`+(c1?'':names.map(nm=>{ const k2='b:'+kind+'|'+nm, c2=!searching&&TOPEN.has(k2); const scope=kind+'|'+nm;
       const list=ordSort([...by[nm]].sort(byT),CTORD.jcProjects?.[scope]||[],x=>x.id);
-      return `<div class="g2${c2?' closed':''}" data-t="${esc(k2)}" draggable="true" data-dk="jb:${rk}" data-dv="${esc(nm)}"><span class="hd" title="拖曳調整順序">⋮⋮</span><span class="ar">▼</span>${esc(nm)}<span class="c">${list.length}</span></div>`+(c2?'':list.map(r=>row(r,scope)).join('')); }).join('')); }).join('');
+      return `<div class="g2${c2?' closed':''}" data-t="${esc(k2)}" draggable="true" data-dk="jb:${esc(kind)}" data-dv="${esc(nm)}"><span class="hd" title="拖曳調整順序">⋮⋮</span><span class="ar">▼</span>${esc(nm)}<span class="c">${list.length}</span></div>`+(c2?'':list.map(r=>row(r,scope)).join('')); }).join('')); }).join('');
 }
 function renderCtTree(rows,searching){
   const tree={}; for(const c of rows) for(const cs of ctCases(c)){ const k=c.kind||'未分類', g=c.group_name||'未分組'; (((tree[cs]??={})[k]??={})[g]??=[]).push(c); }
@@ -361,8 +362,7 @@ function bindTreeDrag(){
   });
 }
 $('#q').addEventListener('input',renderList); $('#fStage').addEventListener('change',renderList);
-$('#rows').addEventListener('change',e=>{ if(e.target.id==='jcRole'){ JCROLE=e.target.value; try{ localStorage.setItem('atlas-jc-role',JCROLE); }catch(_){} renderList(); } });
-$('#rows').addEventListener('click',e=>{ if(e.target.closest('.hd')||e.target.closest('.jcsel')) return; const g=e.target.closest('[data-t]'); if(g){ const k=g.dataset.t; TOPEN.has(k)?TOPEN.delete(k):TOPEN.add(k); tSave(); renderList(); return; }
+$('#rows').addEventListener('click',e=>{ if(e.target.closest('.hd')) return; const g=e.target.closest('[data-t]'); if(g){ const k=g.dataset.t; TOPEN.has(k)?TOPEN.delete(k):TOPEN.add(k); tSave(); renderList(); return; }
   const r=e.target.closest('.row'); if(!r) return; CUR=DATA[TAB].find(x=>x.id===+r.dataset.id); renderList(); showForm(); });
 $('#btnNew').addEventListener('click',()=>{ CUR=null; renderList(); showForm(); });
 // 聯絡人分頁：貼謄本（個資在這裡處理）
@@ -436,11 +436,13 @@ function showForm(){
     ${fld('bonus_est','預估容積獎勵',r.bonus_est,'text','full')}
     ${txt('checklist','闖關檢核表',r.checklist,'c2')}${txt('notes','推動備註／說明會紀錄',r.notes,'c2')}
     ${isNew?`<div class="field full"><label>📄 放入都更計算機 PDF（選填：案件清單＋各地號單查，可多選；建立後自動讀取並出現預覽表）</label><input type="file" id="f-import_pdf" accept="application/pdf" multiple style="padding:8px"></div><div class="field full"><label>或貼上「本次分析地號清單」文字（建立時自動加入地號並加總基地面積）</label><textarea id="f-import_lots" placeholder="五股區	五股段	05840000	947.61	自然人100%&#10;五股區	五股段	05850000	195.61	自然人100%" style="font-family:'Space Mono',monospace;font-size:12px"></textarea></div>`:''}</div>`;
-  if(TAB==='jc') h=`<div class="d-head"><h2>${isNew?'新增建材專案':esc(r.name)}</h2>${isNew?'':`<span class="id">更新 ${fmtD(r.updated_at)}</span>`}</div><div class="grid">
-    ${fld('name','工程名稱<b>＊</b>（與選色表一致）',r.name,'text','full')}
-    ${fld('permit_no','建造執照',r.permit_no)}${fld('track_date','追蹤／執行日',fmtD(r.track_date),'date')}
-    ${chips('categories','類別（可複選）',JC_CAT,r.categories)}</div><div class="grid g4 g5" style="margin-top:4px">
-    ${fld('applicant','起造人',r.applicant)}${fld('architect','設計人',r.architect)}${fld('supervisor','監造人',r.supervisor)}${fld('contractor','承造人',r.contractor)}${fld('summary','工程概要（地下2層、地上7層、2棟1幢）',r.summary)}</div>`;
+  if(TAB==='jc') h=`<div class="d-head"><h2>${isNew?'新增建材專案':esc(r.short_name||r.name)}</h2>${isNew?'':`<span class="id">建檔 ${fmtD(r.created_at)} · 更新 ${fmtD(r.updated_at)}</span>`}</div><div class="grid">
+    ${fld('name','工程名稱<b>＊</b>（與選色表一致）',r.name)}${fld('short_name','簡稱（左側樹狀顯示）',r.short_name)}
+    ${sel('client_kind','業主類型',JC_KIND,r.client_kind||'建設')}<div class="field"><label>業主（公司）</label><input id="f-client_name" list="dl-client" value="${esc(r.client_name??'')}"><datalist id="dl-client">${[...new Set([...DATA.jc.map(x=>x.client_name),...(DATA.finder?.clients||[]).map(c=>c.name)].filter(Boolean))].map(n=>`<option value="${esc(n)}">`).join('')}</datalist></div>
+    ${fld('permit_no','建造執照',r.permit_no)}${fld('summary','工程概要（地下2層、地上7層、2棟1幢）',r.summary)}
+    ${chips('categories','類別（可複選）',JC_CAT,r.categories)}</div><div class="grid g4" style="margin-top:4px">
+    ${fld('applicant','起造人',r.applicant)}${fld('architect','設計人',r.architect)}${fld('supervisor','監造人',r.supervisor)}${fld('contractor','承造人',r.contractor)}</div><div class="grid">
+    ${fld('track_date','追蹤／執行日',fmtD(r.track_date),'date')}</div>`;
   if(TAB==='ct') h=`<div class="d-head"><h2>${isNew?'新增聯絡人':esc(r.name)}</h2></div><div class="grid">
     ${fld('name','姓名<b>＊</b>',r.name)}${sel('kind','類型',CT_KIND,r.kind)}
     <div class="field"><label>群組（家族／戶／公司）</label><input id="f-group_name" list="dl-group" value="${esc(r.group_name??'')}" placeholder="例：陳家三兄弟、41號公寓"><datalist id="dl-group">${[...new Set(DATA.ct.map(c=>c.group_name).filter(Boolean))].map(g=>`<option value="${esc(g)}">`).join('')}</datalist></div>
@@ -463,7 +465,7 @@ function showForm(){
 }
 function payload(){
   if(TAB==='ur') return {name:v('name'),code:v('code')||null,kind:v('kind')||null,stage:v('stage')||null,address:v('address')||null,site_area_m2:num('site_area_m2'),consent_pct:num('consent_pct'),owners_official:num('owners_official'),land_owners_times:num('land_owners_times'),bldg_owners_official:num('bldg_owners_official'),consent_threshold:num('consent_threshold'),land_count:num('land_count'),land_private_m2:num('land_private_m2'),land_public_m2:num('land_public_m2'),bldg_count:num('bldg_count'),bldg_floor_m2:num('bldg_floor_m2'),bldg_private_m2:num('bldg_private_m2'),unreg_bldg_count:num('unreg_bldg_count'),unreg_bldg_notes:v('unreg_bldg_notes')||null,legal_flags:chipVals('legal_flags'),bonus_est:v('bonus_est')||null,checklist:v('checklist')||null,notes:v('notes')||null};
-  if(TAB==='jc') return {name:v('name'),categories:chipVals('categories'),permit_no:v('permit_no')||null,applicant:v('applicant')||null,architect:v('architect')||null,supervisor:v('supervisor')||null,contractor:v('contractor')||null,summary:v('summary')||null,track_date:v('track_date')||null};
+  if(TAB==='jc') return {name:v('name'),short_name:v('short_name')||null,client_kind:v('client_kind')||null,client_name:v('client_name')||null,categories:chipVals('categories'),permit_no:v('permit_no')||null,applicant:v('applicant')||null,architect:v('architect')||null,supervisor:v('supervisor')||null,contractor:v('contractor')||null,summary:v('summary')||null,track_date:v('track_date')||null};
   return {name:v('name'),kind:v('kind')||null,group_name:v('group_name')||null,relation:v('relation')||null,company:v('company')||null,title:v('title')||null,phone:v('phone')||null,line_id:v('line_id')||null,background:v('background')||null,next_action:v('next_action')||null,next_date:v('next_date')||null};
 }
 function scheduleSave(){ clearTimeout(AUTOSAVE); const st=$('#st'); if(st){ st.className='st'; st.textContent='未儲存…'; } AUTOSAVE=setTimeout(()=>save(true),3000); }
@@ -522,7 +524,7 @@ function relSections(){
       .sort((a,b)=>(a.r?.name||'').localeCompare(b.r?.name||'','zh-Hant')||a.p.section.localeCompare(b.p.section,'zh-Hant')||a.p.lot.localeCompare(b.p.lot));
     const viaLand=[...new Map(owns.filter(x=>x.r&&!urs.some(u=>u.r.id===x.r.id)).map(x=>[x.r.id,x.r])).values()];
     h+=`<div class="sec"><h3>參與的案件</h3>${urs.map(x=>`<div class="it"><span class="pill k1">都更</span><span>${esc(x.r.name)}</span><span class="sub">${esc(x.role||'')}</span></div>`).join('')}${viaLand.map(r=>`<div class="it"><span class="pill k1">都更</span><span>${esc(r.name)}</span><span class="sub">地主（由持有地號推得）</span></div>`).join('')}${jcs.map(p=>`<div class="it"><span class="pill k2">建材</span><span>${esc(p.name)}</span></div>`).join('')}${urs.length+jcs.length+viaLand.length?'':'<div style="font-size:12px;color:var(--muted)">尚無。</div>'}
-      <div class="addrow"><input id="jCase" list="dl-case" placeholder="打字找案件（都更／建材）" style="flex:1.6"><datalist id="dl-case">${DATA.ur.map(u=>`<option value="都更 · ${esc(u.name)}">${esc(u.stage||'')}</option>`).join('')}${DATA.jc.map(u=>`<option value="建材 · ${esc(u.name)}">${esc(u.applicant||'')}</option>`).join('')}</datalist><select id="jRole">${UR_ROLE.map(o=>`<option>${o}</option>`).join('')}</select><button class="btn sm" id="btnJoin">加入案件</button></div></div>`;
+      <div class="addrow"><input id="jCase" list="dl-case" placeholder="打字找案件（都更／建材）" style="flex:1.6"><datalist id="dl-case">${DATA.ur.map(u=>`<option value="都更 · ${esc(u.name)}">${esc(u.stage||'')}</option>`).join('')}${DATA.jc.map(u=>`<option value="建材 · ${esc(u.name)}">${esc(u.client_name||'')}</option>`).join('')}</datalist><select id="jRole">${UR_ROLE.map(o=>`<option>${o}</option>`).join('')}</select><button class="btn sm" id="btnJoin">加入案件</button></div></div>`;
     h+=`<div class="sec"><h3>持有地號 <span class="spacer"></span><span class="mono" style="font-weight:400">${owns.length}</span></h3>${owns.map(x=>`<div class="it"><span class="pill k1">${esc(x.r?.name||'')}</span><span>${esc(x.p.section)} <b class="mono" style="font-weight:400">${esc(x.p.lot)}</b></span><span class="sub">${fmtM2(x.p.area_m2)} m² × ${frac(x.o.share_num,x.o.share_den)}</span><select data-consent="${x.o.id}" class="c-${x.o.consent}" style="padding:2px 6px;font-size:12px;background:var(--bg);border:1px solid var(--border2);border-radius:6px">${CONSENT.map(c=>`<option${c===x.o.consent?' selected':''}>${c}</option>`).join('')}</select><input data-onote="${x.o.id}" value="${esc(x.o.notes??'')}" placeholder="備註" style="flex:1;min-width:120px;padding:2px 6px;font-size:12px;background:var(--bg);border:1px solid var(--border2);border-radius:6px;color:var(--text)"><span class="x" data-delown="${x.o.id}">刪</span></div>`).join('')||'<div style="font-size:12px;color:var(--muted)">尚無。下方直接加，或到都更案件頁「地號與所有權人」加。</div>'}
       ${DATA.noParcels?'':`<div class="addrow"><input id="hPcl" list="dl-pcl" placeholder="打字找地號（案名或地號）" style="flex:1.8"><datalist id="dl-pcl">${DATA.pcl.filter(p=>!DATA.po.some(o=>o.parcel_id===p.id&&o.contact_id===id)).map(p=>`<option value="${esc(DATA.ur.find(u=>u.id===p.ur_project_id)?.name||'')} · ${esc(p.section)} ${esc(p.lot)}">${fmtM2(p.area_m2)} m²</option>`).join('')}</datalist><input id="hNum" type="number" min="1" placeholder="分子" style="flex:0 0 70px"><span style="align-self:center">／</span><input id="hDen" type="number" min="1" placeholder="分母" style="flex:0 0 70px"><select id="hCs">${CONSENT.map(c=>`<option>${c}</option>`).join('')}</select><input id="hNote" placeholder="備註" style="flex:1"><button class="btn sm" id="btnHold">加持有地號</button></div>`}</div>`;
   }
