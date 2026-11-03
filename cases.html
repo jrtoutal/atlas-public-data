@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#0e1012">
-<title>ATLAS 案件中心 v2.9.3</title>
+<title>ATLAS 案件中心 v3.0</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Space+Mono:wght@400;700&display=swap');
 :root{--bg:#0e1012;--sb:#141618;--panel:#1a1d21;--card:#1f2328;--border:#2a2f36;--border2:#353b44;--gold:#d4a843;--gold2:#f0cc7a;--teal:#3aaa8c;--teal2:#4dc9a8;--red:#e06c6c;--indigo:#7b8cff;--amber:#e8b04a;--text:#dde2ee;--sub:#8a94a6;--muted:#4a5566}
@@ -229,6 +229,9 @@ const TASK_TAG=['送件審議','內部作業','協調會議','送樣','其他'];
 const CONSENT=['未接觸','同意','未同意','拒絕'];
 const LAND_USE=['建','田','旱','林','道','水','雜','—'];
 
+// 選色表（finder_state）裡對應這個建材專案的版本
+const finderProj=jcId=>(DATA.finder?.projects||[]).find(p=>p.jcId===jcId)||null;
+const finderVers=jcId=>{ const p=finderProj(jcId); return p?(DATA.finder?.versions||[]).filter(v=>v.projectId===p.id):[]; };
 // ── 狀態 ──
 let UID=null, TAB='ur', CUR=null, DATA={ur:[],jc:[],ct:[],tasks:[],urc:[],jcc:[],pcl:[],po:[]};
 let AUTOSAVE=null, EDIT_PCL=null, PASTE_PCL=null; const ADDOPEN=new Set();
@@ -238,7 +241,7 @@ const secSave=()=>{ try{ localStorage.setItem('atlas-sec-closed',JSON.stringify(
 const pclSave=()=>{ try{ localStorage.setItem('atlas-pcl-open',JSON.stringify([...PCLOPEN])); }catch(e){} };
 const T={
   ur:{table:'ur_projects',label:'都更案件',name:r=>r.name,sub:r=>[r.kind,r.consent_pct!=null?`同意 ${r.consent_pct}%`:'',r.site_area_m2?`${Number(r.site_area_m2).toLocaleString()} m²`:''].filter(Boolean),filterKey:'stage',filterOpts:UR_STAGE,filterLabel:'全部階段'},
-  jc:{table:'jc_projects',label:'建材專案',name:r=>r.name,sub:r=>[r.builder_name,r.owner,(r.categories||[]).join('·'),fmtD(r.track_date)].filter(Boolean),filterKey:'_cat',filterOpts:JC_CAT,filterLabel:'全部類別'},
+  jc:{table:'jc_projects',label:'建材專案',name:r=>r.name,sub:r=>[r.builder_name,r.owner,(r.categories||[]).join('·'),fmtD(r.track_date),finderVers(r.id).length?`選色 ${finderVers(r.id).length} 版`:''].filter(Boolean),filterKey:'_cat',filterOpts:JC_CAT,filterLabel:'全部類別'},
   ct:{table:'contacts',label:'聯絡人',name:r=>r.name,sub:r=>[r.relation,r.company,r.title,r.phone].filter(Boolean),filterKey:'kind',filterOpts:CT_KIND,filterLabel:'全部類型'},
 };
 
@@ -254,7 +257,7 @@ function cloud(st,txt){ $('#cloudDot').className=st; $('#cloudTxt').textContent=
 // ── 載入 ──
 async function loadAll(){
   cloud('wait','載入中…');
-  const [a,b,c,d,e,f,g,h,z]=await Promise.all([
+  const [a,b,c,d,e,f,g,h,z,fs]=await Promise.all([
     sb.from('ur_projects').select('*').order('updated_at',{ascending:false}),
     sb.from('jc_projects').select('*').order('updated_at',{ascending:false}),
     sb.from('contacts').select('*').order('name'),
@@ -264,10 +267,11 @@ async function loadAll(){
     sb.from('parcels').select('*').order('section').order('lot'),
     sb.from('parcel_owners').select('*').order('id'),
     sb.from('zoning_rules').select('*').is('effective_to',null).order('city').order('far_pct'),
+    sb.from('finder_state').select('data').eq('user_id',UID).maybeSingle(),
   ]);
   const err=[a,b,c,d,e,f].find(x=>x.error)?.error; if(err){ cloud('err','讀取失敗：'+err.message); return; }
   // parcels 兩表還沒建（supabase_11 未跑）時不擋整頁
-  DATA={ur:a.data,jc:b.data,ct:c.data,tasks:d.data,urc:e.data,jcc:f.data,pcl:g.error?[]:g.data,po:h.error?[]:h.data,zr:z.error?[]:z.data};
+  DATA={ur:a.data,jc:b.data,ct:c.data,tasks:d.data,urc:e.data,jcc:f.data,pcl:g.error?[]:g.data,po:h.error?[]:h.data,zr:z.error?[]:z.data,finder:fs.data?.data||null};
   DATA.noParcels=!!g.error;
   cloud('ok','已同步');
 }
@@ -479,6 +483,10 @@ async function del(){
 function relSections(){
   const id=CUR.id; let h='';
   if(TAB==='ur') h+=parcelSection(id);
+  if(TAB==='jc'){ const fp=finderProj(id), vs=finderVers(id); const cl=fp?(DATA.finder?.clients||[]).find(c=>c.id===fp.clientId):null;
+    h+=`<div class="sec"><h3>選色表 <span class="spacer"></span><span class="mono" style="font-weight:400">${vs.length} 個版本</span></h3>
+      ${fp?`<div class="it"><span class="pill k2">${esc(cl?.name||'')}</span><span>${esc(fp.name)}</span><span class="sub">${vs.map(v=>esc(v.name)).join('、')||'尚無版本'}</span><a class="btn sm" href="finder.html?jc=${id}" style="margin-left:auto;text-decoration:none">開選色表 →</a></div>`
+        :`<div style="font-size:12px;color:var(--muted)">選色表裡還沒有這個專案。到 <a href="finder.html">選色表</a> 在對應建商下新增同名專案，它會自動連到這裡。</div>`}</div>`; }
   if(TAB==='ur'||TAB==='jc'){
     const links=TAB==='ur'?DATA.urc.filter(x=>x.ur_project_id===id):DATA.jcc.filter(x=>x.jc_project_id===id);
     h+=`<div class="sec"><h3>相關聯絡人 <span class="spacer"></span><span class="mono" style="font-weight:400">${links.length}</span></h3>

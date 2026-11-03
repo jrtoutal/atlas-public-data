@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="ATLAS 選色表">
 <meta name="theme-color" content="#141618">
-<title>ATLAS 選色表 v6.0.4</title>
+<title>ATLAS 選色表 v6.1</title>
 <style>
 /* 大螢幕自動放大（外接螢幕）：1600px 以上 110%、2200px 以上 125% */
 @media (min-width:1600px){html{zoom:1.1}}
@@ -1659,7 +1659,7 @@ function saveClient(){
     db.clients.push({id,name});
     activeClientId=id; activeProjectId=null;
   }
-  saveDb(); closeModal('client-modal'); renderFinder();
+  saveDb(); closeModal('client-modal'); renderFinder(); syncJc();
 }
 function deleteClient(id){
   if(!confirm('刪除此建商及其所有專案？'))return;
@@ -1701,7 +1701,7 @@ function saveProjectModal(){
     document.getElementById('project-f').value=name;
     renderItemList(); render();
   }
-  saveDb(); closeModal('project-modal'); renderFinder();
+  saveDb(); closeModal('project-modal'); renderFinder(); syncJc();
   const client=db.clients.find(c=>c.id===activeClientId);
   document.getElementById('tb-project').textContent=`${client?.name||''} ／ ${name}`;
 }
@@ -2816,6 +2816,35 @@ document.getElementById('gateForm').addEventListener('submit',async e=>{
   boot();
 });
 let _booted=false;
+
+// ════════════════════════════════════════════
+//  表二 jc_projects 連動：finder 的建商／專案 ↔ 案件中心「建材專案」
+//  原則：finder 仍以 finder_state 為主；每個專案記 jcId，對應 jc_projects 一筆（name=專案名、builder_name=建商）
+// ════════════════════════════════════════════
+let _jcBusy=false;
+async function syncJc(){
+  if(!SB_UID||_jcBusy) return; _jcBusy=true;
+  try{
+    const {data:rows,error}=await sb.from('jc_projects').select('id,name,builder_name'); if(error){ console.warn('jc_projects 讀取失敗',error.message); return; }
+    let changed=false;
+    for(const p of db.projects){
+      const client=db.clients.find(c=>c.id===p.clientId); const bn=client?.name||null;
+      let row=p.jcId?rows.find(r=>r.id===p.jcId):null;
+      if(!row){ row=rows.find(r=>r.name===p.name&&(r.builder_name||null)===bn)||rows.find(r=>r.name===p.name&&!r.builder_name); }
+      if(!row){ const {data,error:e2}=await sb.from('jc_projects').insert({name:p.name,builder_name:bn,categories:['指定']}).select('id,name,builder_name').single(); if(e2){ console.warn('jc_projects 新增失敗',e2.message); continue; } row=data; rows.push(row); }
+      if(p.jcId!==row.id){ p.jcId=row.id; changed=true; }
+      if(row.name!==p.name||(row.builder_name||null)!==bn){ const {error:e3}=await sb.from('jc_projects').update({name:p.name,builder_name:bn}).eq('id',row.id); if(!e3){ row.name=p.name; row.builder_name=bn; } }
+    }
+    if(changed){ try{ localStorage.setItem('atlas-db-v1',JSON.stringify(db)); }catch{} cloudSave(); }
+  } finally { _jcBusy=false; }
+}
+// 從案件中心開過來：finder.html?jc=<jc_projects.id>
+function openFromJc(){
+  const id=+(new URLSearchParams(location.search).get('jc')||0); if(!id) return false;
+  const p=db.projects.find(x=>x.jcId===id); if(!p) return false;
+  activeClientId=p.clientId; activeProjectId=p.id; activeVersionId=(db.versions||[]).find(v=>v.projectId===p.id)?.id||null;
+  return true;
+}
 async function boot(){
   const {data:{session}}=await sb.auth.getSession();
   if(!session){ document.body.classList.add('locked'); document.getElementById('gate').style.display='flex'; return; }
@@ -2826,6 +2855,8 @@ async function boot(){
   initApp();
   if(!hadCloud && db.clients.length){ cloudSave(); }   // 第一次：把本機資料推上雲端
   migrateDataUrls();                                   // 把 base64 圖片搬到 Storage
+  await syncJc();                                      // 建商／專案 → 表二 jc_projects（案件中心看得到）
+  if(openFromJc()){ loadActiveProject(); renderFinder(); }   // 從案件中心「開選色表」直達該專案
 }
 sb.auth.onAuthStateChange((ev)=>{ if(ev==='SIGNED_OUT'){ location.reload(); } });
 boot();
