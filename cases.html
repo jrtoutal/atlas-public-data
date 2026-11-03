@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#0e1012">
-<title>ATLAS 案件中心 v3.10</title>
+<title>ATLAS 案件中心 v3.11</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Space+Mono:wght@400;700&display=swap');
 :root{--bg:#0e1012;--sb:#141618;--panel:#1a1d21;--card:#1f2328;--border:#2a2f36;--border2:#353b44;--gold:#d4a843;--gold2:#f0cc7a;--teal:#3aaa8c;--teal2:#4dc9a8;--red:#e06c6c;--indigo:#7b8cff;--amber:#e8b04a;--text:#dde2ee;--sub:#8a94a6;--muted:#4a5566}
@@ -24,7 +24,7 @@ a{color:var(--teal2)}
 .brand h1{font-size:20px;font-weight:700}
 .login-box p{color:var(--sub);font-size:12.5px;margin-bottom:20px}
 .field{margin-bottom:12px;min-width:0}
-.field label{display:block;font-size:11.5px;color:var(--sub);margin-bottom:5px;letter-spacing:.06em}
+.field label{display:block;font-size:11.5px;color:var(--teal2);margin-bottom:5px;letter-spacing:.06em}
 .field label b{color:var(--red);font-weight:400}
 .field input,.field select,.field textarea{width:100%;padding:9px 11px;background:var(--bg);border:1px solid var(--border2);border-radius:8px;color:var(--text);outline:none}
 .field input:focus,.field select:focus,.field textarea:focus{border-color:var(--gold)}
@@ -77,11 +77,11 @@ a{color:var(--teal2)}
 .detail{flex:1;overflow-y:auto;padding:22px 26px}
 .d-head{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:14px}
 .d-head h2{font-size:20px;font-weight:700}
-.d-head .id{font-family:'Space Mono',monospace;font-size:11px;color:var(--muted)}
+.d-head .id{font-family:'Space Mono',monospace;font-size:11px;color:var(--teal2)}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:4px 16px;max-width:860px}
 .grid.g4{grid-template-columns:repeat(4,minmax(0,1fr));max-width:1000px;gap:2px 14px}
 .grid .c2{grid-column:span 2}.grid .c3{grid-column:span 3}.grid .full{grid-column:1/-1}
-.row .todo{display:flex;flex-wrap:wrap;gap:4px 8px;margin-top:5px;font-size:11px}.row .todo span{color:var(--amber);background:rgba(232,176,74,.12);border:1px solid rgba(232,176,74,.35);padding:1px 7px;border-radius:5px}.row .todo i{font-style:normal;color:var(--gold2);font-family:'Space Mono',monospace;font-size:10px;margin-left:4px}.row .todo .late{color:#ff8a8a;background:rgba(224,108,108,.15);border-color:rgba(224,108,108,.5)}
+.row .todo{display:flex;flex-wrap:wrap;gap:4px 8px;margin-top:5px;font-size:11px}.row .todo span{color:var(--amber);background:rgba(232,176,74,.12);border:1px solid rgba(232,176,74,.35);padding:1px 7px;border-radius:5px}.row .todo .tcb{cursor:pointer;font-style:normal;font-weight:400;margin-right:4px;font-size:13px;line-height:1}.row .todo .tcb:hover{color:#fff}.row .todo i{font-style:normal;color:var(--gold2);font-family:'Space Mono',monospace;font-size:10px;margin-left:4px}.row .todo .late{color:#ff8a8a;background:rgba(224,108,108,.15);border-color:rgba(224,108,108,.5)}
 .grid.g5{grid-template-columns:repeat(5,minmax(0,1fr));max-width:860px;gap:2px 10px}.grid.g5 input[type=date]{padding-left:6px;padding-right:4px;font-size:12px}@media (max-width:900px){.grid.g5{grid-template-columns:1fr 1fr 1fr}}
 .dmask.bad{border-color:var(--red)!important}
 .grid .gh{grid-column:1/-1;font-size:11px;letter-spacing:.14em;color:var(--gold);margin:10px 0 4px;padding-bottom:4px;border-bottom:1px solid var(--border);display:flex;gap:8px;align-items:baseline}.grid .gh small{font-size:10.5px;color:var(--muted);letter-spacing:.04em}
@@ -96,14 +96,14 @@ a{color:var(--teal2)}
 .actions .st{flex:1;font-size:12px;color:var(--sub)}
 .actions .st.ok{color:var(--teal2)}.actions .st.err{color:var(--red)}
 .sec{max-width:860px;border-top:1px solid var(--border);padding-top:14px;margin-top:6px}
-.sec h3{font-size:12px;color:var(--sub);letter-spacing:.12em;margin-bottom:8px;display:flex;align-items:center;gap:10px}
+.sec h3{font-size:12px;color:var(--gold);font-weight:600;letter-spacing:.12em;margin-bottom:8px;display:flex;align-items:center;gap:10px}
 .sec h3 .spacer{flex:1}
 .it{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px dashed var(--border);font-size:13px}
 .it .x{color:var(--muted);cursor:pointer;font-size:12px;margin-left:auto}
 .it .x:hover{color:var(--red)}
-.it .sub{color:var(--sub);font-size:12px}
-.it.done .t{color:var(--muted);text-decoration:line-through}
-.it .cb{width:15px;height:15px;border:1px solid var(--border2);border-radius:4px;cursor:pointer;flex-shrink:0;position:relative}
+.it .sub{color:var(--sub);font-size:12px}.it:not(.done) .t{color:var(--amber)}.it:not(.done) .sub{color:var(--gold2)}.it.late:not(.done) .t{color:#ff8a8a}
+.it.done .t{color:var(--muted);text-decoration:line-through}.it.done .sub{color:var(--muted);text-decoration:line-through}
+.it .cb{width:15px;height:15px;border:1px solid var(--amber);border-radius:4px;cursor:pointer;flex-shrink:0;position:relative}
 .it.done .cb{background:var(--teal);border-color:var(--teal)}
 .it.done .cb::after{content:'✓';color:#fff;font-size:10px;position:absolute;left:2px;top:-3px}
 .addrow{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
@@ -326,7 +326,7 @@ document.addEventListener('input',e=>{ const el=e.target; if(!el.classList?.cont
 function todoLine(r){ // 列表第三行：未完成待辦（最近到期的前 2 筆）
   if(TAB==='ct') return ''; const ts=DATA.tasks.filter(t=>t.status!=='完成'&&(TAB==='ur'?t.ur_project_id===r.id:t.jc_project_id===r.id)); if(!ts.length) return '';
   const today=new Date().toISOString().slice(0,10);
-  return `<div class="todo">${ts.slice(0,2).map(t=>`<span class="${t.due_at&&t.due_at.slice(0,10)<today?'late':''}">☐ ${esc(t.title)}${fmtD(t.due_at)?' <i>'+fmtD(t.due_at).slice(5)+'</i>':''}</span>`).join('')}${ts.length>2?`<span>＋${ts.length-2}</span>`:''}</div>`;
+  return `<div class="todo">${ts.slice(0,2).map(t=>`<span class="${t.due_at&&t.due_at.slice(0,10)<today?'late':''}"><b class="tcb" data-tdone="${t.id}" title="打勾＝完成">☐</b>${esc(t.title)}${fmtD(t.due_at)?' <i>'+fmtD(t.due_at).slice(5)+'</i>':''}</span>`).join('')}${ts.length>2?`<span>＋${ts.length-2}</span>`:''}</div>`;
 }
 function jcClient(r){ // 業主：表單沒填就用選色表那邊的業主
   if(r.client_name) return {kind:r.client_kind||'建設',name:r.client_name};
@@ -373,7 +373,9 @@ function bindTreeDrag(){
   });
 }
 $('#q').addEventListener('input',renderList); $('#fStage').addEventListener('change',renderList);
-$('#rows').addEventListener('click',e=>{ if(e.target.closest('.hd')) return; const g=e.target.closest('[data-t]'); if(g){ const k=g.dataset.t; TOPEN.has(k)?TOPEN.delete(k):TOPEN.add(k); tSave(); renderList(); return; }
+$('#rows').addEventListener('click',async e=>{ const cb=e.target.closest('[data-tdone]'); if(cb){ e.stopPropagation(); const t=DATA.tasks.find(k=>k.id===+cb.dataset.tdone); if(!t) return; cb.textContent='☑';
+    const {error}=await sb.from('tasks').update({status:'完成',done_on:new Date().toISOString().slice(0,10)}).eq('id',t.id); if(error){ alert(error.message); return; } t.status='完成'; renderList(); if(CUR) showForm(); return; }
+  if(e.target.closest('.hd')) return; const g=e.target.closest('[data-t]'); if(g){ const k=g.dataset.t; TOPEN.has(k)?TOPEN.delete(k):TOPEN.add(k); tSave(); renderList(); return; }
   const r=e.target.closest('.row'); if(!r) return; CUR=DATA[TAB].find(x=>x.id===+r.dataset.id); renderList(); showForm(); });
 $('#btnNew').addEventListener('click',()=>{ CUR=null; renderList(); showForm(); });
 // 聯絡人分頁：貼謄本（個資在這裡處理）
@@ -524,7 +526,7 @@ function relSections(){
       <div class="addrow"><select id="linkCt"><option value="">— 選聯絡人 —</option>${DATA.ct.map(c=>`<option value="${c.id}">${esc(c.name)}${c.company?' · '+esc(c.company):''}</option>`).join('')}</select>${TAB==='ur'?`<select id="linkRole">${UR_ROLE.map(o=>`<option>${o}</option>`).join('')}</select>`:''}<button class="btn sm" id="btnLink">加入</button><button class="btn sm" id="btnNewCt" title="先新增聯絡人再回來連結">＋ 新聯絡人</button></div></div>`;
     const ts=DATA.tasks.filter(t=>TAB==='ur'?t.ur_project_id===id:t.jc_project_id===id);
     h+=`<div class="sec"><h3>待辦 <span class="spacer"></span><span class="mono" style="font-weight:400">${ts.filter(t=>t.status!=='完成').length} 未完成</span></h3>
-      ${ts.map(t=>`<div class="it${t.status==='完成'?' done':''}"><span class="cb" data-task="${t.id}"></span><span class="t">${esc(t.title)}</span><span class="sub">${esc([t.tag,fmtD(t.due_at)?'到期 '+fmtD(t.due_at):''].filter(Boolean).join(' · '))}</span><span class="x" data-deltask="${t.id}">刪</span></div>`).join('')||'<div style="font-size:12px;color:var(--muted)">尚無</div>'}
+      ${ts.map(t=>`<div class="it${t.status==='完成'?' done':''}${t.due_at&&t.status!=='完成'&&t.due_at.slice(0,10)<new Date().toISOString().slice(0,10)?' late':''}"><span class="cb" data-task="${t.id}"></span><span class="t">${esc(t.title)}</span><span class="sub">${esc([t.tag,fmtD(t.due_at)?'到期 '+fmtD(t.due_at):''].filter(Boolean).join(' · '))}</span><span class="x" data-deltask="${t.id}">刪</span></div>`).join('')||'<div style="font-size:12px;color:var(--muted)">尚無</div>'}
       <div class="addrow"><input id="taskTitle" placeholder="新待辦…"><select id="taskTag">${TASK_TAG.map(o=>`<option>${o}</option>`).join('')}</select><input id="taskDue" class="dmask" placeholder="2026/11/04" inputmode="numeric" maxlength="10" style="flex:0 0 110px"><button class="btn sm" id="btnTask">加入</button></div></div>`;
   }
   if(TAB==='ct'){
