@@ -304,7 +304,7 @@ Vercel 盯著這個 repo，檔案一變就自動重新部署（約 30–60 秒�
 
 資料庫結構（SQL）
   每次改結構都是一支新的 supabase_NN_xxx.sql，在 Supabase SQL Editor 跑一次
-  已跑：01 法規條文 · 03 全表 · 04 Storage · 05 law-pdf · 06 法規主檔 · 07 ui_state · 08 刪法規 · 09 issuer · 10 ur_projects 中文化 · 11 地號與持分 · 11b 授權 · 12 角色 · 13 群組 · 14 官方人數 · 15 持分排序 · 16 建物人數 · 17 遮罩識別碼 · 18 公有地／代號 · 19 地號排序 · 20 公告現值 · 21 建物筆數面積 · 22 未登記建物 · 23 案件總覽 · 24 分區容積率 · 25 擷取日 · 26 新北容積種子 · 27–30 分區／地號群組 · 31 sync_log
+  已跑：01 法規條文 · 03 全表 · 04 Storage · 05 law-pdf · 06 法規主檔 · 07 ui_state · 08 刪法規 · 09 issuer · 10 ur_projects 中文化 · 11 地號與持分 · 11b 授權 · 12 角色 · 13 群組 · 14 官方人數 · 15 持分排序 · 16 建物人數 · 17 遮罩識別碼 · 18 公有地／代號 · 19 地號排序 · 20 公告現值 · 21 建物筆數面積 · 22 未登記建物 · 23 案件總覽 · 24 分區容積率 · 25 擷取日 · 26 新北容積種子 · 27–30 分區／地號群組 · 31 sync_log · 32 土管檢討／結案／倍數 · 33 建照欄位 · 34 業主簡稱 · 35 schema 記錄
   改 SQL 不會動到資料；重建整個專案才需要從 01 依序跑
 
 版本號慣例
@@ -386,8 +386,10 @@ const SCH = [
        w:'✅ 2026-11-02 cases v2.9。SQL 11→30。公有地免計、人數去重、PDF 單查頁全欄位辨識、地段→群組→地號樹'},
       {n:'首頁 v6.2：案件卡片顯示人數比／面積比燈號、門檻、未登記建物提醒', s:'sat', h:1, done:true,
        w:'✅ 2026-11-02。與案件中心同一套算法'},
-      {n:'finder 的建商／專案改讀 jc_projects（表二）', s:'sun', h:2,
-       w:'現在建商／專案存在 finder_state 內；接表二後選色版本才能正規化進 color_versions'},
+      {n:'finder 的建商／專案改讀 jc_projects（表二）', s:'sun', h:2, done:true,
+       w:'✅ 2026-11-03 finder v6.9。syncJc 自動對上表二；?jc=ID 從案件中心直開；Dock 側欄、上一步、區域樹、表格正方形縮圖、品牌識別存雲端'},
+      {n:'案件中心 v3.x：建材專案改建照欄位（起造／設計／監造／承造／工程概要）、業主→公司→工程樹、待辦可在樹上打勾、全站樹狀配色統一', s:'sat', h:3, done:true,
+       w:'✅ 2026-11-04 cases v3.11。SQL 33–35；選色表存檔會更新 jc_projects.updated_at 讓樹狀排序一致'},
       {n:'二類謄本進場：聯絡人頁「貼謄本」把 11 筆地號所有權人（遮罩識別碼）貼入 → 真實去重分母', s:'any', h:2,
        w:'等謄本申請到。貼完每筆地號「地主 已建/官方」應轉綠'},
       {n:'建物層：建號 × 所有權人（算 §37 建物人數比／樓地板面積比）', s:'sun', h:4,
@@ -577,6 +579,7 @@ const OPS=[
   {k:'last_backup',l:'最近一次確認 Supabase 備份',ph:'YYYY-MM-DD',judge:v=>{ if(!v) return ['bad','未記錄']; const d=(Date.now()-new Date(v))/864e5; return d>45?['bad',Math.round(d)+' 天前']:d>30?['warn',Math.round(d)+' 天前']:['ok',Math.round(d)+' 天前']; }},
   {k:'law_central',auto:true,l:'中央法規同步（腳本自動記）',judge:()=>{ const r=SYNC.law_central; if(!r) return ['bad','未記錄']; const d=(Date.now()-new Date(r.ran_at))/864e5; return [d>100?'warn':'ok',new Date(r.ran_at).toLocaleDateString('zh-TW')+' · '+Math.round(d)+' 天前'+(r.note?' · '+r.note:'')]; }},
   {k:'law_pdf',auto:true,l:'地方法規 PDF 最後上傳（法規庫自動記）',judge:()=>{ const r=SYNC.law_pdf; if(!r) return ['bad','未記錄（開一次法規庫即寫入）']; const d=(Date.now()-new Date(r.ran_at))/864e5; return [d>100?'warn':'ok',new Date(r.ran_at).toLocaleDateString('zh-TW')+' · '+Math.round(d)+' 天前'+(r.note?' · '+r.note:'')]; }},
+  {k:'schema',auto:true,l:'資料庫結構最後更新（SQL 檔尾自動記）',judge:()=>{ const r=SYNC.schema; if(!r) return ['warn','未記錄（跑 supabase_35 起自動寫）']; const d=(Date.now()-new Date(r.ran_at))/864e5; return ['ok',new Date(r.ran_at).toLocaleDateString('zh-TW')+' · '+Math.round(d)+' 天前'+(r.note?' · '+r.note:'')]; }},
   {k:'handover_ver',l:'交接文件版本',ph:'例：v5 · 2026-10',judge:v=>v?['ok',v]:['warn','未填']},
   {k:'nocodb',l:'NocoDB 容器',ph:'運行中 / 已停用',judge:v=>v&&v.includes('停')?['ok',v]:['warn',v||'運行中（待停用）']},
 ];
