@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#0e1012">
-<title>ATLAS 案件中心 v3.11</title>
+<title>ATLAS 案件中心 v3.12</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Space+Mono:wght@400;700&display=swap');
 :root{--bg:#0e1012;--sb:#141618;--panel:#1a1d21;--card:#1f2328;--border:#2a2f36;--border2:#353b44;--gold:#d4a843;--gold2:#f0cc7a;--teal:#3aaa8c;--teal2:#4dc9a8;--red:#e06c6c;--indigo:#7b8cff;--amber:#e8b04a;--text:#dde2ee;--sub:#8a94a6;--muted:#4a5566}
@@ -83,6 +83,8 @@ a{color:var(--teal2)}
 .grid .c2{grid-column:span 2}.grid .c3{grid-column:span 3}.grid .full{grid-column:1/-1}
 .row .todo{display:flex;flex-wrap:wrap;gap:4px 8px;margin-top:5px;font-size:11px}.row .todo span{color:var(--amber);background:rgba(232,176,74,.12);border:1px solid rgba(232,176,74,.35);padding:1px 7px;border-radius:5px}.row .todo .tcb{cursor:pointer;font-style:normal;font-weight:400;margin-right:4px;font-size:13px;line-height:1}.row .todo .tcb:hover{color:#fff}.row .todo i{font-style:normal;color:var(--gold2);font-family:'Space Mono',monospace;font-size:10px;margin-left:4px}.row .todo .late{color:#ff8a8a;background:rgba(224,108,108,.15);border-color:rgba(224,108,108,.5)}
 .grid.g5{grid-template-columns:repeat(5,minmax(0,1fr));max-width:860px;gap:2px 10px}.grid.g5 input[type=date]{padding-left:6px;padding-right:4px;font-size:12px}@media (max-width:900px){.grid.g5{grid-template-columns:1fr 1fr 1fr}}
+.pdfbox{background:var(--panel);border:1px dashed var(--border2);border-radius:10px;padding:12px 14px;max-width:860px}.pdfh{font-weight:500;margin-bottom:6px}.pdfh .sub{font-weight:400;font-size:12px;color:var(--sub);margin-left:8px}.pdfbox input[type=file]{font-size:12px}
+.tbcard{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin-top:12px;max-width:1100px}.tbh{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap;margin-bottom:6px}.tbh b{color:var(--teal2)}.tbh .sub{font-size:12px;color:var(--sub)}.tbcard tr.dim{opacity:.45}.tbcard .pt td,.tbcard .pt th{font-size:12px;padding:4px 6px}
 .dmask.bad{border-color:var(--red)!important}
 .grid .gh{grid-column:1/-1;font-size:11px;letter-spacing:.14em;color:var(--gold);margin:10px 0 4px;padding-bottom:4px;border-bottom:1px solid var(--border);display:flex;gap:8px;align-items:baseline}.grid .gh small{font-size:10.5px;color:var(--muted);letter-spacing:.04em}
 .grid.g4 .field{margin-bottom:8px}.grid.g4 .field label{font-size:11px;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.grid.g4 .field input,.grid.g4 .field select{padding:7px 9px}
@@ -381,7 +383,10 @@ $('#btnNew').addEventListener('click',()=>{ CUR=null; renderList(); showForm(); 
 // 聯絡人分頁：貼謄本（個資在這裡處理）
 function showPastePanel(){
   CUR=null; renderList();
-  $('#detail').innerHTML=`<div class="d-head"><h2>📋 貼二類謄本</h2><span class="id">所有權人 → 某一筆地號</span></div>
+  $('#detail').innerHTML=`<div class="d-head"><h2>📋 二類謄本</h2><span class="id">土地所有權部 → 地號所有權人、聯絡人</span></div>
+    <div class="pdfbox"><div class="pdfh">📄 放入謄本 PDF <span class="sub">網路申領的電子謄本（有文字層），一次可放多個地號；自動對到案件中的地號</span></div>
+      <input type="file" id="tbFile" accept="application/pdf" multiple><span class="st" id="tbMsg"></span></div><div id="tbOut"></div>
+    <div class="gh" style="margin-top:14px">手動貼文字（備援）</div>
     <div class="grid"><div class="field full"><label>地號（打字找：案名或地號）</label><input id="ppPcl" list="dl-pcl2" placeholder="例：五股段 0584"><datalist id="dl-pcl2">${pclsAllSorted().map(p=>`<option value="${esc(DATA.ur.find(u=>u.id===p.ur_project_id)?.name||'')} · ${esc(p.section)} ${esc(p.lot)}">${fmtM2(p.area_m2)} m² · 已建 ${DATA.po.filter(o=>o.parcel_id===p.id).length} 人${p.owners_official!=null?'／官方 '+p.owners_official:''}</option>`).join('')}</datalist></div>
     <div class="field full"><label>謄本內容（每行一人：姓名 遮罩識別碼 持分；「所有權人：」「統一編號：」等字樣會自動剝掉）</label><textarea id="ppTxt" rows="10" style="font-family:'Space Mono',monospace;font-size:12.5px" placeholder="陳＊＊ F125*****3 36分之1&#10;陳** F127***4 1/36&#10;桃園農田水利會 全部"></textarea></div></div>
     <div class="actions"><button class="btn pri" id="ppPrev">預覽</button><span class="st" id="ppMsg"></span></div><div id="ppOut"></div>`;
@@ -399,6 +404,90 @@ function showPastePanel(){
     $('#ppWrite').addEventListener('click',async()=>{ let base=have.length; const ins=prev.filter(r=>!r.dup).map(r=>({parcel_id:p.id,contact_id:r.contact_id,owner_name:r.link||r.owner_name,owner_key:r.owner_key,share_num:r.share_num,share_den:r.share_den,consent:'未接觸',sort_order:base++,notes:r.hasShare?null:'持分未填（謄本沒讀到）'}));
       if(!ins.length) return; const {data,error}=await sb.from('parcel_owners').insert(ins).select(); if(error){ alert('寫入失敗：'+error.message); return; } DATA.po.push(...data); alert(`已寫入 ${data.length} 人到 ${p.section} ${p.lot}`); showPastePanel(); }); });
 }
+// ── 二類謄本 PDF：文字層 → 標示部 + 所有權部逐筆 ──
+async function pdfTextPlain(file){
+  await loadLib(PDFJS); pdfjsLib.GlobalWorkerOptions.workerSrc=PDFJS_W;
+  const pdf=await pdfjsLib.getDocument({data:await file.arrayBuffer()}).promise; let out='';
+  for(let i=1;i<=pdf.numPages;i++){ const tc=await (await pdf.getPage(i)).getTextContent(); const rows={};
+    for(const t of tc.items){ if(!t.str.trim()) continue; if(Math.abs(t.transform[1])>0.01||Math.abs(t.transform[2])>0.01) continue; // 旋轉的浮水印（地政事務所）略過
+      const y=Math.round(t.transform[5]/3); (rows[y]??=[]).push(t); }
+    out+=Object.keys(rows).map(Number).sort((a,b)=>b-a).map(y=>rows[y].sort((a,b)=>a.transform[4]-b.transform[4]).map(t=>t.str).join(' ')).join('\n')+'\n'; }
+  return out; }
+const rocDate=(y,m,d)=>{ y=+y; m=+m; d=+d||1; if(!y||!m) return null; return `${y+1911}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`; };
+function parseTranscript(txt){
+  const T=txt.split(/\r?\n/).filter(l=>!/^\s*[一-鿿]\s*$/.test(l)).join('\n') // 單一中文字的行＝直式浮水印（新北市新莊地政事務所），丟掉
+    .replace(/[ \t]+/g,' ').replace(/(?<=[一-鿿：）]) +(?=[一-鿿（])/g,''); // 同一行中文字間空白合併（不跨行）
+  const h={}; let m;
+  if((m=T.match(/([一-鿿]{1,3}區[一-鿿]{1,6}段(?:[一-鿿]{1,6}小段)?)\s*(\d{4}-\d{4})\s*地號/))){ h.section=m[1]; h.lot=m[2]; }
+  if((m=T.match(/列印時間[:：]?\s*民國(\d{2,3})年(\d{1,2})月(\d{1,2})日/))) h.printed=rocDate(m[1],m[2],m[3]);
+  if((m=T.match(/面\s*積[:：]?\s*\**([\d,]+\.?\d*)\s*平方公尺/))) h.area_m2=+m[1].replace(/,/g,'');
+  if((m=T.match(/公告土地現值[:：]?\s*\**([\d,]+)/))) h.announced_value=+m[1].replace(/,/g,'');
+  if((m=T.match(/地上建物建號[:：]?\s*共\s*(\d+)\s*棟/))) h.bldg_count=+m[1];
+  const body=T.split(/土地所有權部/)[1]||''; const end=body.search(/土地他項權利部|本謄本列印完畢|謄本列印完畢/); const own=end>0?body.slice(0,end):body;
+  const parts=own.split(/（\d{4}）\s*登記次序[:：]?\s*/).slice(1); const rows=[];
+  for(const p of parts){ const r={}; r.reg_seq=(p.match(/^(\d+)/)||[])[1]||null;
+    if((m=p.match(/登記日期[:：]?\s*民國(\d{2,3})年(\d{1,2})月(\d{1,2})日/))) r.reg_date=rocDate(m[1],m[2],m[3]);
+    if((m=p.match(/登記原因[:：]?\s*([一-鿿]+)/))) r.reg_cause=m[1];
+    if((m=p.match(/原因發生日期[:：]?\s*民國(\d{2,3})年(\d{1,2})月(\d{1,2})日/))) r.cause_date=rocDate(m[1],m[2],m[3]);
+    if((m=p.match(/所有權人[:：]?\s*([^\n]*?)\s*(?=統一編號|\n)/))) r.owner_name=(m[1].replace(/\*/g,'＊').replace(/[：:\s]/g,'')||'＊＊');
+    if((m=p.match(/統一編號[:：]?\s*([A-Za-z0-9＊*]+)/))) r.owner_key=m[1].replace(/＊/g,'*');
+    if((m=p.match(/住\s*址[:：]?\s*([^\n]*)/))){ const a=m[1]; const am=a.match(/^(.*?[縣市].*?[區鄉鎮市].*?(?:里|村))/); r.addr_area=(am?am[1]:a.slice(0,12)).replace(/\s/g,''); }
+    if((m=p.match(/權利範圍[:：]?\s*\**\s*(全部|(\d+)分之(\d+))/))){ if(m[1]==='全部'){ r.share_num=1; r.share_den=1; } else { r.share_den=+m[2]; r.share_num=+m[3]; } r.hasShare=true; } else { r.share_num=1; r.share_den=1; r.hasShare=false; }
+    if((m=p.match(/權狀字號[:：]?\s*([^\n]+?號)/))) r.deed_no=m[1].replace(/\s/g,'');
+    if((m=p.match(/當期申報地價[:：]?\s*(\d{2,3})年(\d{1,2})月\s*\**([\d,]+\.?\d*)/))) r.declared_price=+m[3].replace(/,/g,'');
+    if((m=p.match(/前次移轉現值或原規定地價[:：]?\s*(\d{2,3})年(\d{1,2})月\s*\**([\d,]+\.?\d*)/))){ r.prev_ym=`${m[1]}/${m[2].padStart(2,'0')}`; r.prev_value=+m[3].replace(/,/g,''); }
+    if(r.owner_key||r.owner_name) rows.push(r); }
+  return {h,rows}; }
+// 同一戶提示：同登記原因＋同原因發生日期（例：三兄弟同一天繼承）→ 建議同群組
+function suggestGroups(rows){ const by={}; rows.forEach(r=>{ const k=r.reg_cause&&r.cause_date?r.reg_cause+' '+r.cause_date:null; if(k) (by[k]??=[]).push(r); });
+  for(const [k,list] of Object.entries(by)) if(list.length>=2){ const [c,d]=k.split(' '); const lbl=`${c} ${d.slice(0,4)-1911}/${d.slice(5,7)}`; list.forEach(r=>r.group_hint=lbl); } }
+async function tbImport(files){
+  const msg=$('#tbMsg'); msg.className='st'; const outs=[];
+  for(const f of files){ msg.textContent=`讀取 ${f.name}…`; let txt; try{ txt=await pdfTextPlain(f); }catch(e){ outs.push(`<div class="st err">${esc(f.name)}：${esc(e.message)}</div>`); continue; }
+    const {h,rows}=parseTranscript(txt); if(!rows.length){ outs.push(`<div class="st err">${esc(f.name)}：沒讀到土地所有權部（不是二類謄本？或沒有文字層）</div>`); continue; }
+    suggestGroups(rows); outs.push(tbPreview(f.name,h,rows)); }
+  msg.textContent=''; $('#tbOut').innerHTML=outs.join(''); tbBind(); }
+const normKey=k=>(k||'').replace(/[*＊]/g,'');
+function tbPreview(fname,h,rows){
+  const cands=DATA.pcl.filter(p=>p.lot===h.lot&&(!h.section||p.section.includes(h.section.replace(/^.*?區/,''))||h.section.includes(p.section.replace(/^.*?區/,''))));
+  const pid=cands[0]?.id||''; const keys=new Set(rows.map(r=>normKey(r.owner_key)).filter(Boolean));
+  const id='tb'+Math.random().toString(36).slice(2,7);
+  return `<div class="tbcard" id="${id}" data-h='${esc(JSON.stringify(h))}' data-rows='${esc(JSON.stringify(rows))}'>
+    <div class="tbh"><b>${esc(h.section||'?')} ${esc(h.lot||'?')}</b><span class="sub">列印 ${esc(h.printed||'?')} · 面積 ${fmtM2(h.area_m2)} ㎡ · 公告現值 ${fmtN(h.announced_value)} · 地上建物 ${h.bldg_count??'?'} 棟 · 所有權部 ${rows.length} 筆／${keys.size} 人</span></div>
+    <div class="addrow"><label class="sub">對到地號</label><select class="tbPcl">${cands.length?'':'<option value="">— 案件裡沒有這筆地號，請選 —</option>'}${pclsAllSorted().map(p=>`<option value="${p.id}"${p.id===pid?' selected':''}>${esc(DATA.ur.find(u=>u.id===p.ur_project_id)?.name||'')} · ${esc(p.section)} ${esc(p.lot)}（已建 ${DATA.po.filter(o=>o.parcel_id===p.id).length} 人）</option>`).join('')}</select>
+      <label class="chk tbMk"><input type="checkbox" checked> 新人同時建聯絡人（地主/住戶）</label><label class="chk tbUp"><input type="checkbox" checked> 更新地號面積／公告現值／建物棟數</label></div>
+    <table class="pt" style="margin-top:8px"><tr><th>次序</th><th>所有權人</th><th>識別碼</th><th>持分</th><th>登記原因／日期</th><th>申報地價</th><th>前次移轉</th><th>住址</th><th>群組（可改）</th><th>狀態</th></tr>
+    ${rows.map((r,i)=>`<tr data-i="${i}"><td class="mono">${esc(r.reg_seq||'')}</td><td>${esc(r.owner_name)}</td><td class="mono">${esc(r.owner_key||'')}</td><td class="mono">${frac(r.share_num,r.share_den)}${r.hasShare?'':' ?'}</td><td class="sub">${esc(r.reg_cause||'')} ${esc(r.reg_date||'')}${r.cause_date?'<br>原因 '+esc(r.cause_date):''}</td><td class="mono">${fmtN(r.declared_price)}</td><td class="mono">${esc(r.prev_ym||'')} ${fmtN(r.prev_value)}</td><td class="sub">${esc(r.addr_area||'')}</td><td><input class="tbGrp" value="${esc(r.group_hint||'')}" placeholder="—" style="width:110px;padding:3px 6px"></td><td class="sub tbSt">—</td></tr>`).join('')}</table>
+    <div class="actions"><button class="btn pri tbWrite">寫入</button><span class="st tbRes"></span></div></div>`; }
+function tbBind(){ document.querySelectorAll('.tbcard').forEach(card=>{
+  const rows=JSON.parse(card.dataset.rows), h=JSON.parse(card.dataset.h); const sel=card.querySelector('.tbPcl');
+  const refresh=()=>{ const pid=+sel.value; const have=DATA.po.filter(o=>o.parcel_id===pid); let n=0,d=0;
+    card.querySelectorAll('tr[data-i]').forEach(tr=>{ const r=rows[+tr.dataset.i]; const dup=have.find(o=>(r.owner_key&&o.owner_key&&normKey(o.owner_key)===normKey(r.owner_key))); r.dup=!!dup;
+      const same=!dup&&r.owner_key?DATA.po.find(o=>o.contact_id&&o.owner_key&&normKey(o.owner_key)===normKey(r.owner_key)):null; r.contact_id=same?.contact_id||null; const ct=r.contact_id?DATA.ct.find(c=>c.id===r.contact_id):null;
+      tr.querySelector('.tbSt').textContent=dup?'已有，略過':ct?'連結聯絡人 '+ct.name:'新增'; tr.classList.toggle('dim',!!dup); dup?d++:n++; });
+    const sum=rows.filter(r=>!r.dup).reduce((a,r)=>a+r.share_num/r.share_den,0)+have.reduce((a,o)=>a+o.share_num/o.share_den,0);
+    card.querySelector('.tbRes').textContent=`新增 ${n}、略過 ${d}；寫入後持分合計 ${(sum*100).toFixed(2)}%${Math.abs(sum-1)>0.0005?'（≠100%，核對）':' ✓'}`; };
+  sel.addEventListener('change',refresh); refresh();
+  card.querySelector('.tbWrite').addEventListener('click',async()=>{ const pid=+sel.value; if(!pid){ alert('先選地號'); return; } const p=DATA.pcl.find(x=>x.id===pid); const mk=card.querySelector('.tbMk input').checked, up=card.querySelector('.tbUp input').checked;
+    const grps=[...card.querySelectorAll('.tbGrp')].map(i=>i.value.trim()); const todo=rows.map((r,i)=>({...r,group:grps[i]})).filter(r=>!r.dup);
+    if(todo.some(r=>r.owner_key&&/^[A-Za-z][12]\d{8}$/.test(r.owner_key))){ alert('含完整統一編號，依規則不存'); return; }
+    // 1) 新聯絡人（同識別碼只建一次）
+    if(mk){ const need=[]; const seen=new Set(); for(const r of todo){ const k=normKey(r.owner_key); if(r.contact_id||!k||seen.has(k)) continue; seen.add(k); need.push(r); }
+      if(need.length){ const ins=need.map(r=>({name:r.owner_name,kind:'地主/住戶',group_name:r.group||null,background:`二類謄本 ${h.section||''} ${h.lot||''}（列印 ${h.printed||''}）匯入；識別碼 ${r.owner_key}`})); const {data,error}=await sb.from('contacts').insert(ins).select(); if(error){ alert('建聯絡人失敗：'+error.message); return; } DATA.ct.push(...data);
+        for(const r of todo){ const k=normKey(r.owner_key); const j=need.findIndex(x=>normKey(x.owner_key)===k); if(j>=0) r.contact_id=data[j].id; } } }
+    // 2) 持分
+    let base=DATA.po.filter(o=>o.parcel_id===pid).length;
+    const ins=todo.map(r=>({parcel_id:pid,contact_id:r.contact_id,owner_name:r.contact_id?(DATA.ct.find(c=>c.id===r.contact_id)?.name||r.owner_name):r.owner_name,owner_key:r.owner_key,share_num:r.share_num,share_den:r.share_den,consent:'未接觸',sort_order:base++,deed_no:r.deed_no||null,registered_on:r.reg_date||null,reg_seq:r.reg_seq,reg_date:r.reg_date||null,reg_cause:r.reg_cause||null,cause_date:r.cause_date||null,declared_price:r.declared_price??null,prev_value:r.prev_value??null,prev_ym:r.prev_ym||null,addr_area:r.addr_area||null,notes:r.hasShare?null:'持分未讀到'}));
+    if(ins.length){ const {data,error}=await sb.from('parcel_owners').insert(ins).select(); if(error){ alert('寫入持分失敗：'+error.message+'（請先跑 supabase_36）'); return; } DATA.po.push(...data); }
+    // 3) 地號欄位
+    const keys=new Set([...DATA.po.filter(o=>o.parcel_id===pid).map(o=>normKey(o.owner_key)).filter(Boolean)]);
+    const upd={transcript_date:h.printed||null,transcript_owners:keys.size}; if(up){ if(h.area_m2) upd.area_m2=h.area_m2; if(h.announced_value) upd.announced_value=h.announced_value; if(h.bldg_count!=null) upd.bldg_count=h.bldg_count; }
+    const {error:e2}=await sb.from('parcels').update(upd).eq('id',pid); if(e2) alert('地號更新失敗：'+e2.message); else Object.assign(p,upd);
+    // 4) 把新聯絡人連到案件
+    if(mk){ const u=DATA.ur.find(x=>x.id===p.ur_project_id); if(u){ const links=todo.filter(r=>r.contact_id&&!DATA.urc.some(l=>l.ur_project_id===u.id&&l.contact_id===r.contact_id)).map(r=>({ur_project_id:u.id,contact_id:r.contact_id,role:'地主'})); const uniq=[...new Map(links.map(l=>[l.contact_id,l])).values()]; if(uniq.length){ const {error}=await sb.from('ur_project_contacts').insert(uniq); if(!error) DATA.urc.push(...uniq); } } }
+    card.querySelector('.tbRes').textContent=`完成：寫入 ${ins.length} 筆持分，${p.section} ${p.lot} 謄本 ${keys.size} 人`; card.querySelector('.tbWrite').disabled=true; renderList(); });
+}); }
+$('#detail').addEventListener('change',e=>{ if(e.target.id==='tbFile'&&e.target.files.length) tbImport([...e.target.files]); });
 const pclsAllSorted=()=>[...DATA.pcl].sort((a,b)=>(DATA.ur.find(u=>u.id===a.ur_project_id)?.name||'').localeCompare(DATA.ur.find(u=>u.id===b.ur_project_id)?.name||'','zh-Hant')||a.lot.localeCompare(b.lot));
 $('#btnPasteCt').addEventListener('click',showPastePanel);
 // 分區容積率資料庫面板（滾動更新：改了就新增一列，舊列填失效日）
