@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#0e1012">
-<title>ATLAS 案件中心 v3.12</title>
+<title>ATLAS 案件中心 v3.13</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Space+Mono:wght@400;700&display=swap');
 :root{--bg:#0e1012;--sb:#141618;--panel:#1a1d21;--card:#1f2328;--border:#2a2f36;--border2:#353b44;--gold:#d4a843;--gold2:#f0cc7a;--teal:#3aaa8c;--teal2:#4dc9a8;--red:#e06c6c;--indigo:#7b8cff;--amber:#e8b04a;--text:#dde2ee;--sub:#8a94a6;--muted:#4a5566}
@@ -81,6 +81,7 @@ a{color:var(--teal2)}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:4px 16px;max-width:860px}
 .grid.g4{grid-template-columns:repeat(4,minmax(0,1fr));max-width:1000px;gap:2px 14px}
 .grid .c2{grid-column:span 2}.grid .c3{grid-column:span 3}.grid .full{grid-column:1/-1}
+.tree .row .rel.key{font-family:'Space Mono',monospace;font-size:10px;color:var(--teal2);margin-left:6px}
 .row .todo{display:flex;flex-wrap:wrap;gap:4px 8px;margin-top:5px;font-size:11px}.row .todo span{color:var(--amber);background:rgba(232,176,74,.12);border:1px solid rgba(232,176,74,.35);padding:1px 7px;border-radius:5px}.row .todo .tcb{cursor:pointer;font-style:normal;font-weight:400;margin-right:4px;font-size:13px;line-height:1}.row .todo .tcb:hover{color:#fff}.row .todo i{font-style:normal;color:var(--gold2);font-family:'Space Mono',monospace;font-size:10px;margin-left:4px}.row .todo .late{color:#ff8a8a;background:rgba(224,108,108,.15);border-color:rgba(224,108,108,.5)}
 .grid.g5{grid-template-columns:repeat(5,minmax(0,1fr));max-width:860px;gap:2px 10px}.grid.g5 input[type=date]{padding-left:6px;padding-right:4px;font-size:12px}@media (max-width:900px){.grid.g5{grid-template-columns:1fr 1fr 1fr}}
 .pdfbox{background:var(--panel);border:1px dashed var(--border2);border-radius:10px;padding:12px 14px;max-width:860px}.pdfh{font-weight:500;margin-bottom:6px}.pdfh .sub{font-weight:400;font-size:12px;color:var(--sub);margin-left:8px}.pdfbox input[type=file]{font-size:12px}
@@ -352,7 +353,7 @@ function renderCtTree(rows,searching){
   let cases=Object.keys(tree).sort((a,b)=>a==='未歸案'?1:b==='未歸案'?-1:a.localeCompare(b,'zh-Hant')); cases=ordSort(cases,CTORD.cases,x=>x);
   const cnt=o=>Object.values(o).reduce((a,v)=>a+(Array.isArray(v)?v.length:cnt(v)),0);
   const node=(cls,key,label,n,closed,drag)=>`<div class="${cls}${closed?' closed':''}" data-t="${esc(key)}"${drag?` draggable="true" data-dk="${esc(drag.k)}" data-dv="${esc(drag.v)}"`:''}>${drag?'<span class="hd" title="拖曳調整順序">⋮⋮</span>':''}<span class="ar">▼</span>${esc(label)}<span class="c">${n}</span></div>`;
-  const rowH=(c,scope)=>`<div class="row${CUR&&CUR.id===c.id?' active':''}" data-id="${c.id}" draggable="true" data-dk="p:${esc(scope)}" data-dv="${c.id}"><div class="n"><span class="hd" title="拖曳調整順序">⋮⋮</span><span>${esc(c.name)}</span>${c.relation?`<span class="rel">${esc(c.relation)}</span>`:''}</div><div class="m">${[c.company,c.title,c.phone].filter(Boolean).map(s=>`<span class="pill">${esc(s)}</span>`).join('')}</div></div>`;
+  const rowH=(c,scope)=>`<div class="row${CUR&&CUR.id===c.id?' active':''}" data-id="${c.id}" draggable="true" data-dk="p:${esc(scope)}" data-dv="${c.id}"><div class="n"><span class="hd" title="拖曳調整順序">⋮⋮</span><span>${esc(c.name)}</span>${c.relation?`<span class="rel">${esc(c.relation)}</span>`:''}${isMasked(c.name)&&c.owner_key?`<span class="rel key">${esc(c.owner_key)}</span>`:''}</div><div class="m">${[c.company,c.title,c.phone].filter(Boolean).map(s=>`<span class="pill">${esc(s)}</span>`).join('')}</div></div>`;
   return cases.map(cs=>{ const k1='c:'+cs, c1=!searching&&TOPEN.has(k1); const kinds=tree[cs];
     return node('g1',k1,cs,cnt(kinds),c1,{k:'c',v:cs})+(c1?'':[...CT_KIND,'未分類'].filter(k=>kinds[k]).map(k=>{ const k2='k:'+cs+'|'+k, c2=!searching&&TOPEN.has(k2); const groups=kinds[k]; const gscope=cs+'|'+k;
       let gs=Object.keys(groups).sort((a,b)=>a==='未分組'?1:b==='未分組'?-1:a.localeCompare(b,'zh-Hant')); gs=ordSort(gs,CTORD.groups[gscope]||[],x=>x);
@@ -448,6 +449,7 @@ async function tbImport(files){
     suggestGroups(rows); outs.push(tbPreview(f.name,h,rows)); }
   msg.textContent=''; $('#tbOut').innerHTML=outs.join(''); tbBind(); }
 const normKey=k=>(k||'').replace(/[*＊]/g,'');
+const isMasked=n=>/[＊*]/.test(n||''); // 姓名還是「陳＊＊」＝還沒確認，樹狀顯示識別碼方便分配
 function tbPreview(fname,h,rows){
   const cands=DATA.pcl.filter(p=>p.lot===h.lot&&(!h.section||p.section.includes(h.section.replace(/^.*?區/,''))||h.section.includes(p.section.replace(/^.*?區/,''))));
   const pid=cands[0]?.id||''; const keys=new Set(rows.map(r=>normKey(r.owner_key)).filter(Boolean));
@@ -463,8 +465,8 @@ function tbBind(){ document.querySelectorAll('.tbcard').forEach(card=>{
   const rows=JSON.parse(card.dataset.rows), h=JSON.parse(card.dataset.h); const sel=card.querySelector('.tbPcl');
   const refresh=()=>{ const pid=+sel.value; const have=DATA.po.filter(o=>o.parcel_id===pid); let n=0,d=0;
     card.querySelectorAll('tr[data-i]').forEach(tr=>{ const r=rows[+tr.dataset.i]; const dup=have.find(o=>(r.owner_key&&o.owner_key&&normKey(o.owner_key)===normKey(r.owner_key))); r.dup=!!dup;
-      const same=!dup&&r.owner_key?DATA.po.find(o=>o.contact_id&&o.owner_key&&normKey(o.owner_key)===normKey(r.owner_key)):null; r.contact_id=same?.contact_id||null; const ct=r.contact_id?DATA.ct.find(c=>c.id===r.contact_id):null;
-      tr.querySelector('.tbSt').textContent=dup?'已有，略過':ct?'連結聯絡人 '+ct.name:'新增'; tr.classList.toggle('dim',!!dup); dup?d++:n++; });
+      const k=normKey(r.owner_key); const byCt=!dup&&k?DATA.ct.find(c=>c.owner_key&&normKey(c.owner_key)===k):null; const same=!dup&&!byCt&&k?DATA.po.find(o=>o.contact_id&&o.owner_key&&normKey(o.owner_key)===k):null; r.contact_id=byCt?.id||same?.contact_id||null; const ct=r.contact_id?DATA.ct.find(c=>c.id===r.contact_id):null;
+      tr.querySelector('.tbSt').textContent=dup?'已有，略過':ct?'→ '+ct.name+(isMasked(ct.name)?'':' ✓已確認'):'新增'; tr.classList.toggle('dim',!!dup); dup?d++:n++; });
     const sum=rows.filter(r=>!r.dup).reduce((a,r)=>a+r.share_num/r.share_den,0)+have.reduce((a,o)=>a+o.share_num/o.share_den,0);
     card.querySelector('.tbRes').textContent=`新增 ${n}、略過 ${d}；寫入後持分合計 ${(sum*100).toFixed(2)}%${Math.abs(sum-1)>0.0005?'（≠100%，核對）':' ✓'}`; };
   sel.addEventListener('change',refresh); refresh();
@@ -473,7 +475,7 @@ function tbBind(){ document.querySelectorAll('.tbcard').forEach(card=>{
     if(todo.some(r=>r.owner_key&&/^[A-Za-z][12]\d{8}$/.test(r.owner_key))){ alert('含完整統一編號，依規則不存'); return; }
     // 1) 新聯絡人（同識別碼只建一次）
     if(mk){ const need=[]; const seen=new Set(); for(const r of todo){ const k=normKey(r.owner_key); if(r.contact_id||!k||seen.has(k)) continue; seen.add(k); need.push(r); }
-      if(need.length){ const ins=need.map(r=>({name:r.owner_name,kind:'地主/住戶',group_name:r.group||null,background:`二類謄本 ${h.section||''} ${h.lot||''}（列印 ${h.printed||''}）匯入；識別碼 ${r.owner_key}`})); const {data,error}=await sb.from('contacts').insert(ins).select(); if(error){ alert('建聯絡人失敗：'+error.message); return; } DATA.ct.push(...data);
+      if(need.length){ const ins=need.map(r=>({name:r.owner_name,owner_key:r.owner_key||null,kind:'地主/住戶',group_name:r.group||null,background:`二類謄本 ${h.section||''} ${h.lot||''}（列印 ${h.printed||''}）匯入；識別碼 ${r.owner_key}`})); const {data,error}=await sb.from('contacts').insert(ins).select(); if(error){ alert('建聯絡人失敗：'+error.message); return; } DATA.ct.push(...data);
         for(const r of todo){ const k=normKey(r.owner_key); const j=need.findIndex(x=>normKey(x.owner_key)===k); if(j>=0) r.contact_id=data[j].id; } } }
     // 2) 持分
     let base=DATA.po.filter(o=>o.parcel_id===pid).length;
@@ -545,8 +547,8 @@ function showForm(){
     ${chips('categories','類別（可複選）',JC_CAT,r.categories)}</div><div class="grid g4 g5" style="margin-top:4px">
     ${fld('applicant','起造人',r.applicant)}${fld('architect','設計人',r.architect)}${fld('supervisor','監造人',r.supervisor)}${fld('contractor','承造人',r.contractor)}${fld('track_date','追蹤／執行日',fmtD(r.track_date),'date')}</div>`;
   if(TAB==='ct') h=`<div class="d-head"><h2>${isNew?'新增聯絡人':esc(r.name)}</h2></div><div class="grid">
-    ${fld('name','姓名<b>＊</b>',r.name)}${sel('kind','類型',CT_KIND,r.kind)}
-    <div class="field"><label>群組（家族／戶／公司）</label><input id="f-group_name" list="dl-group" value="${esc(r.group_name??'')}" placeholder="例：陳家三兄弟、41號公寓"><datalist id="dl-group">${[...new Set(DATA.ct.map(c=>c.group_name).filter(Boolean))].map(g=>`<option value="${esc(g)}">`).join('')}</datalist></div>
+    ${fld('name','姓名<b>＊</b>',r.name)}${fld('owner_key','識別碼（二類謄本遮罩，例 F120*****5）',r.owner_key)}
+    ${sel('kind','類型',CT_KIND,r.kind)}<div class="field"><label>群組（家族／戶／公司）</label><input id="f-group_name" list="dl-group" value="${esc(r.group_name??'')}" placeholder="例：陳家三兄弟、41號公寓"><datalist id="dl-group">${[...new Set(DATA.ct.map(c=>c.group_name).filter(Boolean))].map(g=>`<option value="${esc(g)}">`).join('')}</datalist></div>
     ${fld('relation','關係／身分',r.relation)}
     ${fld('company','公司',r.company)}${fld('title','職稱',r.title)}
     ${fld('phone','電話',r.phone,'tel')}${fld('line_id','LINE ID',r.line_id)}
@@ -567,7 +569,7 @@ function showForm(){
 function payload(){
   if(TAB==='ur') return {name:v('name'),code:v('code')||null,kind:v('kind')||null,stage:v('stage')||null,address:v('address')||null,site_area_m2:num('site_area_m2'),consent_pct:num('consent_pct'),owners_official:num('owners_official'),land_owners_times:num('land_owners_times'),bldg_owners_official:num('bldg_owners_official'),consent_threshold:num('consent_threshold'),land_count:num('land_count'),land_private_m2:num('land_private_m2'),land_public_m2:num('land_public_m2'),bldg_count:num('bldg_count'),bldg_floor_m2:num('bldg_floor_m2'),bldg_private_m2:num('bldg_private_m2'),unreg_bldg_count:num('unreg_bldg_count'),unreg_bldg_notes:v('unreg_bldg_notes')||null,legal_flags:chipVals('legal_flags'),bonus_est:v('bonus_est')||null,checklist:v('checklist')||null,notes:v('notes')||null};
   if(TAB==='jc') return {name:v('name'),short_name:v('short_name')||null,client_kind:v('client_kind')||null,client_name:v('client_name')||null,categories:chipVals('categories'),permit_no:v('permit_no')||null,applicant:v('applicant')||null,architect:v('architect')||null,supervisor:v('supervisor')||null,contractor:v('contractor')||null,summary:v('summary')||null,track_date:v('track_date')||null};
-  return {name:v('name'),kind:v('kind')||null,group_name:v('group_name')||null,relation:v('relation')||null,company:v('company')||null,title:v('title')||null,phone:v('phone')||null,line_id:v('line_id')||null,background:v('background')||null,next_action:v('next_action')||null,next_date:v('next_date')||null};
+  return {name:v('name'),owner_key:(()=>{ const k=v('owner_key').replace(/＊/g,'*').trim(); if(/^[A-Za-z][12]\d{8}$/.test(k)){ alert('識別碼只存遮罩版（例 F120*****5），不存完整統一編號'); return null; } return k||null; })(),kind:v('kind')||null,group_name:v('group_name')||null,relation:v('relation')||null,company:v('company')||null,title:v('title')||null,phone:v('phone')||null,line_id:v('line_id')||null,background:v('background')||null,next_action:v('next_action')||null,next_date:v('next_date')||null};
 }
 function scheduleSave(){ clearTimeout(AUTOSAVE); const st=$('#st'); if(st){ st.className='st'; st.textContent='未儲存…'; } AUTOSAVE=setTimeout(()=>save(true),3000); }
 async function save(quiet=false){
