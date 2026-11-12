@@ -1,0 +1,422 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>都更試算表關聯圖</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=LXGW+WenKai+TC:wght@400;700&family=Noto+Sans+TC:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: drafting-table reference sheet — header facts strip, tabbed views, graph canvas + detail rail */
+:root{
+  --bg:#F2F5F6; --surface:#FFFFFF; --fg:#18232A; --muted:#5A6A73; --line:#D3DCE0; --line-soft:#E4EAED;
+  --src:#0A6F8C; --dst:#B4581B; --mac:#7B3FA8; --edge:#8A9AA3;
+  --ok:#2C7A4B; --warn:#A86A00; --bad:#B3362C; --ok-bg:#E3F1E8; --warn-bg:#FBF0DB; --bad-bg:#F8E3E0; --info-bg:#E2EEF2;
+  --g-law:#6C7884; --g-site:#2E68A8; --g-far:#7650AE; --g-cost:#2C7F55; --g-val:#A5740F; --g-sum:#B0413A; --g-alloc:#11808A;
+  --font-display:"LXGW WenKai TC","Noto Serif TC","PingFang TC",serif;
+  --font-body:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+  --font-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#12181C; --surface:#1A2227; --fg:#E3EAEE; --muted:#97A7B0; --line:#2E3A41; --line-soft:#232D33;
+  --src:#4FB6D3; --dst:#EE9A5E; --mac:#C08AEB; --edge:#5F7079;
+  --ok:#6FCB93; --warn:#E6B04F; --bad:#F07F73; --ok-bg:#1C3326; --warn-bg:#3A2E15; --bad-bg:#3D211E; --info-bg:#183039;
+  --g-law:#9AA6B1; --g-site:#6FA3E0; --g-far:#AE90E0; --g-cost:#62BE8E; --g-val:#D9A84A; --g-sum:#EA7D74; --g-alloc:#4CC2CB;
+  color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#12181C; --surface:#1A2227; --fg:#E3EAEE; --muted:#97A7B0; --line:#2E3A41; --line-soft:#232D33;
+  --src:#4FB6D3; --dst:#EE9A5E; --mac:#C08AEB; --edge:#5F7079;
+  --ok:#6FCB93; --warn:#E6B04F; --bad:#F07F73; --ok-bg:#1C3326; --warn-bg:#3A2E15; --bad-bg:#3D211E; --info-bg:#183039;
+  --g-law:#9AA6B1; --g-site:#6FA3E0; --g-far:#AE90E0; --g-cost:#62BE8E; --g-val:#D9A84A; --g-sum:#EA7D74; --g-alloc:#4CC2CB;
+  color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--fg);font-family:var(--font-body);font-size:14px;line-height:1.6;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:24px 48px}
+.wrap{max-width:1280px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
+h1{font-family:var(--font-display);font-weight:700;font-size:clamp(26px,4vw,36px);line-height:1.2;margin:0;text-wrap:balance;letter-spacing:.02em}
+h2{font-family:var(--font-display);font-size:20px;margin:0;text-wrap:balance}
+h3{font-size:15px;margin:0}
+.eyebrow{font-size:12px;letter-spacing:.12em;color:var(--muted);text-transform:uppercase}
+.sub{color:var(--muted);margin:6px 0 0;max-width:72ch}
+.mono{font-family:var(--font-mono);font-size:12.5px}
+.facts{display:flex;flex-wrap:wrap;gap:8px 28px;border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding-block:12px}
+.fact{display:flex;align-items:baseline;gap:8px}
+.fact b{font-family:var(--font-mono);font-size:22px;font-weight:500;font-variant-numeric:tabular-nums}
+.fact span{color:var(--muted);font-size:13px}
+.tabs{display:flex;gap:4px;flex-wrap:wrap;border-bottom:1px solid var(--line)}
+.tab{appearance:none;border:0;background:none;color:var(--muted);font:inherit;font-weight:500;padding:8px 14px;border-bottom:2px solid transparent;cursor:pointer;margin-bottom:-1px}
+.tab[aria-selected="true"]{color:var(--fg);border-bottom-color:var(--fg)}
+.tab:focus-visible,.chip:focus-visible,.node:focus-visible{outline:2px solid var(--src);outline-offset:2px}
+.tab .n{font-family:var(--font-mono);font-size:11px;margin-left:6px;padding:1px 6px;border-radius:9px;background:var(--bad-bg);color:var(--bad)}
+.toolbar{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center}
+.chips{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.chips .lbl{color:var(--muted);font-size:12.5px;margin-right:2px}
+.chip{appearance:none;font:inherit;font-size:12.5px;border:1px solid var(--line);background:var(--surface);color:var(--fg);padding:3px 10px;border-radius:999px;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.chip.mac[aria-pressed="true"]{background:var(--mac);border-color:var(--mac);color:var(--bg)}
+.chip.mac.broken{border-style:dashed;color:var(--bad)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:12.5px;color:var(--muted)}
+.legend i{display:inline-block;width:18px;height:3px;border-radius:2px;vertical-align:middle;margin-right:6px}
+.graph-layout{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:16px;align-items:start}
+@media (max-width:980px){.graph-layout{grid-template-columns:minmax(0,1fr)}}
+.canvas{background:var(--surface);border:1px solid var(--line);border-radius:6px;overflow-x:auto;min-width:0}
+.canvas svg{display:block}
+.node rect{fill:var(--surface);stroke-width:1.2}
+.node text{font-family:var(--font-body);font-size:12.5px;fill:var(--fg);pointer-events:none}
+.node .tag{fill:var(--mac);font-size:10px;font-family:var(--font-mono)}
+.node{cursor:pointer;transition:opacity .15s}
+.node.dim{opacity:.22}
+.node.sel rect{stroke-width:2.6}
+.node.btn rect{stroke-dasharray:none}
+.colhead{font-family:var(--font-display);font-size:13px;fill:var(--muted)}
+.edge{fill:none;stroke:var(--edge);opacity:.22;transition:opacity .15s}
+.edge.hide{opacity:.03}
+.edge.in{stroke:var(--src);opacity:.95}
+.edge.out{stroke:var(--dst);opacity:.95}
+.edge.mac{stroke:var(--mac);opacity:.95;stroke-dasharray:5 4}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:16px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.panel .head{display:flex;flex-direction:column;gap:4px}
+.swatch{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;vertical-align:baseline}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:2px 12px;font-size:13px}
+.kv dt{color:var(--muted)}
+.kv dd{margin:0;font-variant-numeric:tabular-nums}
+.lst{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;max-height:300px;overflow-y:auto;padding-right:4px}
+.lst li{display:flex;flex-direction:column;gap:1px;border-left:3px solid var(--line);padding-left:8px}
+.lst li.in{border-left-color:var(--src)}
+.lst li.out{border-left-color:var(--dst)}
+.lst li.m{border-left-color:var(--mac)}
+.lst .row{display:flex;justify-content:space-between;gap:8px}
+.lst .row button{appearance:none;border:0;background:none;color:var(--fg);font:inherit;padding:0;cursor:pointer;text-align:left;text-decoration:underline;text-decoration-color:var(--line);text-underline-offset:3px}
+.lst .cnt{font-family:var(--font-mono);font-size:12px;color:var(--muted);white-space:nowrap}
+.lst .f{font-family:var(--font-mono);font-size:11.5px;color:var(--muted);overflow-wrap:anywhere}
+.sec-t{font-size:12.5px;color:var(--muted);letter-spacing:.06em;display:flex;align-items:center;gap:6px}
+.sec-t i{width:14px;height:3px;border-radius:2px;display:inline-block}
+.pill{display:inline-block;font-size:11.5px;padding:1px 8px;border-radius:999px;font-weight:500;white-space:nowrap}
+.pill.ok{background:var(--ok-bg);color:var(--ok)} .pill.warn{background:var(--warn-bg);color:var(--warn)} .pill.bad{background:var(--bad-bg);color:var(--bad)} .pill.info{background:var(--info-bg);color:var(--src)}
+.note{font-size:12.5px;color:var(--muted)}
+/* mind map */
+.mm{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:20px;overflow-x:auto}
+.tree,.tree ul{list-style:none;margin:0;padding:0}
+.tree ul{margin-left:22px;border-left:1px solid var(--line);padding-left:0}
+.tree li{position:relative;padding:3px 0 3px 18px}
+.tree ul>li::before{content:"";position:absolute;left:0;top:15px;width:14px;border-top:1px solid var(--line)}
+.tree .root{font-family:var(--font-display);font-size:18px;font-weight:700}
+.tree .grp{font-family:var(--font-display);font-size:16px;font-weight:700}
+.tree .sh{font-weight:500}
+.tree .meta{color:var(--muted);font-size:12px;margin-left:8px;font-family:var(--font-mono)}
+.tree .mac{color:var(--mac);font-size:13px}
+.tree details>summary{cursor:pointer;list-style:none}
+.tree details>summary::-webkit-details-marker{display:none}
+.tree details>summary::before{content:"▸";display:inline-block;width:14px;color:var(--muted)}
+.tree details[open]>summary::before{content:"▾"}
+.mm-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:4px 24px}
+/* tables & cards */
+.tbl-wrap{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:6px}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--line-soft);vertical-align:top}
+th{font-weight:500;color:var(--muted);font-size:12px;letter-spacing:.04em;background:var(--bg)}
+tr:last-child td{border-bottom:0}
+td .mono{white-space:nowrap}
+.code{font-family:var(--font-mono);font-size:12px;background:var(--bg);border:1px solid var(--line-soft);border-radius:4px;padding:10px;overflow-x:auto;white-space:pre;margin:8px 0 0;max-width:100%}
+details.cd>summary{cursor:pointer;color:var(--src);font-size:12.5px}
+.lead{margin:0 0 10px;color:var(--fg)}.phases{display:flex;gap:10px;flex-wrap:wrap;align-items:center;font-size:12.5px;color:var(--muted);margin-bottom:12px}.webtbl{width:100%;border-collapse:collapse;font-size:13px;background:var(--surface);border:1px solid var(--line);border-radius:6px}.webtbl th,.webtbl td{padding:7px 10px;border-bottom:1px solid var(--line-soft);vertical-align:top;text-align:left}.webtbl th{font-size:11.5px;color:var(--muted);font-weight:500;background:var(--bg)}.webtbl td.g{white-space:nowrap;font-weight:500}.webtbl td.n{font-family:var(--font-mono);font-size:12px;text-align:right;white-space:nowrap}.webtbl tr.grp td{background:var(--bg);font-weight:600;color:var(--fg)}.webtbl td.ph{white-space:nowrap}
+.items{display:flex;flex-direction:column;gap:10px}
+.item{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:14px 16px;display:grid;grid-template-columns:92px minmax(0,1fr);gap:4px 14px}
+.item .k{grid-row:span 3}
+.item p{margin:0}
+.item .where{font-family:var(--font-mono);font-size:12px;color:var(--muted);overflow-wrap:anywhere}
+@media (max-width:560px){.item{grid-template-columns:minmax(0,1fr)}.item .k{grid-row:auto}}
+.callout{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--src);border-radius:6px;padding:12px 16px;max-width:80ch}
+.callout p{margin:0}
+.view{display:flex;flex-direction:column;gap:14px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap">
+  <header style="display:flex;flex-direction:column;gap:6px">
+    <div class="eyebrow">Excel 活頁簿結構分析 · 111.11.16 版（.xlsm）對照 114.01.04 版（.xlsb）· 2026-11-11 加「網頁版對應」分頁、分組改依 概算模組-解析-v1</div>
+    <h1>都更／危老財務試算活頁簿 關聯圖</h1>
+    <p class="sub">從兩個檔案直接解析：每張工作表的跨表公式、按鈕綁定的巨集，以及巨集切換的開關格被哪些公式讀取。圖上以 114 版為準，兩版差異另列在「版本差異」。</p>
+  </header>
+
+  <div class="facts" id="facts"></div>
+
+  <nav class="tabs" role="tablist" aria-label="檢視方式">
+    <button class="tab" role="tab" id="t-graph" aria-selected="true" aria-controls="v-graph">關聯圖</button>
+    <button class="tab" role="tab" id="t-mind" aria-selected="false" aria-controls="v-mind">心智圖</button>
+    <button class="tab" role="tab" id="t-mac" aria-selected="false" aria-controls="v-mac">巨集對照</button>
+    <button class="tab" role="tab" id="t-diff" aria-selected="false" aria-controls="v-diff">版本差異</button>
+    <button class="tab" role="tab" id="t-fix" aria-selected="false" aria-controls="v-fix">待修清單<span class="n" id="fixn"></span></button>
+    <button class="tab" role="tab" id="t-web" aria-selected="false" aria-controls="v-web">網頁版對應</button>
+  </nav>
+
+  <section class="view" id="v-graph" role="tabpanel" aria-labelledby="t-graph">
+    <div class="toolbar">
+      <div class="chips" id="strength"><span class="lbl">連結強度</span></div>
+      <div class="chips" id="macchips"><span class="lbl">按鈕巨集</span></div>
+    </div>
+    <div class="legend">
+      <span><i style="background:var(--src)"></i>資料來源（選取的表讀了它）</span>
+      <span><i style="background:var(--dst)"></i>下游（它被這張表讀取）</span>
+      <span><i style="background:var(--mac)"></i>巨集開關影響範圍</span>
+      <span>線越粗＝引用的公式格越多</span>
+    </div>
+    <div class="graph-layout">
+      <div class="canvas" id="canvas"></div>
+      <aside class="panel" id="panel" aria-live="polite"></aside>
+    </div>
+    <p class="note">分組是依工作表名稱與用途歸類，方便閱讀，不是活頁簿裡本來就有的設定。箭頭方向是資料流向：從被引用的表指向寫公式的表。</p>
+  </section>
+
+  <section class="view" id="v-mind" role="tabpanel" aria-labelledby="t-mind" hidden>
+    <div class="mm"><ul class="tree" id="tree"></ul></div>
+  </section>
+
+  <section class="view" id="v-mac" role="tabpanel" aria-labelledby="t-mac" hidden>
+    <div class="callout"><p>這本活頁簿的巨集都是用「錄製巨集」做的「模式開關」：按一下按鈕，就在某一格填入 1 或 2（或改寫一條公式），其他表的 IF 公式再依這格切換算法。目前兩版的開關狀態相同：<b id="curstate"></b>。</p></div>
+    <div class="tbl-wrap"><table id="mactbl"></table></div>
+    <p class="note" id="emptymods"></p>
+  </section>
+
+  <section class="view" id="v-diff" role="tabpanel" aria-labelledby="t-diff" hidden>
+    <div class="callout"><p>兩版的骨架完全一樣：同樣 38 張工作表、順序相同；VBA 程式碼一字不差；7 顆按鈕綁定相同。實質改動集中在<b>法定造價</b>，另外有兩處資料被清掉或搬動。</p></div>
+    <div class="tbl-wrap"><table id="difftbl"></table></div>
+    <p class="note">比對方式：兩個檔案用同一套程序轉檔後逐格比較公式與輸入值，已排除純格式差異（例如引號、空白、省略的尾端參數）以及運算列表在轉檔時的顯示差異。111 版檔案最後儲存於 2024-08-04，114 版最後儲存於 2025-07-12。</p>
+  </section>
+
+  <section class="view" id="v-fix" role="tabpanel" aria-labelledby="t-fix" hidden>
+    <div class="items" id="fixes"></div>
+  </section>
+  <section class="view" id="v-web" role="tabpanel" aria-labelledby="t-web" hidden>
+    <p class="lead">ATLAS 帷幄「成本分析」網頁版怎麼接這本活頁簿（依 <code>概算模組-解析-v1.md</code>）。三種資料三個去處：<b>案件資料</b>＝案件中心已有的（面積、分區、地號、人數、公告現值）；<b>本案輸入</b>＝每案每方案填的（戶數、樓高、造價、售價、融資…），存 <code>cost_plans</code>；<b>參數</b>＝全站共用、隨法規年度改的費率表，存 <code>cost_params</code>（含生效日、來源、連法規庫）。巨集全部換成四個下拉：都更／危老、委建／合建／自建、權變／協議合建、容移實際／推估。</p>
+    <div class="phases"><span class="pill ok">一</span> 第一版：主線 41 項＋容獎勾選＋銷售面積＋費用加總 <span class="pill warn">二</span> 現金流量表、容移、建築規劃 <span class="pill info">三</span> 估價鏈＋權變分配 <span class="pill bad">—</span> 不搬</div>
+    <table class="webtbl" id="webtbl"></table>
+  </section>
+</div>
+
+<script type="application/json" id="data">{"groups": [{"key": "law", "label": "導覽與法規參考", "sheets": ["大序", "重建程序表", "劃定更新單元", "土地管制規則一覽表", "新北市容積管制", "建築師樓地板分析", "容獎(建築師)"]}, {"key": "site", "label": "基本資料與基地", "sheets": ["A.基本資料", "@.基地資料", "吉林一小593", " 建築規劃"]}, {"key": "far", "label": "容積獎勵", "sheets": ["@都更容獎", "@危老容獎", "設計獎勵保證金"]}, {"key": "cost", "label": "共同負擔費用", "sheets": ["法定造價", "工程(加成)造價", "危老工程加價", "壹.工程費用", "規劃設計+公廈基金", "貳.規劃費+估價費", "參.利息+肆.稅捐", "拆遷安置+補償費", "地籍整理+信託", "伍.管理費用", "全案管理公司開發奬金", "陸.容移費用", "車位代金", "都更補助費用"]}, {"key": "val", "label": "房地估價", "sheets": ["更前樓層效用比", "直接資本化+比準房價", "更後房價", "土地基地價格"]}, {"key": "sum", "label": "彙總與方案", "sheets": ["@共負表", "1.概算方式", "2-1.(委建)", "2-2.(合建)", "2-3.土開分析"]}, {"key": "alloc", "label": "權利變換分配", "sheets": ["權變分配"]}], "sheets": [{"name": "劃定更新單元", "idx": 0, "group": "law", "nform": 0, "code": "工作表38", "refErr": [], "dataTables": [], "solver": null, "note": "台北市自行劃定更新單元評估標準 109.1.8（純文字）", "web": "→ 法規庫條文", "phase": "—", "ninput": 0}, {"name": "@.基地資料", "idx": 1, "group": "site", "nform": 1044, "code": "工作表7", "refErr": ["G16", "H16", "J16", "K16", "L16", "M16"], "dataTables": [], "solver": null, "note": "每分區一欄：面積占比、公告現值、原容積、都更四種上限取法、危老上限、貢獻率；被讀 ≈430 次", "web": "＝地號群組依分區計算；far.html 右欄「允建上限」", "phase": "一", "ninput": 32}, {"name": "直接資本化+比準房價", "idx": 2, "group": "val", "nform": 238, "code": "工作表26", "refErr": [], "dataTables": [], "solver": null, "note": "收益法推更新前房價與房租", "web": "第三期", "phase": "三", "ninput": 6}, {"name": "吉林一小593", "idx": 3, "group": "site", "nform": 28, "code": "工作表6", "refErr": [], "dataTables": [], "solver": null, "note": "範例案的更新區域分區：各地號／建物（不同樓層、竣工年）歸區，餵 @.基地資料", "web": "＝案件中心「地段→地號群組」，群組加樓層數／竣工年／原樓地板面積三欄；資料不搬，當測試組", "phase": "一", "ninput": 35}, {"name": "更前樓層效用比", "idx": 4, "group": "val", "nform": 2824, "code": "工作表28", "refErr": ["V23", "B41", "D41", "V41", "Q62", "W62", "D98"], "dataTables": [], "solver": null, "note": "更新前各區各樓層效用比加權→更新後樓層效用比（2,827 式）", "web": "第三期（權變線）", "phase": "三", "ninput": 4}, {"name": "建築師樓地板分析", "idx": 5, "group": "law", "nform": 0, "code": "工作表30", "refErr": [], "dataTables": [], "solver": null, "note": "空表", "web": "刪", "phase": "—", "ninput": 0}, {"name": "權變分配", "idx": 6, "group": "alloc", "nform": 1413, "code": "工作表37", "refErr": ["AV5", "Z5", "AV15", "Z15", "AV33", "Z33", "AV98", "Z98", "AK138", "AL138", "AV138"], "dataTables": [], "solver": null, "note": "各所有權人更新前權利價值→更新後分配、找補（含他案個資）", "web": "第三期；資料源改案件中心 parcel_owners", "phase": "三", "ninput": 373}, {"name": "A.基本資料", "idx": 7, "group": "site", "nform": 71, "code": "工作表8", "refErr": [], "dataTables": [], "solver": {"adj": "A.基本資料!$E$19", "opt": "A.基本資料!$F$19", "typ": "3", "val": "27"}, "note": "總輸入面板：土地／建物／建築面積／財務／權變參數＋回歸校正欄位；被 28 張表讀 ≈420 次", "web": "拆三份：案件帶入（案件中心已有）／本案輸入（cost_plans.inputs）／參數（cost_params）", "phase": "一", "ninput": 8}, {"name": "土地基地價格", "idx": 8, "group": "val", "nform": 612, "code": "工作表31", "refErr": [], "dataTables": [], "solver": null, "note": "比準／土開／合建／委建土地價格，基地形狀調整；AX2 巨集切權變／協議合建", "web": "第三期", "phase": "三", "ninput": 15}, {"name": "更後房價", "idx": 9, "group": "val", "nform": 190, "code": "工作表32", "refErr": [], "dataTables": [], "solver": {"adj": "更後房價!$B$7", "opt": "更後房價!$K$21", "typ": "3", "val": "125"}, "note": "更新後各樓層價格配置（層距效用比差 1.5%）", "web": "第一版只要「2 樓以上平均售價」一個數字；完整版第三期", "phase": "三", "ninput": 1}, {"name": "1.概算方式", "idx": 10, "group": "sum", "nform": 202, "code": "工作表4", "refErr": [], "dataTables": ["O6:Q17", "D59:I59", "D62:I62"], "solver": {"adj": "'1.概算方式'!$H$45", "opt": "'1.概算方式'!$G$44", "typ": "3", "val": "34.12"}, "note": "主線 41 項：基本→容獎→成本→收入→分回比例→分回坪數→財務平衡 OK/NG→建築規劃；敏感度分析", "web": "第一版畫面本體", "phase": "一", "ninput": 42}, {"name": "陸.容移費用", "idx": 11, "group": "cost", "nform": 156, "code": "工作表19", "refErr": [], "dataTables": ["M7:O11", "M13:O20"], "solver": {"adj": "陸.容移費用!$R$6", "opt": "陸.容移費用!$S$13", "typ": "3", "val": "5902"}, "note": "容積移轉代金／購買成本與增加收益試算（含運算列表）", "web": "第二期", "phase": "二", "ninput": 27}, {"name": "@共負表", "idx": 12, "group": "sum", "nform": 1755, "code": "工作表9", "refErr": ["U59", "AZ72", "AZ76", "AW78", "AW79", "AW80", "AD111", "AE111", "AF111", "AG111"], "dataTables": ["P67:S67"], "solver": null, "note": "台北市費用提列總表逐項金額→現金流量表（-3 年～完工，FV/PV，萬元）", "web": "第一版只做費用加總；現金流第二期", "phase": "一／二", "ninput": 31}, {"name": "2-1.(委建)", "idx": 13, "group": "sum", "nform": 812, "code": "工作表1", "refErr": ["AB101"], "dataTables": [], "solver": null, "note": "土開建築面積分析表（委建）：容積→免計容積→銷售面積→財務；結果回填 A.基本資料", "web": "「容積→銷售面積」段併入第一版；三方案之一", "phase": "一", "ninput": 96}, {"name": "2-2.(合建)", "idx": 14, "group": "sum", "nform": 356, "code": "工作表5", "refErr": [], "dataTables": [], "solver": {"adj": "'2-2.(合建)'!#REF!", "opt": "'2-2.(合建)'!#REF!", "typ": "3", "val": "0"}, "note": "同上合建版（地主不出資）；規劃求解設定已壞", "web": "三方案之一", "phase": "一", "ninput": 64}, {"name": "2-3.土開分析", "idx": 15, "group": "sum", "nform": 464, "code": "工作表3", "refErr": [], "dataTables": [], "solver": null, "note": "成本法＆土開分析法（合建土開／購地自建），模式開關 P19", "web": "三方案之一", "phase": "一", "ninput": 84}, {"name": "@都更容獎", "idx": 16, "group": "far", "nform": 421, "code": "工作表22", "refErr": [], "dataTables": [], "solver": null, "note": "§5–§16 中央獎勵（上限 50%）＋台北市地方獎勵（20%）勾選表、方案一／二、每分區上限", "web": "far.html 原型；獎勵項目進 far_bonus_items；缺新北市地方獎勵表", "phase": "一", "ninput": 41}, {"name": "@危老容獎", "idx": 17, "group": "far", "nform": 362, "code": "工作表2", "refErr": [], "dataTables": [], "solver": null, "note": "A 基礎＋B 增額＋時程／規模，上限 30%＋10%", "web": "同上", "phase": "一", "ninput": 15}, {"name": " 建築規劃", "idx": 18, "group": "site", "nform": 122, "code": "工作表20", "refErr": [], "dataTables": [], "solver": null, "note": "投資興建案土開建築評估：重建後規劃、合建 vs 委建、地下允建、面前道路", "web": "第二期", "phase": "二", "ninput": 19}, {"name": "重建程序表", "idx": 19, "group": "law", "nform": 0, "code": "工作表29", "refErr": [], "dataTables": [], "solver": null, "note": "金蘭大樓重建程序：Stage／必要文件／時程", "web": "→ 帷幄時程表／案件檢核表", "phase": "—", "ninput": 3}, {"name": "壹.工程費用", "idx": 20, "group": "cost", "nform": 66, "code": "工作表10", "refErr": [], "dataTables": [], "solver": null, "note": "拆除費（構造×樓層）、鄰房鑑定、公設用地捐贈成本、測量", "web": "cost_params＋公式", "phase": "一", "ninput": 55}, {"name": "工程(加成)造價", "idx": 21, "group": "cost", "nform": 448, "code": "工作表11", "refErr": [], "dataTables": [], "solver": null, "note": "台北市 35 層以下房屋構造標準單價表（物價基準 96.12）＋街路等級＋物價指數查表（VLOOKUP）", "web": "cost_params 標準單價表（北／新北），每年版；要抓新資料", "phase": "一", "ninput": 178}, {"name": "危老工程加價", "idx": 22, "group": "cost", "nform": 38, "code": "工作表33", "refErr": [], "dataTables": [], "solver": null, "note": "申請設計獎勵的工程費加成（耐震／綠建築／智慧／無障礙／面前道路<8m）", "web": "cost_params，與容獎項目一對一掛", "phase": "一", "ninput": 35}, {"name": "法定造價", "idx": 23, "group": "cost", "nform": 42, "code": "工作表12", "refErr": [], "dataTables": [], "solver": null, "note": "建照工程造價標準表 99.1.1（RC/SRC/SC 依樓層）＋雜項工作物單價", "web": "cost_params（依構造×樓層，含生效日）", "phase": "一", "ninput": 54}, {"name": "規劃設計+公廈基金", "idx": 24, "group": "cost", "nform": 69, "code": "工作表13", "refErr": [], "dataTables": [], "solver": null, "note": "建築師設計費級距＋公寓大廈管理基金級距", "web": "cost_params", "phase": "一", "ninput": 35}, {"name": "貳.規劃費+估價費", "idx": 25, "group": "cost", "nform": 44, "code": "工作表14", "refErr": [], "dataTables": [], "solver": null, "note": "都更規劃各階段費用（可行性→權變）＋估價費依面積／人數級距", "web": "cost_params（新北／台北各一組）", "phase": "一", "ninput": 73}, {"name": "參.利息+肆.稅捐", "idx": 26, "group": "cost", "nform": 211, "code": "工作表17", "refErr": [], "dataTables": [], "solver": null, "note": "貸款利息（FV 複利、訂簽開 15%）、印花稅、營業稅、地價稅房屋稅", "web": "利息公式進程式；稅率進 cost_params", "phase": "一（簡化）", "ninput": 10}, {"name": "拆遷安置+補償費", "idx": 27, "group": "cost", "nform": 52, "code": "工作表15", "refErr": [], "dataTables": [], "solver": null, "note": "台北市合法建築物拆遷安置費＋拆遷補償費（構造×屋齡）", "web": "公式＋單價表", "phase": "一", "ninput": 6}, {"name": "地籍整理+信託", "idx": 28, "group": "cost", "nform": 31, "code": "工作表16", "refErr": [], "dataTables": [], "solver": null, "note": "地籍整理各項登記費、信託管理費率 0.3%", "web": "cost_params", "phase": "一", "ninput": 9}, {"name": "設計獎勵保證金", "idx": 29, "group": "far", "nform": 70, "code": "工作表21", "refErr": [], "dataTables": [], "solver": null, "note": "申請設計獎勵要繳的保證金＝申請獎勵容積×45%×公告現值×比例", "web": "容獎段附屬一條公式", "phase": "一", "ninput": 1}, {"name": "伍.管理費用", "idx": 30, "group": "cost", "nform": 59, "code": "工作表18", "refErr": [], "dataTables": [], "solver": null, "note": "人事行政管理費率（依筆數／面積／人數級別）", "web": "cost_params", "phase": "一", "ninput": 21}, {"name": "容獎(建築師)", "idx": 31, "group": "law", "nform": 0, "code": "工作表27", "refErr": [], "dataTables": [], "solver": null, "note": "建築師事務所的危老容獎檢討書範本（士林延平北路案）", "web": "不搬", "phase": "—", "ninput": 6}, {"name": "車位代金", "idx": 32, "group": "cost", "nform": 8, "code": "工作表34", "refErr": [], "dataTables": [], "solver": null, "note": "停車位代金 T=(P×C+E×LA/ΣFA)×PA×UT", "web": "一條公式", "phase": "一", "ninput": 0}, {"name": "土地管制規則一覽表", "idx": 33, "group": "law", "nform": 0, "code": "工作表23", "refErr": [], "dataTables": [], "solver": null, "note": "台北市住二之一～住三之一 建蔽／容積／退縮一覽", "web": "→ 法規庫＋分區容積率資料庫", "phase": "—", "ninput": 41}, {"name": "新北市容積管制", "idx": 34, "group": "law", "nform": 1, "code": "工作表24", "refErr": [], "dataTables": [], "solver": null, "note": "新北各區住宅區／商業區 容積率、建蔽率（211 個數字）", "web": "→ 直接餵 zoning_rules 補齊新北 29 區", "phase": "前置", "ninput": 211}, {"name": "大序", "idx": 35, "group": "law", "nform": 0, "code": "工作表35", "refErr": [], "dataTables": [], "solver": null, "note": "建築師事務所的危老容獎檢討書範本（北投雙全街案）", "web": "不搬；可掃成 PDF 放法規庫「實務範例」", "phase": "—", "ninput": 6}, {"name": "全案管理公司開發奬金", "idx": 36, "group": "cost", "nform": 61, "code": "工作表25", "refErr": [], "dataTables": [], "solver": null, "note": "松山中城工作站內規：簽約金額、服務費率、團獎分配", "web": "不搬；Ted 自己的收費模式另建", "phase": "—", "ninput": 26}, {"name": "都更補助費用", "idx": 37, "group": "cost", "nform": 9, "code": "工作表36", "refErr": [], "dataTables": [], "solver": null, "note": "都更補助一覽（更新會／管委會／事業計畫…）", "web": "cost_params（中央／新北／台北）", "phase": "一", "ninput": 19}], "edges": [{"from": "吉林一小593", "to": "@.基地資料", "cells": 6, "samples": [{"cell": "C3", "f": "吉林一小593!C9"}, {"cell": "D3", "f": "吉林一小593!C18"}]}, {"from": "A.基本資料", "to": "@.基地資料", "cells": 50, "samples": [{"cell": "C28", "f": "IF('A.基本資料'!$B$29=0,\"\",MAX(C26:C27))"}, {"cell": "D28", "f": "IF('A.基本資料'!$B$29=0,\"\",MAX(D26:D27))"}]}, {"from": "@都更容獎", "to": "@.基地資料", "cells": 4, "samples": [{"cell": "C33", "f": "IF('A.基本資料'!B29=0,\"\",'@都更容獎'!F54-'@都更容獎'!G9-'@都更容獎'!G12-'@都更容獎'!P42)"}, {"cell": "C33", "f": "IF('A.基本資料'!B29=0,\"\",'@都更容獎'!F54-'@都更容獎'!G9-'@都更容獎'!G12-'@都更容獎'!P42)"}]}, {"from": "@危老容獎", "to": "@.基地資料", "cells": 38, "samples": [{"cell": "C43", "f": "'@危老容獎'!$V$29-'@危老容獎'!V$11"}, {"cell": "C43", "f": "'@危老容獎'!$V$29-'@危老容獎'!V$11"}]}, {"from": "陸.容移費用", "to": "@.基地資料", "cells": 3, "samples": [{"cell": "W55", "f": "'陸.容移費用'!R8"}, {"cell": "W56", "f": "'陸.容移費用'!R9"}]}, {"from": "土地基地價格", "to": "@.基地資料", "cells": 20, "samples": [{"cell": "C60", "f": "土地基地價格!$Y5"}, {"cell": "D60", "f": "土地基地價格!$Y6"}]}, {"from": "更前樓層效用比", "to": "直接資本化+比準房價", "cells": 55, "samples": [{"cell": "M1", "f": "更前樓層效用比!C25"}, {"cell": "O1", "f": "更前樓層效用比!E25"}]}, {"from": "A.基本資料", "to": "直接資本化+比準房價", "cells": 9, "samples": [{"cell": "B4", "f": "'A.基本資料'!E11"}, {"cell": "C4", "f": "'A.基本資料'!$H$11*0.3025"}]}, {"from": "法定造價", "to": "直接資本化+比準房價", "cells": 1, "samples": [{"cell": "B13", "f": "法定造價!$D$3/0.3025"}]}, {"from": "直接資本化+比準房價", "to": "更前樓層效用比", "cells": 1, "samples": [{"cell": "F1", "f": "'直接資本化+比準房價'!F29"}]}, {"from": "更後房價", "to": "更前樓層效用比", "cells": 244, "samples": [{"cell": "M1", "f": "更後房價!C4"}, {"cell": "C87", "f": "更後房價!E10"}]}, {"from": "@.基地資料", "to": "更前樓層效用比", "cells": 46, "samples": [{"cell": "B3", "f": "'@.基地資料'!C2"}, {"cell": "D3", "f": "'@.基地資料'!D2"}]}, {"from": "土地基地價格", "to": "更前樓層效用比", "cells": 45, "samples": [{"cell": "J44", "f": "IF(土地基地價格!$A16=0,0,土地基地價格!$T16+1)"}, {"cell": "J44", "f": "IF(土地基地價格!$A16=0,0,土地基地價格!$T16+1)"}]}, {"from": "2-1.(委建)", "to": "更前樓層效用比", "cells": 1, "samples": [{"cell": "G88", "f": "1-'2-1.(委建)'!I76"}]}, {"from": "A.基本資料", "to": "更前樓層效用比", "cells": 2, "samples": [{"cell": "I88", "f": "'A.基本資料'!K19"}, {"cell": "K88", "f": "'A.基本資料'!F19"}]}, {"from": "土地基地價格", "to": "權變分配", "cells": 24, "samples": [{"cell": "AE1", "f": "土地基地價格!AH6"}, {"cell": "AY1", "f": "土地基地價格!AY2"}]}, {"from": "2-1.(委建)", "to": "權變分配", "cells": 2, "samples": [{"cell": "BA1", "f": "'2-1.(委建)'!I76"}, {"cell": "BJ2", "f": "'2-1.(委建)'!U6"}]}, {"from": "陸.容移費用", "to": "權變分配", "cells": 2, "samples": [{"cell": "AA2", "f": "'陸.容移費用'!L12"}, {"cell": "AX2", "f": "IF(AA2=0,0,'陸.容移費用'!S13)"}]}, {"from": "A.基本資料", "to": "權變分配", "cells": 4, "samples": [{"cell": "AD2", "f": "'A.基本資料'!G19"}, {"cell": "AE2", "f": "'A.基本資料'!F11"}]}, {"from": "@共負表", "to": "權變分配", "cells": 3, "samples": [{"cell": "AY2", "f": "IF(AY1=\"權利變換\",'@共負表'!S66,'@共負表'!R66)-AX2"}, {"cell": "AY2", "f": "IF(AY1=\"權利變換\",'@共負表'!S66,'@共負表'!R66)-AX2"}]}, {"from": "更後房價", "to": "權變分配", "cells": 16, "samples": [{"cell": "BB2", "f": "更後房價!E10"}, {"cell": "BC2", "f": "更後房價!B5"}]}, {"from": "@.基地資料", "to": "權變分配", "cells": 12, "samples": [{"cell": "AX4", "f": "'@.基地資料'!C74"}, {"cell": "AX14", "f": "'@.基地資料'!D74"}]}, {"from": "更前樓層效用比", "to": "權變分配", "cells": 123, "samples": [{"cell": "AT6", "f": "更前樓層效用比!B5"}, {"cell": "AU6", "f": "更前樓層效用比!B47"}]}, {"from": "土地基地價格", "to": "A.基本資料", "cells": 1, "samples": [{"cell": "N1", "f": "土地基地價格!AX2"}]}, {"from": "@.基地資料", "to": "A.基本資料", "cells": 10, "samples": [{"cell": "B3", "f": "'@.基地資料'!V3"}, {"cell": "D3", "f": "'@.基地資料'!W15"}]}, {"from": "壹.工程費用", "to": "A.基本資料", "cells": 1, "samples": [{"cell": "J3", "f": "'壹.工程費用'!M43"}]}, {"from": "2-1.(委建)", "to": "A.基本資料", "cells": 17, "samples": [{"cell": "E7", "f": "IF(I14>15,'2-1.(委建)'!L81,E5)"}, {"cell": "D14", "f": "'2-1.(委建)'!I58/C14"}]}, {"from": "吉林一小593", "to": "A.基本資料", "cells": 4, "samples": [{"cell": "D9", "f": "吉林一小593!C25*0.3025"}, {"cell": "B11", "f": "吉林一小593!AA19*0.3025"}]}, {"from": "直接資本化+比準房價", "to": "A.基本資料", "cells": 1, "samples": [{"cell": "C11", "f": "'直接資本化+比準房價'!$E$26"}]}, {"from": "拆遷安置+補償費", "to": "A.基本資料", "cells": 1, "samples": [{"cell": "I11", "f": "IF(B29=0,\"\",'拆遷安置+補償費'!AA13)"}]}, {"from": "2-3.土開分析", "to": "A.基本資料", "cells": 1, "samples": [{"cell": "B14", "f": "'2-3.土開分析'!E34"}]}, {"from": "@共負表", "to": "A.基本資料", "cells": 1, "samples": [{"cell": "C19", "f": "'@共負表'!O66"}]}, {"from": "危老工程加價", "to": "A.基本資料", "cells": 2, "samples": [{"cell": "D19", "f": "危老工程加價!D44"}, {"cell": "F19", "f": "危老工程加價!C45"}]}, {"from": "更後房價", "to": "A.基本資料", "cells": 2, "samples": [{"cell": "I19", "f": "更後房價!B46"}, {"cell": "D27", "f": "更後房價!G2"}]}, {"from": "陸.容移費用", "to": "A.基本資料", "cells": 1, "samples": [{"cell": "N19", "f": "'陸.容移費用'!L6"}]}, {"from": "全案管理公司開發奬金", "to": "A.基本資料", "cells": 1, "samples": [{"cell": "K21", "f": "IF(J1=1,全案管理公司開發奬金!K5,'伍.管理費用'!I77)"}]}, {"from": "伍.管理費用", "to": "A.基本資料", "cells": 1, "samples": [{"cell": "K21", "f": "IF(J1=1,全案管理公司開發奬金!K5,'伍.管理費用'!I77)"}]}, {"from": "地籍整理+信託", "to": "A.基本資料", "cells": 1, "samples": [{"cell": "G25", "f": "IFERROR('地籍整理+信託'!K15,1)"}]}, {"from": "A.基本資料", "to": "土地基地價格", "cells": 8, "samples": [{"cell": "BA1", "f": "'A.基本資料'!$K$19"}, {"cell": "AE2", "f": "'A.基本資料'!B27"}]}, {"from": "2-3.土開分析", "to": "土地基地價格", "cells": 1, "samples": [{"cell": "B2", "f": "'2-3.土開分析'!W50"}]}, {"from": "2-1.(委建)", "to": "土地基地價格", "cells": 3, "samples": [{"cell": "C2", "f": "'2-1.(委建)'!$AF$62"}, {"cell": "D2", "f": "'2-1.(委建)'!$X$62"}]}, {"from": "直接資本化+比準房價", "to": "土地基地價格", "cells": 1, "samples": [{"cell": "AO2", "f": "'直接資本化+比準房價'!E26"}]}, {"from": "@共負表", "to": "土地基地價格", "cells": 3, "samples": [{"cell": "AW3", "f": "IF(AX2=1,'@共負表'!$M$62,'@共負表'!R62)-'陸.容移費用'!S13"}, {"cell": "AW3", "f": "IF(AX2=1,'@共負表'!$M$62,'@共負表'!R62)-'陸.容移費用'!S13"}]}, {"from": "陸.容移費用", "to": "土地基地價格", "cells": 1, "samples": [{"cell": "AW3", "f": "IF(AX2=1,'@共負表'!$M$62,'@共負表'!R62)-'陸.容移費用'!S13"}]}, {"from": "@.基地資料", "to": "土地基地價格", "cells": 147, "samples": [{"cell": "A5", "f": "IF('@.基地資料'!C2=0,\"\",'@.基地資料'!C2)"}, {"cell": "A5", "f": "IF('@.基地資料'!C2=0,\"\",'@.基地資料'!C2)"}]}, {"from": "更前樓層效用比", "to": "土地基地價格", "cells": 55, "samples": [{"cell": "AK5", "f": "IF(AD5=0,0,IF(A5=0,\"\",更前樓層效用比!B$64))"}, {"cell": "AL5", "f": "IF(A5=0,\"\",IF(AE5=0,0,更前樓層效用比!$C$21))"}]}, {"from": "1.概算方式", "to": "土地基地價格", "cells": 1, "samples": [{"cell": "BA5", "f": "(AW5-BA1*BA4)/'1.概算方式'!$E$63"}]}, {"from": "A.基本資料", "to": "更後房價", "cells": 3, "samples": [{"cell": "A2", "f": "ROUNDUP('A.基本資料'!F14,0)"}, {"cell": "C2", "f": "'A.基本資料'!I19"}]}, {"from": "1.概算方式", "to": "更後房價", "cells": 1, "samples": [{"cell": "E2", "f": "'1.概算方式'!E63"}]}, {"from": "@.基地資料", "to": "更後房價", "cells": 11, "samples": [{"cell": "E6", "f": "'@.基地資料'!C3"}, {"cell": "F6", "f": "'@.基地資料'!D3"}]}, {"from": "更前樓層效用比", "to": "更後房價", "cells": 12, "samples": [{"cell": "E7", "f": "更前樓層效用比!B5"}, {"cell": "F7", "f": "更前樓層效用比!D5"}]}, {"from": "2-1.(委建)", "to": "1.概算方式", "cells": 24, "samples": [{"cell": "N2", "f": "'2-1.(委建)'!O57"}, {"cell": "N3", "f": "'2-1.(委建)'!O60"}]}, {"from": "A.基本資料", "to": "1.概算方式", "cells": 20, "samples": [{"cell": "F3", "f": "'A.基本資料'!D7"}, {"cell": "I3", "f": "'A.基本資料'!J1"}]}, {"from": "@.基地資料", "to": "1.概算方式", "cells": 1, "samples": [{"cell": "E7", "f": "'@.基地資料'!V9*0.3025"}]}, {"from": "@危老容獎", "to": "1.概算方式", "cells": 6, "samples": [{"cell": "F11", "f": "'@危老容獎'!T39*0.3025"}, {"cell": "F12", "f": "'@危老容獎'!T40*0.3025"}]}, {"from": "@都更容獎", "to": "1.概算方式", "cells": 8, "samples": [{"cell": "F13", "f": "'@都更容獎'!U76*0.3025"}, {"cell": "F14", "f": "'@都更容獎'!J53*0.3025"}]}, {"from": "2-3.土開分析", "to": "1.概算方式", "cells": 2, "samples": [{"cell": "K13", "f": "'2-3.土開分析'!X38"}, {"cell": "F42", "f": "'2-3.土開分析'!N75"}]}, {"from": "拆遷安置+補償費", "to": "1.概算方式", "cells": 4, "samples": [{"cell": "E20", "f": "'拆遷安置+補償費'!J25+'拆遷安置+補償費'!X13+'拆遷安置+補償費'!X27+'拆遷安置+補償費'!X39"}, {"cell": "E20", "f": "'拆遷安置+補償費'!J25+'拆遷安置+補償費'!X13+'拆遷安置+補償費'!X27+'拆遷安置+補償費'!X39"}]}, {"from": "陸.容移費用", "to": "1.概算方式", "cells": 10, "samples": [{"cell": "Q29", "f": "IF('陸.容移費用'!C10=0,0,O29/O27)"}, {"cell": "M31", "f": "IF('陸.容移費用'!C10=0,0,'陸.容移費用'!C14/('陸.容移費用'!D10*0.3025*2))"}]}, {"from": "危老工程加價", "to": "1.概算方式", "cells": 1, "samples": [{"cell": "C58", "f": "危老工程加價!C45"}]}, {"from": "更後房價", "to": "1.概算方式", "cells": 2, "samples": [{"cell": "C61", "f": "更後房價!B46"}, {"cell": "E63", "f": "更後房價!B45"}]}, {"from": "@.基地資料", "to": "陸.容移費用", "cells": 2, "samples": [{"cell": "S1", "f": "'@.基地資料'!W58"}, {"cell": "J12", "f": "'@.基地資料'!W58"}]}, {"from": "A.基本資料", "to": "陸.容移費用", "cells": 18, "samples": [{"cell": "J2", "f": "'A.基本資料'!B7*0.3025"}, {"cell": "L2", "f": "'A.基本資料'!D7"}]}, {"from": "2-1.(委建)", "to": "陸.容移費用", "cells": 14, "samples": [{"cell": "L3", "f": "'2-1.(委建)'!K100"}, {"cell": "L4", "f": "'2-1.(委建)'!J100"}]}, {"from": "@共負表", "to": "陸.容移費用", "cells": 4, "samples": [{"cell": "P3", "f": "'@共負表'!P56"}, {"cell": "Q3", "f": "'@共負表'!S56"}]}, {"from": "參.利息+肆.稅捐", "to": "陸.容移費用", "cells": 1, "samples": [{"cell": "E14", "f": "'參.利息+肆.稅捐'!R25"}]}, {"from": "土地基地價格", "to": "陸.容移費用", "cells": 1, "samples": [{"cell": "I14", "f": "土地基地價格!B2"}]}, {"from": "1.概算方式", "to": "陸.容移費用", "cells": 1, "samples": [{"cell": "C16", "f": "IF('1.概算方式'!N5=0,0,F19-G13)"}]}, {"from": "A.基本資料", "to": "@共負表", "cells": 55, "samples": [{"cell": "A1", "f": "IF('A.基本資料'!J1=1,\"危 老 重 建\",\"都 市 更 新\")"}, {"cell": "I3", "f": "'A.基本資料'!B19"}]}, {"from": "壹.工程費用", "to": "@共負表", "cells": 25, "samples": [{"cell": "I5", "f": "'壹.工程費用'!B17"}, {"cell": "K5", "f": "'壹.工程費用'!D17"}]}, {"from": "2-1.(委建)", "to": "@共負表", "cells": 13, "samples": [{"cell": "I6", "f": "'2-1.(委建)'!I57"}, {"cell": "K7", "f": "'2-1.(委建)'!V11"}]}, {"from": "規劃設計+公廈基金", "to": "@共負表", "cells": 4, "samples": [{"cell": "I12", "f": "'規劃設計+公廈基金'!E42"}, {"cell": "O12", "f": "'規劃設計+公廈基金'!E42+設計獎勵保證金!D37"}]}, {"from": "設計獎勵保證金", "to": "@共負表", "cells": 4, "samples": [{"cell": "K12", "f": "設計獎勵保證金!D37"}, {"cell": "O12", "f": "'規劃設計+公廈基金'!E42+設計獎勵保證金!D37"}]}, {"from": "1.概算方式", "to": "@共負表", "cells": 3, "samples": [{"cell": "K15", "f": "'1.概算方式'!L5"}, {"cell": "U29", "f": "'1.概算方式'!I3"}]}, {"from": "拆遷安置+補償費", "to": "@共負表", "cells": 8, "samples": [{"cell": "K19", "f": "'拆遷安置+補償費'!T39/0.3025"}, {"cell": "M33", "f": "'拆遷安置+補償費'!AA13"}]}, {"from": "法定造價", "to": "@共負表", "cells": 1, "samples": [{"cell": "K28", "f": "法定造價!D3"}]}, {"from": "貳.規劃費+估價費", "to": "@共負表", "cells": 11, "samples": [{"cell": "K29", "f": "'貳.規劃費+估價費'!H34"}, {"cell": "R29", "f": "IFERROR(IF('A.基本資料'!J1=1,O29,'貳.規劃費+估價費'!H8+'貳.規劃費+估價費'!H17+'貳.規劃費+估價費'!H20+'貳.規劃費+估價費'!H30+'貳.規劃費+估價費'!H33),1)"}]}, {"from": "土地基地價格", "to": "@共負表", "cells": 1, "samples": [{"cell": "Q33", "f": "土地基地價格!AJ22"}]}, {"from": "地籍整理+信託", "to": "@共負表", "cells": 4, "samples": [{"cell": "M37", "f": "IFERROR('地籍整理+信託'!F30,1)"}, {"cell": "I51", "f": "'地籍整理+信託'!M10"}]}, {"from": "陸.容移費用", "to": "@共負表", "cells": 2, "samples": [{"cell": "O40", "f": "'陸.容移費用'!R2+'陸.容移費用'!P2"}, {"cell": "O40", "f": "'陸.容移費用'!R2+'陸.容移費用'!P2"}]}, {"from": "參.利息+肆.稅捐", "to": "@共負表", "cells": 12, "samples": [{"cell": "Q42", "f": "IFERROR('參.利息+肆.稅捐'!O11-O43,1)"}, {"cell": "S42", "f": "IFERROR('參.利息+肆.稅捐'!AA11,1)"}]}, {"from": "伍.管理費用", "to": "@共負表", "cells": 3, "samples": [{"cell": "Q50", "f": "'伍.管理費用'!F47"}, {"cell": "S50", "f": "IFERROR('伍.管理費用'!G47,1)"}]}, {"from": "全案管理公司開發奬金", "to": "@共負表", "cells": 1, "samples": [{"cell": "M53", "f": "IF('A.基本資料'!K1=\"都更\",'伍.管理費用'!I77,全案管理公司開發奬金!K5)"}]}, {"from": "@.基地資料", "to": "@共負表", "cells": 1, "samples": [{"cell": "I55", "f": "'@.基地資料'!D3*0.3025"}]}, {"from": "危老工程加價", "to": "@共負表", "cells": 1, "samples": [{"cell": "S59", "f": "危老工程加價!B42*(1+E19)"}]}, {"from": "更後房價", "to": "@共負表", "cells": 1, "samples": [{"cell": "S60", "f": "更後房價!B46"}]}, {"from": "A.基本資料", "to": "2-1.(委建)", "cells": 84, "samples": [{"cell": "Q1", "f": "IF('A.基本資料'!J1=1,\"危老重建\",\"都市更新\")"}, {"cell": "Y1", "f": "IF('A.基本資料'!J1=1,\"危老重建\",\"都市更新\")"}]}, {"from": "@.基地資料", "to": "2-1.(委建)", "cells": 4, "samples": [{"cell": "AH5", "f": "'@.基地資料'!V48"}, {"cell": "M17", "f": "'@.基地資料'!V48"}]}, {"from": "更後房價", "to": "2-1.(委建)", "cells": 1, "samples": [{"cell": "S6", "f": "更後房價!B45"}]}, {"from": "陸.容移費用", "to": "2-1.(委建)", "cells": 3, "samples": [{"cell": "AH6", "f": "'陸.容移費用'!L12"}, {"cell": "U26", "f": "'陸.容移費用'!R2"}]}, {"from": "1.概算方式", "to": "2-1.(委建)", "cells": 8, "samples": [{"cell": "C11", "f": "'1.概算方式'!F3"}, {"cell": "L19", "f": "'1.概算方式'!I3"}]}, {"from": "2-2.(合建)", "to": "2-1.(委建)", "cells": 5, "samples": [{"cell": "AD11", "f": "'2-2.(合建)'!E54"}, {"cell": "AE43", "f": "AC43/'2-2.(合建)'!I57"}]}, {"from": "@共負表", "to": "2-1.(委建)", "cells": 68, "samples": [{"cell": "U13", "f": "'@共負表'!O5+'@共負表'!O8+'@共負表'!O9+'@共負表'!O10+'@共負表'!O11+'@共負表'!O12+'@共負表'!O14+'@共負表'!O16"}, {"cell": "U13", "f": "'@共負表'!O5+'@共負表'!O8+'@共負表'!O9+'@共負表'!O10+'@共負表'!O11+'@共負表'!O12+'@共負表'!O14+'@共負表'!O16"}]}, {"from": "@都更容獎", "to": "2-1.(委建)", "cells": 5, "samples": [{"cell": "C17", "f": "'@都更容獎'!V86-1"}, {"cell": "I19", "f": "'@都更容獎'!U76"}]}, {"from": "@危老容獎", "to": "2-1.(委建)", "cells": 4, "samples": [{"cell": "K19", "f": "'@危老容獎'!T43"}, {"cell": "G21", "f": "'@危老容獎'!T39"}]}, {"from": "參.利息+肆.稅捐", "to": "2-1.(委建)", "cells": 9, "samples": [{"cell": "V30", "f": "IFERROR('參.利息+肆.稅捐'!O11,1)"}, {"cell": "W35", "f": "'參.利息+肆.稅捐'!C97"}]}, {"from": "設計獎勵保證金", "to": "2-1.(委建)", "cells": 5, "samples": [{"cell": "V31", "f": "IF('A.基本資料'!K1=\"危老重建\",設計獎勵保證金!G10,設計獎勵保證金!G31)"}, {"cell": "V31", "f": "IF('A.基本資料'!K1=\"危老重建\",設計獎勵保證金!G10,設計獎勵保證金!G31)"}]}, {"from": "全案管理公司開發奬金", "to": "2-1.(委建)", "cells": 4, "samples": [{"cell": "V36", "f": "全案管理公司開發奬金!K5"}, {"cell": "AD36", "f": "全案管理公司開發奬金!K5"}]}, {"from": "伍.管理費用", "to": "2-1.(委建)", "cells": 2, "samples": [{"cell": "W36", "f": "'伍.管理費用'!I77"}, {"cell": "AE36", "f": "'伍.管理費用'!I77"}]}, {"from": "地籍整理+信託", "to": "2-1.(委建)", "cells": 2, "samples": [{"cell": "U38", "f": "('地籍整理+信託'!M10+'地籍整理+信託'!O13)*0.3%"}, {"cell": "U38", "f": "('地籍整理+信託'!M10+'地籍整理+信託'!O13)*0.3%"}]}, {"from": "工程(加成)造價", "to": "2-1.(委建)", "cells": 14, "samples": [{"cell": "N105", "f": "IF(L105=\"\",\"\",IF(L105<'工程(加成)造價'!B$122,危老工程加價!C45,危老工程加價!C45*(1+VLOOKUP(L105,'工程(加成)造價'!$B$122:$F$125,5))))"}, {"cell": "N105", "f": "IF(L105=\"\",\"\",IF(L105<'工程(加成)造價'!B$122,危老工程加價!C45,危老工程加價!C45*(1+VLOOKUP(L105,'工程(加成)造價'!$B$122:$F$125,5))))"}]}, {"from": "危老工程加價", "to": "2-1.(委建)", "cells": 14, "samples": [{"cell": "N105", "f": "IF(L105=\"\",\"\",IF(L105<'工程(加成)造價'!B$122,危老工程加價!C45,危老工程加價!C45*(1+VLOOKUP(L105,'工程(加成)造價'!$B$122:$F$125,5))))"}, {"cell": "N105", "f": "IF(L105=\"\",\"\",IF(L105<'工程(加成)造價'!B$122,危老工程加價!C45,危老工程加價!C45*(1+VLOOKUP(L105,'工程(加成)造價'!$B$122:$F$125,5))))"}]}, {"from": "2-3.土開分析", "to": "2-2.(合建)", "cells": 2, "samples": [{"cell": "H2", "f": "'2-3.土開分析'!H2:O2"}, {"cell": "C17", "f": "'2-3.土開分析'!C17"}]}, {"from": "2-1.(委建)", "to": "2-2.(合建)", "cells": 18, "samples": [{"cell": "C6", "f": "'2-1.(委建)'!C6"}, {"cell": "E6", "f": "'2-1.(委建)'!E6"}]}, {"from": "A.基本資料", "to": "2-2.(合建)", "cells": 12, "samples": [{"cell": "C7", "f": "'A.基本資料'!C3"}, {"cell": "E7", "f": "'A.基本資料'!C5"}]}, {"from": "1.概算方式", "to": "2-2.(合建)", "cells": 5, "samples": [{"cell": "C8", "f": "'1.概算方式'!E4/0.3025"}, {"cell": "C11", "f": "'1.概算方式'!F3"}]}, {"from": "@共負表", "to": "2-2.(合建)", "cells": 1, "samples": [{"cell": "Y14", "f": "'2-1.(委建)'!AB9*'@共負表'!S56"}]}, {"from": "@危老容獎", "to": "2-2.(合建)", "cells": 1, "samples": [{"cell": "L21", "f": "'@危老容獎'!C51+K16"}]}, {"from": "@都更容獎", "to": "2-2.(合建)", "cells": 3, "samples": [{"cell": "G25", "f": "'@都更容獎'!D53"}, {"cell": "L25", "f": "'@都更容獎'!D91"}]}, {"from": "A.基本資料", "to": "2-3.土開分析", "cells": 39, "samples": [{"cell": "Q1", "f": "IF('A.基本資料'!J1=1,\"危老重建\",\"都市更新\")"}, {"cell": "E7", "f": "'A.基本資料'!C5"}]}, {"from": "2-1.(委建)", "to": "2-3.土開分析", "cells": 6, "samples": [{"cell": "H2", "f": "'2-1.(委建)'!H2"}, {"cell": "U24", "f": "IF(K17=0,0,'2-1.(委建)'!AC26)"}]}, {"from": "1.概算方式", "to": "2-3.土開分析", "cells": 13, "samples": [{"cell": "T6", "f": "'1.概算方式'!E63"}, {"cell": "X6", "f": "'1.概算方式'!E28"}]}, {"from": "危老工程加價", "to": "2-3.土開分析", "cells": 1, "samples": [{"cell": "X9", "f": "危老工程加價!C45"}]}, {"from": "參.利息+肆.稅捐", "to": "2-3.土開分析", "cells": 4, "samples": [{"cell": "W15", "f": "'參.利息+肆.稅捐'!E85"}, {"cell": "S74", "f": "'參.利息+肆.稅捐'!E83"}]}, {"from": "@危老容獎", "to": "2-3.土開分析", "cells": 7, "samples": [{"cell": "C17", "f": "IF(L19=0,0,IF(L19=1,('@危老容獎'!C51-'@危老容獎'!C35*'@危老容獎'!C36)/('@危老容獎'!C35*'@危老容獎'!C36),('@都更容獎'!F56-'@都更容獎'!F53)/('@都更容獎'!F53)))"}, {"cell": "C17", "f": "IF(L19=0,0,IF(L19=1,('@危老容獎'!C51-'@危老容獎'!C35*'@危老容獎'!C36)/('@危老容獎'!C35*'@危老容獎'!C36),('@都更容獎'!F56-'@都更容獎'!F53)/('@都更容獎'!F53)))"}]}, {"from": "@都更容獎", "to": "2-3.土開分析", "cells": 6, "samples": [{"cell": "C17", "f": "IF(L19=0,0,IF(L19=1,('@危老容獎'!C51-'@危老容獎'!C35*'@危老容獎'!C36)/('@危老容獎'!C35*'@危老容獎'!C36),('@都更容獎'!F56-'@都更容獎'!F53)/('@都更容獎'!F53)))"}, {"cell": "C17", "f": "IF(L19=0,0,IF(L19=1,('@危老容獎'!C51-'@危老容獎'!C35*'@危老容獎'!C36)/('@危老容獎'!C35*'@危老容獎'!C36),('@都更容獎'!F56-'@都更容獎'!F53)/('@都更容獎'!F53)))"}]}, {"from": "全案管理公司開發奬金", "to": "2-3.土開分析", "cells": 1, "samples": [{"cell": "V18", "f": "全案管理公司開發奬金!K5"}]}, {"from": "伍.管理費用", "to": "2-3.土開分析", "cells": 1, "samples": [{"cell": "W18", "f": "'伍.管理費用'!I77"}]}, {"from": "@共負表", "to": "2-3.土開分析", "cells": 2, "samples": [{"cell": "U19", "f": "IFERROR(IF(L19=0,0,'@共負表'!O29),1)"}, {"cell": "U20", "f": "IF(L19=0,0,'@共負表'!O30)"}]}, {"from": "設計獎勵保證金", "to": "2-3.土開分析", "cells": 2, "samples": [{"cell": "V23", "f": "IF(L19=1,設計獎勵保證金!G10,設計獎勵保證金!G31)"}, {"cell": "V23", "f": "IF(L19=1,設計獎勵保證金!G10,設計獎勵保證金!G31)"}]}, {"from": "工程(加成)造價", "to": "2-3.土開分析", "cells": 18, "samples": [{"cell": "G93", "f": "IF(E93=\"\",\"\",IF(E93<'工程(加成)造價'!C$122,'A.基本資料'!F$19,'工程(加成)造價'!I122/'工程(加成)造價'!H122*'A.基本資料'!F$19))"}, {"cell": "G93", "f": "IF(E93=\"\",\"\",IF(E93<'工程(加成)造價'!C$122,'A.基本資料'!F$19,'工程(加成)造價'!I122/'工程(加成)造價'!H122*'A.基本資料'!F$19))"}]}, {"from": "2-1.(委建)", "to": "@都更容獎", "cells": 3, "samples": [{"cell": "D3", "f": "'2-1.(委建)'!H2"}, {"cell": "D4", "f": "'2-1.(委建)'!I6"}]}, {"from": "1.概算方式", "to": "@都更容獎", "cells": 5, "samples": [{"cell": "D5", "f": "'1.概算方式'!E3"}, {"cell": "J52", "f": "'1.概算方式'!I3"}]}, {"from": "A.基本資料", "to": "@都更容獎", "cells": 2, "samples": [{"cell": "R27", "f": "R26/'A.基本資料'!B7"}, {"cell": "F53", "f": "D4*'A.基本資料'!D7"}]}, {"from": "@.基地資料", "to": "@都更容獎", "cells": 98, "samples": [{"cell": "D66", "f": "'@.基地資料'!C2"}, {"cell": "E66", "f": "'@.基地資料'!D2"}]}, {"from": "@.基地資料", "to": "@危老容獎", "cells": 89, "samples": [{"cell": "X2", "f": "'@.基地資料'!V3"}, {"cell": "X7", "f": "('@.基地資料'!C17-'@.基地資料'!C14)/'@.基地資料'!C14"}]}, {"from": "1.概算方式", "to": "@危老容獎", "cells": 10, "samples": [{"cell": "W30", "f": "(('1.概算方式'!E9/0.3025*1.15-('1.概算方式'!E4/0.3025*'1.概算方式'!F3)+X5*('1.概算方式'!E4/0.3025*'1.概算方式'!F3))/('1.概算方式'!E4/0.3025*'1.概算方式'!F3))"}, {"cell": "W30", "f": "(('1.概算方式'!E9/0.3025*1.15-('1.概算方式'!E4/0.3025*'1.概算方式'!F3)+X5*('1.概算方式'!E4/0.3025*'1.概算方式'!F3))/('1.概算方式'!E4/0.3025*'1.概算方式'!F3))"}]}, {"from": "A.基本資料", "to": "@危老容獎", "cells": 2, "samples": [{"cell": "V31", "f": "'A.基本資料'!B7*(1+'@危老容獎'!V30)*'A.基本資料'!D7"}, {"cell": "V31", "f": "'A.基本資料'!B7*(1+'@危老容獎'!V30)*'A.基本資料'!D7"}]}, {"from": "2-3.土開分析", "to": " 建築規劃", "cells": 2, "samples": [{"cell": "B1", "f": "'2-3.土開分析'!H2"}, {"cell": "D5", "f": "'2-3.土開分析'!I54"}]}, {"from": "A.基本資料", "to": " 建築規劃", "cells": 10, "samples": [{"cell": "B2", "f": "'A.基本資料'!B19"}, {"cell": "D2", "f": "'A.基本資料'!C19"}]}, {"from": "2-2.(合建)", "to": " 建築規劃", "cells": 4, "samples": [{"cell": "K3", "f": "ROUNDUP('2-2.(合建)'!N75,0)"}, {"cell": "K4", "f": "'2-2.(合建)'!N76"}]}, {"from": "1.概算方式", "to": " 建築規劃", "cells": 6, "samples": [{"cell": "D7", "f": "'1.概算方式'!E27"}, {"cell": "K8", "f": "'1.概算方式'!C63"}]}, {"from": "2-1.(委建)", "to": " 建築規劃", "cells": 19, "samples": [{"cell": "D8", "f": "'2-1.(委建)'!O41"}, {"cell": "D9", "f": "'2-1.(委建)'!M44"}]}, {"from": "@危老容獎", "to": " 建築規劃", "cells": 2, "samples": [{"cell": "D10", "f": "'@危老容獎'!V8"}, {"cell": "D11", "f": "'@危老容獎'!V13"}]}, {"from": "@都更容獎", "to": " 建築規劃", "cells": 4, "samples": [{"cell": "D12", "f": "'@都更容獎'!G28"}, {"cell": "D13", "f": "'@都更容獎'!G43"}]}, {"from": "A.基本資料", "to": "壹.工程費用", "cells": 25, "samples": [{"cell": "M8", "f": "'A.基本資料'!F7"}, {"cell": "M9", "f": "'A.基本資料'!K5"}]}, {"from": "拆遷安置+補償費", "to": "壹.工程費用", "cells": 2, "samples": [{"cell": "N33", "f": "'拆遷安置+補償費'!AA15"}, {"cell": "N34", "f": "'拆遷安置+補償費'!T23/0.3025"}]}, {"from": "法定造價", "to": "壹.工程費用", "cells": 1, "samples": [{"cell": "B48", "f": "法定造價!E3"}]}, {"from": "@共負表", "to": "壹.工程費用", "cells": 1, "samples": [{"cell": "C84", "f": "'@共負表'!K6"}]}, {"from": "2-1.(委建)", "to": "壹.工程費用", "cells": 2, "samples": [{"cell": "C100", "f": "'2-1.(委建)'!C12"}, {"cell": "G104", "f": "'2-1.(委建)'!G59"}]}, {"from": "更後房價", "to": "工程(加成)造價", "cells": 1, "samples": [{"cell": "A13", "f": "更後房價!A2"}]}, {"from": "A.基本資料", "to": "工程(加成)造價", "cells": 6, "samples": [{"cell": "B13", "f": "'A.基本資料'!B19"}, {"cell": "D13", "f": "'A.基本資料'!C19"}]}, {"from": "2-1.(委建)", "to": "工程(加成)造價", "cells": 2, "samples": [{"cell": "D131", "f": "'2-1.(委建)'!I57-D132"}, {"cell": "D132", "f": "'2-1.(委建)'!M44"}]}, {"from": "@都更容獎", "to": "危老工程加價", "cells": 3, "samples": [{"cell": "G2", "f": "'@都更容獎'!G36"}, {"cell": "G8", "f": "'@都更容獎'!G23"}]}, {"from": "2-1.(委建)", "to": "危老工程加價", "cells": 1, "samples": [{"cell": "K2", "f": "J2*B42*'2-1.(委建)'!AA5"}]}, {"from": "@危老容獎", "to": "危老工程加價", "cells": 1, "samples": [{"cell": "G22", "f": "'@危老容獎'!V23"}]}, {"from": "2-2.(合建)", "to": "危老工程加價", "cells": 1, "samples": [{"cell": "A34", "f": "'2-2.(合建)'!G59"}]}, {"from": "1.概算方式", "to": "危老工程加價", "cells": 1, "samples": [{"cell": "B34", "f": "'1.概算方式'!E4/0.3025"}]}, {"from": "A.基本資料", "to": "危老工程加價", "cells": 5, "samples": [{"cell": "B39", "f": "'A.基本資料'!F25"}, {"cell": "C42", "f": "'A.基本資料'!E19"}]}, {"from": "工程(加成)造價", "to": "危老工程加價", "cells": 1, "samples": [{"cell": "B42", "f": "'工程(加成)造價'!J130"}]}, {"from": "A.基本資料", "to": "法定造價", "cells": 4, "samples": [{"cell": "A3", "f": "'A.基本資料'!F14"}, {"cell": "B3", "f": "'A.基本資料'!B19"}]}, {"from": "2-1.(委建)", "to": "法定造價", "cells": 2, "samples": [{"cell": "E5", "f": "'2-1.(委建)'!G57"}, {"cell": "E31", "f": "'2-1.(委建)'!G83"}]}, {"from": "2-1.(委建)", "to": "規劃設計+公廈基金", "cells": 2, "samples": [{"cell": "B5", "f": "'2-1.(委建)'!G59"}, {"cell": "B9", "f": "'2-1.(委建)'!H2"}]}, {"from": "A.基本資料", "to": "規劃設計+公廈基金", "cells": 3, "samples": [{"cell": "H5", "f": "'A.基本資料'!B19"}, {"cell": "I6", "f": "'A.基本資料'!F14"}]}, {"from": "法定造價", "to": "規劃設計+公廈基金", "cells": 4, "samples": [{"cell": "B6", "f": "IF(H5=\"RC\",0,法定造價!D3)"}, {"cell": "B7", "f": "法定造價!D3"}]}, {"from": "A.基本資料", "to": "貳.規劃費+估價費", "cells": 6, "samples": [{"cell": "H20", "f": "'A.基本資料'!H25"}, {"cell": "B36", "f": "'A.基本資料'!B7"}]}, {"from": "1.概算方式", "to": "貳.規劃費+估價費", "cells": 1, "samples": [{"cell": "D101", "f": "'1.概算方式'!G10"}]}, {"from": "2-1.(委建)", "to": "參.利息+肆.稅捐", "cells": 22, "samples": [{"cell": "Q4", "f": "'2-1.(委建)'!U43"}, {"cell": "AC4", "f": "'2-1.(委建)'!AB7*'2-1.(委建)'!AD43"}]}, {"from": "A.基本資料", "to": "參.利息+肆.稅捐", "cells": 25, "samples": [{"cell": "K5", "f": "'A.基本資料'!B21"}, {"cell": "Q5", "f": "'A.基本資料'!B25"}]}, {"from": "拆遷安置+補償費", "to": "參.利息+肆.稅捐", "cells": 3, "samples": [{"cell": "C16", "f": "'拆遷安置+補償費'!X13+'拆遷安置+補償費'!X27+'拆遷安置+補償費'!X39"}, {"cell": "C16", "f": "'拆遷安置+補償費'!X13+'拆遷安置+補償費'!X27+'拆遷安置+補償費'!X39"}]}, {"from": "@共負表", "to": "參.利息+肆.稅捐", "cells": 19, "samples": [{"cell": "C17", "f": "'@共負表'!O40"}, {"cell": "C18", "f": "'@共負表'!O17"}]}, {"from": "規劃設計+公廈基金", "to": "參.利息+肆.稅捐", "cells": 2, "samples": [{"cell": "C19", "f": "'規劃設計+公廈基金'!E42"}, {"cell": "C62", "f": "'規劃設計+公廈基金'!B19/10000"}]}, {"from": "設計獎勵保證金", "to": "參.利息+肆.稅捐", "cells": 1, "samples": [{"cell": "C20", "f": "設計獎勵保證金!D37"}]}, {"from": "壹.工程費用", "to": "參.利息+肆.稅捐", "cells": 5, "samples": [{"cell": "C21", "f": "'壹.工程費用'!S10"}, {"cell": "C59", "f": "'壹.工程費用'!G40"}]}, {"from": "1.概算方式", "to": "參.利息+肆.稅捐", "cells": 2, "samples": [{"cell": "C27", "f": "'1.概算方式'!L6"}, {"cell": "D101", "f": "'1.概算方式'!E4*B101"}]}, {"from": "法定造價", "to": "參.利息+肆.稅捐", "cells": 1, "samples": [{"cell": "D57", "f": "法定造價!E3"}]}, {"from": "貳.規劃費+估價費", "to": "參.利息+肆.稅捐", "cells": 2, "samples": [{"cell": "C63", "f": "'貳.規劃費+估價費'!H34"}, {"cell": "C64", "f": "'貳.規劃費+估價費'!H109"}]}, {"from": "地籍整理+信託", "to": "參.利息+肆.稅捐", "cells": 1, "samples": [{"cell": "C67", "f": "'地籍整理+信託'!F22"}]}, {"from": "陸.容移費用", "to": "參.利息+肆.稅捐", "cells": 3, "samples": [{"cell": "C68", "f": "'陸.容移費用'!G17-'陸.容移費用'!G13-'陸.容移費用'!G15"}, {"cell": "C68", "f": "'陸.容移費用'!G17-'陸.容移費用'!G13-'陸.容移費用'!G15"}]}, {"from": "2-3.土開分析", "to": "拆遷安置+補償費", "cells": 1, "samples": [{"cell": "Y9", "f": "IFERROR('2-3.土開分析'!X38,1)"}]}, {"from": "A.基本資料", "to": "拆遷安置+補償費", "cells": 21, "samples": [{"cell": "Z9", "f": "'A.基本資料'!K9"}, {"cell": "S10", "f": "'A.基本資料'!F9"}]}, {"from": "2-1.(委建)", "to": "拆遷安置+補償費", "cells": 3, "samples": [{"cell": "AA9", "f": "'2-1.(委建)'!S73"}, {"cell": "Z14", "f": "'2-1.(委建)'!V66*Z13"}]}, {"from": "2-1.(委建)", "to": "地籍整理+信託", "cells": 2, "samples": [{"cell": "I8", "f": "'2-1.(委建)'!S7"}, {"cell": "M14", "f": "'2-1.(委建)'!I57"}]}, {"from": "A.基本資料", "to": "地籍整理+信託", "cells": 8, "samples": [{"cell": "I11", "f": "'A.基本資料'!F7/0.3025/10000"}, {"cell": "K11", "f": "'A.基本資料'!C7"}]}, {"from": "@共負表", "to": "地籍整理+信託", "cells": 2, "samples": [{"cell": "K14", "f": "'@共負表'!P56"}, {"cell": "K15", "f": "'@共負表'!P56"}]}, {"from": "法定造價", "to": "地籍整理+信託", "cells": 1, "samples": [{"cell": "D26", "f": "法定造價!E3"}]}, {"from": "2-3.土開分析", "to": "設計獎勵保證金", "cells": 1, "samples": [{"cell": "A3", "f": "'2-3.土開分析'!C13"}]}, {"from": "A.基本資料", "to": "設計獎勵保證金", "cells": 6, "samples": [{"cell": "B3", "f": "'A.基本資料'!F7"}, {"cell": "H3", "f": "'A.基本資料'!D21"}]}, {"from": "法定造價", "to": "設計獎勵保證金", "cells": 1, "samples": [{"cell": "F3", "f": "法定造價!D3/0.3025/10000"}]}, {"from": "@危老容獎", "to": "設計獎勵保證金", "cells": 5, "samples": [{"cell": "C5", "f": "'@危老容獎'!V8"}, {"cell": "C6", "f": "'@危老容獎'!V13"}]}, {"from": "@都更容獎", "to": "設計獎勵保證金", "cells": 4, "samples": [{"cell": "C26", "f": "'@都更容獎'!G36"}, {"cell": "C27", "f": "'@都更容獎'!G23"}]}, {"from": "A.基本資料", "to": "伍.管理費用", "cells": 6, "samples": [{"cell": "J7", "f": "'A.基本資料'!I7"}, {"cell": "K7", "f": "'A.基本資料'!B7"}]}, {"from": "@共負表", "to": "伍.管理費用", "cells": 15, "samples": [{"cell": "C18", "f": "'@共負表'!O17"}, {"cell": "C20", "f": "'@共負表'!O27"}]}, {"from": "壹.工程費用", "to": "伍.管理費用", "cells": 1, "samples": [{"cell": "C19", "f": "'壹.工程費用'!S10"}]}, {"from": "陸.容移費用", "to": "伍.管理費用", "cells": 2, "samples": [{"cell": "C22", "f": "'陸.容移費用'!G17"}, {"cell": "C58", "f": "'陸.容移費用'!B19"}]}, {"from": "貳.規劃費+估價費", "to": "伍.管理費用", "cells": 3, "samples": [{"cell": "C23", "f": "'貳.規劃費+估價費'!B83"}, {"cell": "C59", "f": "'貳.規劃費+估價費'!B83"}]}, {"from": "2-1.(委建)", "to": "伍.管理費用", "cells": 1, "samples": [{"cell": "B64", "f": "'2-1.(委建)'!T7"}]}, {"from": "1.概算方式", "to": "伍.管理費用", "cells": 1, "samples": [{"cell": "C92", "f": "'1.概算方式'!N6"}]}, {"from": "參.利息+肆.稅捐", "to": "伍.管理費用", "cells": 1, "samples": [{"cell": "C95", "f": "'參.利息+肆.稅捐'!F75"}]}, {"from": "地籍整理+信託", "to": "伍.管理費用", "cells": 1, "samples": [{"cell": "C98", "f": "IF(B87=\"新北市\",'地籍整理+信託'!P15,0)"}]}, {"from": "法定造價", "to": "車位代金", "cells": 1, "samples": [{"cell": "F4", "f": "法定造價!D3"}]}, {"from": "A.基本資料", "to": "車位代金", "cells": 2, "samples": [{"cell": "F5", "f": "'A.基本資料'!F7"}, {"cell": "F6", "f": "'A.基本資料'!B7"}]}, {"from": "2-1.(委建)", "to": "車位代金", "cells": 3, "samples": [{"cell": "F7", "f": "'2-1.(委建)'!G59"}, {"cell": "F9", "f": "25*'2-1.(委建)'!I54"}]}, {"from": "A.基本資料", "to": "全案管理公司開發奬金", "cells": 3, "samples": [{"cell": "J2", "f": "'A.基本資料'!H7+'A.基本資料'!C9"}, {"cell": "J2", "f": "'A.基本資料'!H7+'A.基本資料'!C9"}]}], "macros": [{"name": "基本資料_重建工具_危老", "button": ["A.基本資料", "危老", "J1"], "writes": "A.基本資料!J1 = 1、K1 = 「危老重建」", "role": "把整本切換成「危老重建」模式", "switch": "A.基本資料!J1 / K1", "readers": {"@.基地資料": 19, "@共負表": 9, "2-1.(委建)": 6, "設計獎勵保證金": 2, "1.概算方式": 1, "2-3.土開分析": 1, " 建築規劃": 1}, "status": "ok", "module": "Module9", "code": "Sub 基本資料_重建工具_危老()\nAttribute 基本資料_重建工具_危老.VB_ProcData.VB_Invoke_Func = \" \\n14\"\n'\n' 基本資料_重建工具_危老 巨集\n'\n\n'\n    Range(\"J1\").Select\n    ActiveCell.FormulaR1C1 = \"1\"\n    Range(\"K1\").Select\n    ActiveCell.FormulaR1C1 = \"危老重建\"\n    Range(\"K2\").Select\nEnd Sub"}, {"name": "基本資料_重建工具_都市更新", "button": ["A.基本資料", "都市更新", "J1"], "writes": "A.基本資料!J1 = 2、K1 = 「都更」", "role": "把整本切換成「都市更新」模式", "switch": "A.基本資料!J1 / K1", "readers": {"@.基地資料": 19, "@共負表": 9, "2-1.(委建)": 6, "設計獎勵保證金": 2, "1.概算方式": 1, "2-3.土開分析": 1, " 建築規劃": 1}, "status": "ok", "module": "Module9", "code": "Sub 基本資料_重建工具_都市更新()\nAttribute 基本資料_重建工具_都市更新.VB_ProcData.VB_Invoke_Func = \" \\n14\"\n'\n' 基本資料_重建工具_都市更新 巨集\n'\n\n'\n    Range(\"J1\").Select\n    ActiveCell.FormulaR1C1 = \"2\"\n    Range(\"K1\").Select\n    ActiveCell.FormulaR1C1 = \"都更\"\n    Range(\"J2\").Select\nEnd Sub"}, {"name": "土地價格推估_權利變換", "button": ["土地基地價格", "權利變換", "AW2"], "writes": "土地基地價格!AX2 = 1", "role": "土地價格改用「權利變換」推估", "switch": "土地基地價格!AX2", "readers": {"土地基地價格": 2, "更前樓層效用比": 1, "A.基本資料": 1}, "status": "ok", "module": "Module10", "code": "Sub 土地價格推估_權利變換()\nAttribute 土地價格推估_權利變換.VB_ProcData.VB_Invoke_Func = \" \\n14\"\n'\n' 土地價格推估_權利變換 巨集\n'\n\n'\n    Range(\"AX2\").Select\n    ActiveCell.FormulaR1C1 = \"1\"\n    Range(\"AQ3\").Select\nEnd Sub"}, {"name": "土地價格推估_協議合建", "button": ["土地基地價格", "協議合建", "AW2"], "writes": "土地基地價格!AX2 = 2", "role": "土地價格改用「協議合建」推估", "switch": "土地基地價格!AX2", "readers": {"土地基地價格": 2, "更前樓層效用比": 1, "A.基本資料": 1}, "status": "ok", "module": "Module10", "code": "Sub 土地價格推估_協議合建()\nAttribute 土地價格推估_協議合建.VB_ProcData.VB_Invoke_Func = \" \\n14\"\n'\n' 土地價格推估_協議合建 巨集\n'\n\n'\n    Range(\"AX2\").Select\n    ActiveCell.FormulaR1C1 = \"2\"\n    Range(\"AQ3\").Select\nEnd Sub"}, {"name": "容移費用_實際", "button": ["陸.容移費用", "實際", "S8"], "writes": "改寫 陸.容移費用!P2 =R10*S10、R2（含 ÷2）", "role": "容積移轉費用改用「實際」單價重算", "switch": "陸.容移費用!P2 / R2", "readers": {"陸.容移費用": 2, "@共負表": 2, "2-1.(委建)": 2}, "status": "ok", "module": "Module13", "code": "Sub 容移費用_實際()\nAttribute 容移費用_實際.VB_ProcData.VB_Invoke_Func = \" \\n14\"\n'\n' 容移費用_實際 巨集\n'\n\n'\n    Range(\"P2\").Select\n    Application.CutCopyMode = False\n    ActiveCell.FormulaR1C1 = \"=R[8]C[2]*R[8]C[3]\"\n    Range(\"R2\").Select\n    ActiveCell.FormulaR1C1 = _\n        \"=RC[-8]*R[1]C[-8]*(R[2]C[-8]/0.3025/10000)*R[3]C[-8]*(1+R[3]C[-4])/2\"\n    Range(\"W14\").Select\nEnd Sub"}, {"name": "容移費用_推估", "button": ["陸.容移費用", "推估", "S8"], "writes": "改寫 陸.容移費用!P2 =R10*T10、R2（不 ÷2）", "role": "容積移轉費用改用「推估」單價重算", "switch": "陸.容移費用!P2 / R2", "readers": {"陸.容移費用": 2, "@共負表": 2, "2-1.(委建)": 2}, "status": "ok", "module": "Module13", "code": "Sub 容移費用_推估()\nAttribute 容移費用_推估.VB_ProcData.VB_Invoke_Func = \" \\n14\"\n'\n' 容移費用_推估 巨集\n'\n\n'\n    Range(\"P2\").Select\n    Application.CutCopyMode = False\n    ActiveCell.FormulaR1C1 = \"=R[8]C[2]*R[8]C[4]\"\n    Range(\"R2\").Select\n    ActiveCell.FormulaR1C1 = _\n        \"=RC[-8]*R[1]C[-8]*(R[2]C[-8]/0.3025/10000)*R[3]C[-8]*(1+R[3]C[-4])\"\n    Range(\"R3\").Select\nEnd Sub"}, {"name": "地上公設計算", "button": ["2-3.土開分析", "ON", "L38"], "writes": "—", "role": "按鈕存在，但活頁簿裡找不到這個巨集", "switch": "", "readers": {}, "status": "broken", "module": "（不存在）", "code": ""}, {"name": "處理方式2", "button": null, "writes": "目前作用中工作表的 I10 = 2", "role": "錄製巨集，沒有按鈕，看不出原本給哪張表用", "switch": "", "readers": {}, "status": "orphan", "module": "Module4", "code": "Sub 處理方式2()\nAttribute 處理方式2.VB_ProcData.VB_Invoke_Func = \" \\n14\"\n'\n' 處理方式2 巨集\n'\n\n'\n    Range(\"I10\").Select\n    ActiveCell.FormulaR1C1 = \"=2\"\n    Range(\"J56\").Select\nEnd Sub"}, {"name": "都市更新3", "button": null, "writes": "目前作用中工作表的 I10 = 3", "role": "錄製巨集，沒有按鈕，看不出原本給哪張表用", "switch": "", "readers": {}, "status": "orphan", "module": "Module6", "code": "Sub 都市更新3()\nAttribute 都市更新3.VB_ProcData.VB_Invoke_Func = \" \\n14\"\n'\n' 都市更新3 巨集\n'\n\n'\n    ActiveWindow.SmallScroll Down:=-51\n    Range(\"I10\").Select\n    ActiveCell.FormulaR1C1 = \"=3\"\n    Range(\"I11:I12\").Select\n    \nEnd Sub"}], "emptyStd": ["Module1", "Module8", "Module2", "Module3", "Module5", "Module7", "Module11", "Module12"], "emptySheetMods": 39, "state": {"v111": {"J1": "2", "K1": "都更", "AX2": "1", "P2": "R10*T10"}, "v114": {"J1": "2", "K1": "都更", "AX2": "1", "P2": "R10*T10"}}}</script>
+<script>
+(function(){
+const D = JSON.parse(document.getElementById('data').textContent);
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const disp = n => n.trim();
+const gcol = k => `var(--g-${k})`;
+const groupOf = {}; D.groups.forEach(g => g.sheets.forEach(s => groupOf[s] = g));
+const sheetBy = {}; D.sheets.forEach(s => sheetBy[s.name] = s);
+const inE = {}, outE = {};
+D.sheets.forEach(s => { inE[s.name] = []; outE[s.name] = []; });
+D.edges.forEach(e => { outE[e.from].push(e); inE[e.to].push(e); });
+const btnBy = {}; D.macros.forEach(m => { if (m.button) (btnBy[m.button[0]] ||= []).push(m); });
+const fmt = n => n.toLocaleString('zh-TW');
+
+// facts
+const okMac = D.macros.filter(m => m.status === 'ok').length;
+const totalCells = D.edges.reduce((a, e) => a + e.cells, 0);
+const refErr = D.sheets.reduce((a, s) => a + s.refErr.length, 0);
+$('#facts').innerHTML = [
+  [D.sheets.length, '張工作表'], [D.edges.length, '條跨表連結'], [fmt(totalCells), '格跨表公式'],
+  [D.macros.filter(m => m.button).length, '顆按鈕'], [okMac, '支有效巨集'], [refErr, '格 #REF! 錯誤']
+].map(([b, s]) => `<div class="fact"><b>${b}</b><span>${s}</span></div>`).join('');
+
+// tabs
+const tabs = [...document.querySelectorAll('.tab')];
+function show(id){
+  tabs.forEach(t => { const on = t.id === id; t.setAttribute('aria-selected', on); document.getElementById(t.getAttribute('aria-controls')).hidden = !on; });
+  try { localStorage.setItem('tab', id); } catch(e) {}
+}
+tabs.forEach(t => t.addEventListener('click', () => show(t.id)));
+try { const t = localStorage.getItem('tab'); if (t && document.getElementById(t)) show(t); } catch(e) {}
+
+// ---------- graph ----------
+const COLS = [
+  {g:'law', label:'導覽與法規參考'}, {g:'site', label:'基本資料與基地'}, {g:'far', label:'容積獎勵'},
+  {g:'cost', label:'共同負擔費用', part:0}, {g:'cost', label:'共同負擔費用（續）', part:1},
+  {g:'val', label:'房地估價'}, {g:'sum', label:'彙總與方案'}, {g:'alloc', label:'權利變換分配'}
+];
+const NW = 140, NH = 30, CS = 176, RS = 42, TOP = 46, LEFT = 18;
+const pos = {};
+let maxRows = 0;
+COLS.forEach((c, i) => {
+  let list = D.groups.find(g => g.key === c.g).sheets;
+  if (c.g === 'cost') list = c.part === 0 ? list.slice(0, 7) : list.slice(7);
+  c.list = list; maxRows = Math.max(maxRows, list.length);
+  list.forEach((s, j) => pos[s] = {x: LEFT + i * CS, y: TOP + j * RS, col: i});
+});
+const W = LEFT + COLS.length * CS - (CS - NW) + 30, H = TOP + maxRows * RS + 10;
+const sw = c => Math.max(1, Math.min(6, 0.8 + Math.log2(c) * 0.75));
+
+function path(a, b){
+  const A = pos[a], B = pos[b];
+  const ay = A.y + NH/2, by = B.y + NH/2;
+  if (A.col === B.col){
+    const x = A.x + NW, bend = 26 + Math.abs(ay - by) * 0.18;
+    return `M${x},${ay} C${x+bend},${ay} ${x+bend},${by} ${x+6},${by}`;
+  }
+  if (A.col < B.col){
+    const x1 = A.x + NW, x2 = B.x, dx = (x2 - x1) * 0.45;
+    return `M${x1},${ay} C${x1+dx},${ay} ${x2-dx},${by} ${x2-6},${by}`;
+  }
+  const x1 = A.x, x2 = B.x + NW, dx = Math.max(40, (x1 - x2) * 0.45);
+  return `M${x1},${ay} C${x1-dx},${ay+18} ${x2+dx},${by+18} ${x2+6},${by}`;
+}
+let svg = `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="工作表關聯圖">
+<defs>${['edge','src','dst','mac'].map(k => `<marker id="ar-${k}" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M0,0 L8,4 L0,8 z" style="fill:var(--${k})"/></marker>`).join('')}</defs>`;
+COLS.forEach((c, i) => { svg += `<text class="colhead" x="${LEFT + i*CS}" y="24">${esc(c.label)}</text><line x1="${LEFT + i*CS}" x2="${LEFT + i*CS + NW}" y1="32" y2="32" style="stroke:${gcol(c.g)};stroke-width:2"/>`; });
+svg += `<g id="edges">` + D.edges.map((e, i) => `<path class="edge" data-i="${i}" d="${path(e.from, e.to)}" stroke-width="${sw(e.cells).toFixed(2)}" marker-end="url(#ar-edge)"/>`).join('') + `<g id="macedges"></g></g>`;
+svg += `<g id="nodes">` + D.sheets.map(s => {
+  const p = pos[s.name], g = groupOf[s.name];
+  const btn = btnBy[s.name];
+  const label = disp(s.name);
+  return `<g class="node${btn ? ' btn' : ''}" tabindex="0" role="button" aria-label="${esc(label)}" data-s="${esc(s.name)}" transform="translate(${p.x},${p.y})">
+    <rect width="${NW}" height="${NH}" rx="4" style="stroke:${gcol(g.key)}"/>
+    <rect width="4" height="${NH}" rx="1" style="fill:${gcol(g.key)};stroke:none"/>
+    <text x="11" y="19.5">${esc(label)}</text>
+    ${btn ? `<text class="tag" x="${NW - 6}" y="11" text-anchor="end">▶${btn.length}</text>` : ''}
+  </g>`;
+}).join('') + `</g></svg>`;
+$('#canvas').innerHTML = svg;
+const edgeEls = [...document.querySelectorAll('.edge')];
+const nodeEls = [...document.querySelectorAll('.node')];
+
+let minCells = 1, selected = 'A.基本資料', selMac = null;
+[['全部',1],['≥ 5 格',5],['≥ 20 格',20]].forEach(([l, v]) => {
+  const b = document.createElement('button'); b.className = 'chip'; b.textContent = l; b.setAttribute('aria-pressed', v === 1);
+  b.onclick = () => { minCells = v; document.querySelectorAll('#strength .chip').forEach(x => x.setAttribute('aria-pressed', x === b)); render(); };
+  $('#strength').appendChild(b);
+});
+D.macros.filter(m => m.button).forEach(m => {
+  const b = document.createElement('button'); b.className = 'chip mac' + (m.status === 'broken' ? ' broken' : '');
+  b.textContent = m.button[1]; b.title = m.name; b.setAttribute('aria-pressed', 'false');
+  b.onclick = () => { selMac = selMac === m.name ? null : m.name; if (selMac) selected = m.button[0]; render(); };
+  $('#macchips').appendChild(b);
+});
+
+function render(){
+  document.querySelectorAll('#macchips .chip').forEach(b => b.setAttribute('aria-pressed', b.title === selMac));
+  const mac = selMac && D.macros.find(m => m.name === selMac);
+  const related = new Set([selected]);
+  edgeEls.forEach((el, i) => {
+    const e = D.edges[i];
+    let cls = 'edge', mk = 'edge';
+    if (e.cells < minCells) cls += ' hide';
+    else if (!mac && e.to === selected){ cls += ' in'; mk = 'src'; related.add(e.from); }
+    else if (!mac && e.from === selected){ cls += ' out'; mk = 'dst'; related.add(e.to); }
+    else if (selected) cls += ' hide';
+    el.setAttribute('class', cls); el.setAttribute('marker-end', `url(#ar-${mk})`);
+  });
+  let mh = '';
+  if (mac){ Object.keys(mac.readers).forEach(r => { related.add(r); if (r !== mac.button[0]) mh += `<path class="edge mac" d="${path(mac.button[0], r)}" stroke-width="2" marker-end="url(#ar-mac)"/>`; }); }
+  $('#macedges').innerHTML = mh;
+  nodeEls.forEach(n => { const s = n.dataset.s; n.classList.toggle('sel', s === selected); n.classList.toggle('dim', !related.has(s)); });
+  mac ? panelMac(mac) : panelSheet(selected);
+}
+function linkBtn(s){ return `<button data-go="${esc(s)}">${esc(disp(s))}</button>`; }
+function edgeList(list, key, cls){
+  list = list.filter(e => e.cells >= minCells).sort((a, b) => b.cells - a.cells);
+  if (!list.length) return `<p class="note">沒有</p>`;
+  return `<ul class="lst">` + list.map(e => `<li class="${cls}"><div class="row">${linkBtn(e[key])}<span class="cnt">${fmt(e.cells)} 格</span></div>${e.samples[0] ? `<div class="f">${esc(e.samples[0].cell)}　=${esc(e.samples[0].f)}</div>` : ''}</li>`).join('') + `</ul>`;
+}
+function panelSheet(name){
+  const s = sheetBy[name], g = groupOf[name];
+  const btn = btnBy[name] || [];
+  const extra = [];
+  if (s.refErr.length) extra.push(`<span class="pill bad">${s.refErr.length} 格 #REF!</span>`);
+  if (s.dataTables.length) extra.push(`<span class="pill info">運算列表 ${s.dataTables.join('、')}</span>`);
+  if (s.solver) extra.push(`<span class="pill ${s.solver.opt.includes('#REF!') ? 'bad' : 'info'}">規劃求解 ${s.solver.opt.includes('#REF!') ? '參照失效' : '目標 ' + s.solver.opt.split('!')[1]}</span>`);
+  const isolated = !inE[name].length && !outE[name].length;
+  $('#panel').innerHTML = `
+    <div class="head"><span class="eyebrow"><span class="swatch" style="background:${gcol(g.key)}"></span>${esc(g.label)} · 第 ${s.idx + 1} 張</span><h2>${esc(disp(name))}</h2></div>
+    <dl class="kv"><dt>公式格數</dt><dd>${fmt(s.nform)}</dd><dt>VBA 名稱</dt><dd class="mono">${esc(s.code || '—')}</dd><dt>讀取</dt><dd>${inE[name].length} 張表</dd><dt>被讀取</dt><dd>${outE[name].length} 張表</dd></dl>
+    ${extra.length ? `<div class="chips">${extra.join('')}</div>` : ''}
+    ${isolated ? `<p class="note">這張表沒有任何跨表公式，屬於獨立的參考或說明頁。</p>` : ''}
+    ${btn.length ? `<div><div class="sec-t"><i style="background:var(--mac)"></i>按鈕</div><ul class="lst">${btn.map(m => `<li class="m"><div class="row"><button data-mac="${esc(m.name)}">「${esc(m.button[1])}」→ ${esc(m.name)}</button><span class="cnt">${esc(m.button[2])}</span></div><div class="f">${esc(m.role)}</div></li>`).join('')}</ul></div>` : ''}
+    <div><div class="sec-t"><i style="background:var(--src)"></i>資料來源：這張表讀取了</div>${edgeList(inE[name], 'from', 'in')}</div>
+    <div><div class="sec-t"><i style="background:var(--dst)"></i>下游：這些表讀取它</div>${edgeList(outE[name], 'to', 'out')}</div>`;
+}
+function panelMac(m){
+  const pill = {ok:'<span class="pill ok">正常</span>', broken:'<span class="pill bad">巨集不存在</span>', orphan:'<span class="pill warn">沒有按鈕</span>'}[m.status];
+  const rd = Object.entries(m.readers).sort((a, b) => b[1] - a[1]);
+  $('#panel').innerHTML = `
+    <div class="head"><span class="eyebrow" style="color:var(--mac)">按鈕巨集 · ${esc(m.module)}</span><h2>${esc(m.name)}</h2><div>${pill}</div></div>
+    <dl class="kv"><dt>按鈕</dt><dd>${esc(disp(m.button[0]))}「${esc(m.button[1])}」<span class="mono">${esc(m.button[2])}</span></dd><dt>動作</dt><dd>${esc(m.writes)}</dd><dt>用途</dt><dd>${esc(m.role)}</dd></dl>
+    ${rd.length ? `<div><div class="sec-t"><i style="background:var(--mac)"></i>讀取開關格 ${esc(m.switch)} 的公式</div><ul class="lst">${rd.map(([s, n]) => `<li class="m"><div class="row">${linkBtn(s)}<span class="cnt">${n} 格</span></div></li>`).join('')}</ul></div>` : ''}
+    ${m.code ? `<details class="cd"><summary>看程式碼</summary><pre class="code">${esc(m.code)}</pre></details>` : ''}
+    <button class="chip" id="clrmac">回到工作表檢視</button>`;
+  $('#clrmac').onclick = () => { selMac = null; render(); };
+}
+$('#panel').addEventListener('click', e => {
+  const go = e.target.closest('[data-go]'); if (go){ selected = go.dataset.go; selMac = null; render(); return; }
+  const mc = e.target.closest('[data-mac]'); if (mc){ selMac = mc.dataset.mac; render(); }
+});
+nodeEls.forEach(n => {
+  const act = () => { selMac = null; selected = n.dataset.s; render(); };
+  n.addEventListener('click', act);
+  n.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); act(); } });
+});
+render();
+
+// ---------- mind map ----------
+let t = `<li><span class="root">都更／危老財務試算活頁簿</span><span class="meta">${D.sheets.length} 張表</span><div class="mm-grid" style="margin-top:8px">`;
+t += D.groups.map(g => `<ul style="border-left-color:${gcol(g.key)}"><li><details open><summary><span class="grp" style="color:${gcol(g.key)}">${esc(g.label)}</span><span class="meta">${g.sheets.length}</span></summary><ul style="border-left-color:${gcol(g.key)}">` +
+  g.sheets.map(n => {
+    const s = sheetBy[n], btn = btnBy[n] || [];
+    const top = inE[n].slice().sort((a, b) => b.cells - a.cells).slice(0, 3).map(e => disp(e.from));
+    const kids = btn.map(m => `<li class="mac">▶ 按鈕「${esc(m.button[1])}」→ ${esc(m.name)}${m.status === 'broken' ? ' <span class="pill bad">巨集不存在</span>' : ''}</li>`).join('')
+      + (top.length ? `<li><span class="note">主要讀取：${esc(top.join('、'))}</span></li>` : '');
+    return `<li><span class="sh">${esc(disp(n))}</span><span class="meta">讀${inE[n].length}・被讀${outE[n].length}</span>${s.refErr.length ? ' <span class="pill bad">#REF!</span>' : ''}${kids ? `<ul>${kids}</ul>` : ''}</li>`;
+  }).join('') + `</ul></details></li></ul>`).join('');
+t += `<ul style="border-left-color:var(--mac)"><li><details open><summary><span class="grp" style="color:var(--mac)">VBA 專案</span><span class="meta">${D.macros.filter(m => m.code).length} 支程序</span></summary><ul>` +
+  [...new Set(D.macros.filter(m => m.code).map(m => m.module))].map(mod => `<li><span class="sh mono">${esc(mod)}</span><ul>${D.macros.filter(m => m.module === mod).map(m => `<li class="mac">${esc(m.name)}${m.status === 'orphan' ? ' <span class="pill warn">沒有按鈕</span>' : ''}</li>`).join('')}</ul></li>`).join('') +
+  `<li><span class="note">另有 ${D.emptyStd.length} 個空的標準模組、${D.emptySheetMods} 個空的工作表／活頁簿模組</span></li></ul></details></li></ul>`;
+t += `</div></li>`;
+$('#tree').innerHTML = t;
+
+// ---------- macro table ----------
+const st = D.state.v114;
+$('#curstate').textContent = `重建工具＝${st.K1}（J1=${st.J1}）、土地價格推估＝${st.AX2 === '1' ? '權利變換' : '協議合建'}（AX2=${st.AX2}）、容移費用＝${st.P2 === 'R10*T10' ? '推估' : '實際'}`;
+$('#mactbl').innerHTML = `<thead><tr><th>巨集</th><th>按鈕位置</th><th>按下去會做什麼</th><th>影響哪些表</th><th>狀態</th></tr></thead><tbody>` +
+  D.macros.map(m => {
+    const pill = {ok:'<span class="pill ok">正常</span>', broken:'<span class="pill bad">巨集不存在</span>', orphan:'<span class="pill warn">沒有按鈕</span>'}[m.status];
+    const rd = Object.entries(m.readers).sort((a, b) => b[1] - a[1]).map(([s, n]) => `${esc(disp(s))} <span class="mono">${n}</span>`).join('、');
+    return `<tr><td><b>${esc(m.name)}</b><div class="note mono">${esc(m.module)}</div>${m.code ? `<details class="cd"><summary>程式碼</summary><pre class="code">${esc(m.code)}</pre></details>` : ''}</td>
+      <td>${m.button ? `${esc(disp(m.button[0]))}<br>「${esc(m.button[1])}」<span class="mono">${esc(m.button[2])}</span>` : '<span class="note">—</span>'}</td>
+      <td>${esc(m.role)}<div class="note">${esc(m.writes)}</div></td><td>${rd || '<span class="note">—</span>'}</td><td>${pill}</td></tr>`;
+  }).join('') + `</tbody>`;
+$('#emptymods').textContent = `空的標準模組（可刪除）：${D.emptyStd.join('、')}。工作表與 ThisWorkbook 模組共 ${D.emptySheetMods} 個，全部沒有程式碼，也就是沒有任何事件巨集（例如開檔或改格子時自動執行）。`;
+
+// ---------- diff ----------
+const DIFF = [
+  ['改動', 'warn', '法定造價', 'B1、I1 與第 3–25 列單價表', '造價標準換新：臺北市「建造執照工程造價」由 99.1.1 版改為 112-12-11 版；新北市「工程造價標準表」由 95.11.10 版改為 112-8-1 版。共 281 格數值更新，例如 1–5 層 RC 單價臺北 7,810 → 9,260、新北 6,700 → 8,930。', '直接影響讀取 D3／E3 的 8 張表：@共負表、壹.工程費用、規劃設計+公廈基金、參.利息+肆.稅捐、地籍整理+信託、設計獎勵保證金、直接資本化+比準房價、車位代金。'],
+  ['新增', 'info', '法定造價', 'A27:M37（第 27 列以下）', '舊版造價表（99.1.1／95.11.10）整塊複製到下方保留，連同 42 個公式。', '複製後的公式相對位移，改成指向 A.基本資料!F40、B45（空白格）與 2-1.(委建)!G83，所以這塊目前算出錯誤值。沒有其他表讀它，不影響結果。'],
+  ['清除', 'warn', '工程(加成)造價', 'C97:G97', '113 年營造工程物價指數只剩第一欄 110.26，後面 5 個月的數值被清空。', '目前查詢的是 113 年 1 月（J2=113、K2=1），結果不變；若改查 113 年 2–6 月會取到空白。'],
+  ['搬移', 'info', '@都更容獎', 'AI66 → AC66 一帶，34 格', '容積獎勵法條說明文字從 AI 欄搬到 AC 欄。', '純文字搬位置，不影響計算。'],
+  ['重算', 'info', '陸.容移費用', 'M20:O20', '運算列表結果略有變動，例如 M20 由 14,576 → 14,597。', '是重新計算後的結果，公式沒有改。'],
+  ['不變', 'ok', 'VBA 與按鈕', '全部 52 個模組、7 顆按鈕', '程式碼逐行相同，按鈕位置與綁定的巨集相同，三個模式開關的目前狀態也相同。', '—'],
+  ['不變', 'ok', '其他公式', '其餘 37 張表', '除上述位置外，所有公式在正規化後完全一致；194 條跨表連結相同。', '法定造價多出的連結（讀 A.基本資料、2-1.(委建)）來自上面那塊複製的舊表。'],
+];
+$('#difftbl').innerHTML = `<thead><tr><th>類型</th><th>工作表</th><th>位置</th><th>改了什麼</th><th>影響</th></tr></thead><tbody>` +
+  DIFF.map(d => `<tr><td><span class="pill ${d[1]}">${d[0]}</span></td><td><b>${esc(d[2])}</b></td><td class="mono" style="white-space:normal">${esc(d[3])}</td><td>${esc(d[4])}</td><td class="note">${esc(d[5])}</td></tr>`).join('') + `</tbody>`;
+
+// ---------- fixes ----------
+const iso = D.sheets.filter(s => !inE[s.name].length && !outE[s.name].length).map(s => disp(s.name));
+const errList = D.sheets.filter(s => s.refErr.length).map(s => `${disp(s.name)}：${s.refErr.join('、')}`);
+const FIX = [
+  ['bad', '高', '按鈕「ON」按了會跳錯誤', '2-3.土開分析 L38 的按鈕綁定「地上公設計算」，但兩版的 VBA 裡都沒有這個巨集，按下去 Excel 會顯示找不到巨集。可以重新錄製這個巨集，或把按鈕刪掉。', '2-3.土開分析!L38'],
+  ['bad', '高', '物價指數查詢範圍沒有延伸', '工程(加成)造價 D101 與 B107 用 VLOOKUP 查 A64:N94，但指數表已經延伸到第 97 列（113 年）。D101 查「112 年 11 月」時，近似比對退回 110 年那一列，取到 103.36，正確應為 109.38。B107 則回傳了年份欄。建議把範圍改成 A64:N97，或改用整欄參照。', '工程(加成)造價!D101、B107'],
+  ['warn', '中', `${refErr} 格 #REF! 錯誤`, '這些格子引用的儲存格或工作表已被刪除，公式結果是錯誤值。部分可能是不再使用的舊公式，建議逐格確認後修正或清除。', errList.join('；')],
+  ['warn', '中', '2-2.(合建) 的規劃求解設定已失效', '這張表存著一組規劃求解設定，但目標格和變數格都變成 #REF!，開啟規劃求解會無法執行。另外 4 組（1.概算方式、A.基本資料、更後房價、陸.容移費用）參照正常。', "solver_opt / solver_adj = '2-2.(合建)'!#REF!"],
+  ['warn', '中', '巨集只會寫入「目前的工作表」', '所有巨集都是 Range("J1").Select 這類錄製寫法，沒有指定工作表。從按鈕按沒問題，但如果從「檢視 → 巨集」清單直接執行，會把 1／2 寫進當下開著的那張表，蓋掉別的資料。建議改成 Worksheets("A.基本資料").Range("J1").Value = 1。', 'Module9、Module10、Module13'],
+  ['info', '低', '兩支沒有按鈕的巨集', '「處理方式2」與「都市更新3」會把目前工作表的 I10 改成 2 或 3，但沒有綁任何按鈕，也找不到對應的開關格，看起來是早期留下的。確認不用後可以刪除。', 'Module4、Module6'],
+  ['info', '低', `${D.emptyStd.length} 個空的標準模組`, '沒有程式碼，可以直接移除，讓 VBA 專案比較乾淨。', D.emptyStd.join('、')],
+  ['info', '參考', '3 張表含運算列表', '運算列表（What-if 敏感度分析）每次重算都會整張跑一遍，檔案慢時可把計算選項設成「除了運算列表，自動重算」。', '1.概算方式、陸.容移費用、@共負表'],
+  ['info', '參考', `${iso.length} 張獨立的表`, '沒有任何跨表公式進出，屬於法規、程序或說明頁。整理檔案時可以集中放在最後。', iso.join('、')],
+];
+$('#fixn').textContent = FIX.filter(f => f[0] !== 'info').length;
+// ---------- 網頁版對應 ----------
+const PH = {'一':'ok','一（簡化）':'ok','一／二':'ok','二':'warn','三':'info','前置':'ok','—':'bad'};
+$('#webtbl').innerHTML = '<tr><th>工作表</th><th>做什麼</th><th>公式</th><th>人填</th><th>網頁版處置</th><th>期</th></tr>' + D.groups.map(g => `<tr class="grp"><td colspan="6" style="color:${gcol(g.key)}">${esc(g.label)}</td></tr>` + g.sheets.map(n => { const x = D.sheets.find(s => s.name === n); return `<tr><td class="g">${esc(disp(n))}</td><td>${esc(x.note||'')}</td><td class="n">${x.nform.toLocaleString()}</td><td class="n">${x.ninput||0}</td><td>${esc(x.web||'')}</td><td class="ph"><span class="pill ${PH[x.phase]||'info'}">${esc(x.phase||'')}</span></td></tr>`; }).join('')).join('');
+$('#fixes').innerHTML = FIX.map(f => `<div class="item"><div class="k"><span class="pill ${f[0]}">${f[1]}</span></div><h3>${esc(f[2])}</h3><p>${esc(f[3])}</p><p class="where">${esc(f[4])}</p></div>`).join('');
+})();
+</script>
+
+</body></html>

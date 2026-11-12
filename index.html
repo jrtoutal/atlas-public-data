@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#0d0f14">
-<title>ATLAS 帷幄 v6.4 — 指揮中心</title>
+<title>ATLAS 帷幄 v6.6 — 指揮中心</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Noto+Serif+TC:wght@600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
 :root[data-theme="dark"]{--bg:#0d0f14;--bg-2:#12151c;--panel:#161a22;--card:#1c2028;--card-2:#22262f;--border:#252c38;--border-2:#2e3648;--ink:#e4e8f2;--ink-2:#b2bacb;--muted:#6a7490;--dim:#434b60;--gold:#d4a843;--gold-2:#f0cc7a;--teal:#3aaa8c;--teal-2:#5dd4b0;--indigo:#5b7ec4;--red:#e07060;--amber:#e8b04a;--grid:rgba(255,255,255,.04)}
@@ -304,7 +304,7 @@ Vercel 盯著這個 repo，檔案一變就自動重新部署（約 30–60 秒�
 
 資料庫結構（SQL）
   每次改結構都是一支新的 supabase_NN_xxx.sql，在 Supabase SQL Editor 跑一次
-  已跑：01 法規條文 · 03 全表 · 04 Storage · 05 law-pdf · 06 法規主檔 · 07 ui_state · 08 刪法規 · 09 issuer · 10 ur_projects 中文化 · 11 地號與持分 · 11b 授權 · 12 角色 · 13 群組 · 14 官方人數 · 15 持分排序 · 16 建物人數 · 17 遮罩識別碼 · 18 公有地／代號 · 19 地號排序 · 20 公告現值 · 21 建物筆數面積 · 22 未登記建物 · 23 案件總覽 · 24 分區容積率 · 25 擷取日 · 26 新北容積種子 · 27–30 分區／地號群組 · 31 sync_log · 32 土管檢討／結案／倍數 · 33 建照欄位 · 34 業主簡稱 · 35 schema 記錄
+  已跑：01 法規條文 · 03 全表 · 04 Storage · 05 law-pdf · 06 法規主檔 · 07 ui_state · 08 刪法規 · 09 issuer · 10 ur_projects 中文化 · 11 地號與持分 · 11b 授權 · 12 角色 · 13 群組 · 14 官方人數 · 15 持分排序 · 16 建物人數 · 17 遮罩識別碼 · 18 公有地／代號 · 19 地號排序 · 20 公告現值 · 21 建物筆數面積 · 22 未登記建物 · 23 案件總覽 · 24 分區容積率 · 25 擷取日 · 26 新北容積種子 · 27–30 分區／地號群組 · 31 sync_log · 32 土管檢討／結案／倍數 · 33 建照欄位 · 34 業主簡稱 · 35 schema 記錄 · 36 二類謄本欄位 · 37 聯絡人識別碼
   改 SQL 不會動到資料；重建整個專案才需要從 01 依序跑
 
 版本號慣例
@@ -324,6 +324,7 @@ PDF 原檔   law.html 上「⬇」的法規＝還沒有 PDF</pre></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.106.2/dist/umd/supabase.min.js"></script>
 <script>
+const APP_VER='v6.6 · 2026-11-12'; // 首頁版本：每次改 index.html 就改這行，「交接版本」自動跟著
 const SCH_SLOT = {sat:'週六', sun:'週日', hol:'連假', any:'零碎'};
 const SCH = [
   { id:'A', t:'階段 A · 法規庫上線', d:'9月中 → 10月中',
@@ -352,8 +353,8 @@ const SCH = [
   { id:'B', t:'階段 B · 經驗層啟動', d:'10月中 → 11月初',
     goal:'★ 幾乎不需工程，但累積的是<b>唯一的護城河</b>。愈早開始愈好，因為經驗是時間函數。',
     tasks:[
-      {n:'ur_projects（表一）：補登過去 3 個案子的初判（含不投的）', s:'any', h:2,
-       w:'在案件中心 cases.html 登；不投的也登，notes 寫為什麼不投'},
+      {n:'ur_projects／jc_projects：先新增「力築－萬方案」一案（舊案之後有空再補）', s:'any', h:0.5,
+       w:'在案件中心登；建材專案填業主類型→公司，樹狀才會分組'},
       {n:'contacts（表四）：補登現有建商／地主／顧問', s:'any', h:1,
        w:'案件中心 → 聯絡人分頁；再到案件頁「相關聯絡人」連起來'},
       {n:'開始寫法規「我的註記」：先補 10 條最常用的', s:'any', h:0,
@@ -390,12 +391,12 @@ const SCH = [
        w:'✅ 2026-11-03 finder v6.9。syncJc 自動對上表二；?jc=ID 從案件中心直開；Dock 側欄、上一步、區域樹、表格正方形縮圖、品牌識別存雲端'},
       {n:'案件中心 v3.x：建材專案改建照欄位（起造／設計／監造／承造／工程概要）、業主→公司→工程樹、待辦可在樹上打勾、全站樹狀配色統一', s:'sat', h:3, done:true,
        w:'✅ 2026-11-04 cases v3.11。SQL 33–35；選色表存檔會更新 jc_projects.updated_at 讓樹狀排序一致'},
-      {n:'二類謄本進場：聯絡人頁「貼謄本」把 11 筆地號所有權人（遮罩識別碼）貼入 → 真實去重分母', s:'any', h:2,
-       w:'等謄本申請到。貼完每筆地號「地主 已建/官方」應轉綠'},
-      {n:'建物層：建號 × 所有權人（算 §37 建物人數比／樓地板面積比）', s:'sun', h:4,
-       w:'新表 buildings + building_owners；資料來源建物謄本。土地層跑順再做'},
-      {n:'未登記建物：查五股建管實施日期＋四棟稅籍起始年 → 決定走不走合法房屋證明', s:'any', h:1,
-       w:'純查資料。結果填案件「未登記建物說明」'},
+      {n:'二類謄本進場：聯絡人頁「放入謄本 PDF」→ 所有權人、持分、登記資料、識別碼歸戶', s:'any', h:2, done:true,
+       w:'✅ 2026-11-10 cases v3.12–3.13，SQL 36–37。584 已匯 15 人；其他地號謄本申請到就匯，同識別碼自動歸到已確認的人'},
+      {n:'584 匯入的 15 人：改真名、分群組（識別碼不動）', s:'any', h:1,
+       w:'聯絡人姓名還是「陳＊＊」時樹狀會顯示識別碼，改完自動消失'},
+      {n:'未登記建物：查五股建管實施日期（稅籍起始年難取得，先略過）', s:'any', h:0.5,
+       w:'只查建管日期，結果填案件「未登記建物說明」'},
     ]},
   { id:'D', t:'階段 D · 產品庫與補強', d:'11月 → 12月',
     goal:'表五重建：<b>不搬舊的 787 筆</b>，爬蟲重抓現行型錄（加停產狀態、用途、紋理）。順便把地方法規與手冊入庫。',
@@ -418,6 +419,16 @@ const SCH = [
        w:'PDF 拆章節；可先只做目錄 + 關鍵表格'},
       {n:'★ Supabase 備份：每週 pg_dump → NAS（mini 到貨後排程）', s:'sat', h:2,
        w:'Free plan 沒有自動備份。mini 到貨前先每月手動 Dashboard → Database → Backups 看一次'},
+      {n:'全站配色統一（第一層金、第二層青綠、待辦琥珀、過期紅；法規庫紫保留給中央／地方）', s:'any', h:2,
+       w:'以 cases v3.11 為準逐頁調 law／finder／index'},
+      {n:'成本分析模組 ①：far.html 接雲端（far_bonus_items 獎勵表＋新北市地方獎勵＋法規庫連結）', s:'sun', h:4,
+       w:'設計藍圖見 Project 的 概算模組-解析-v1.md 與 cost-map.html。獎勵項目含生效日，舊方案照舊列算'},
+      {n:'成本分析模組 ②：cost_params 參數表＋維護頁（法定造價、標準單價、設計費、估價費、管理費、稅率、拆除、地籍）', s:'sun', h:4,
+       w:'跟分區容積率同一套：值＋生效日＋來源；造價表要抓新資料（北市 7/1 公告、新北版）'},
+      {n:'成本分析模組 ③：主線 41 項（1.概算方式）＋三方案切換＋敏感度；方案存 cost_plans（含參數快照）', s:'sun', h:8,
+       w:'內部工具，不給業主看；對外版等找到以前給業主的表再做。用 Excel 同組輸入對答案'},
+      {n:'（往後移）建物層：建號 × 所有權人（§37 建物人數比／樓地板面積比）', s:'sun', h:4,
+       w:'新表 buildings + building_owners；資料來源建物謄本'},
       {n:'年底驗收：手機實測完整流程一次', s:'sat', h:2,
        w:'手機開 law.html 寫一條註記；開 finder.html 加一張建材；儀表板看得到'},
       {n:'更新 CONTEXT 檔，交接給明年', s:'sat', h:1,
@@ -576,18 +587,19 @@ function renderDec(){
 let SYNC={};
 async function loadSync(){ const {data}=await sb.from('sync_log').select('key,ran_at,note'); SYNC=Object.fromEntries((data||[]).map(r=>[r.key,r])); renderOps(); }
 const OPS=[
-  {k:'last_backup',l:'最近一次確認 Supabase 備份',ph:'YYYY-MM-DD',judge:v=>{ if(!v) return ['bad','未記錄']; const d=(Date.now()-new Date(v))/864e5; return d>45?['bad',Math.round(d)+' 天前']:d>30?['warn',Math.round(d)+' 天前']:['ok',Math.round(d)+' 天前']; }},
+  {k:'last_backup',l:'最近一次確認 Supabase 備份',ph:'打 20261104 即可',judge:v=>{ if(!v) return ['bad','未記錄']; const t=Date.parse(v); if(isNaN(t)) return ['bad','日期看不懂：直接打 20261104 即可']; const d=(Date.now()-t)/864e5; return d>45?['bad',Math.round(d)+' 天前']:d>30?['warn',Math.round(d)+' 天前']:['ok',Math.round(d)+' 天前']; }},
   {k:'law_central',auto:true,l:'中央法規同步（腳本自動記）',judge:()=>{ const r=SYNC.law_central; if(!r) return ['bad','未記錄']; const d=(Date.now()-new Date(r.ran_at))/864e5; return [d>100?'warn':'ok',new Date(r.ran_at).toLocaleDateString('zh-TW')+' · '+Math.round(d)+' 天前'+(r.note?' · '+r.note:'')]; }},
   {k:'law_pdf',auto:true,l:'地方法規 PDF 最後上傳（法規庫自動記）',judge:()=>{ const r=SYNC.law_pdf; if(!r) return ['bad','未記錄（開一次法規庫即寫入）']; const d=(Date.now()-new Date(r.ran_at))/864e5; return [d>100?'warn':'ok',new Date(r.ran_at).toLocaleDateString('zh-TW')+' · '+Math.round(d)+' 天前'+(r.note?' · '+r.note:'')]; }},
   {k:'schema',auto:true,l:'資料庫結構最後更新（SQL 檔尾自動記）',judge:()=>{ const r=SYNC.schema; if(!r) return ['warn','未記錄（跑 supabase_35 起自動寫）']; const d=(Date.now()-new Date(r.ran_at))/864e5; return ['ok',new Date(r.ran_at).toLocaleDateString('zh-TW')+' · '+Math.round(d)+' 天前'+(r.note?' · '+r.note:'')]; }},
-  {k:'handover_ver',l:'交接文件版本',ph:'例：v5 · 2026-10',judge:v=>v?['ok',v]:['warn','未填']},
+  {k:'handover_ver',auto:true,l:'首頁／交接版本（index.html 自動）',judge:()=>['ok',APP_VER]},
+  {k:'handover_doc',l:'交接文件 .md 版本（Project 檔案）',ph:'例：v6 · 2026-11',judge:v=>{ if(!v) return ['warn','未填（目前 Project 內是 v5，已落後）']; const m=v.match(/(\d{4})-(\d{2})/); if(m){ const d=(Date.now()-new Date(m[1]+'-'+m[2]+'-01'))/864e5; if(d>60) return ['warn',v+' · 超過兩個月，該更新']; } return ['ok',v]; }},
   {k:'nocodb',l:'NocoDB 容器',ph:'運行中 / 已停用',judge:v=>v&&v.includes('停')?['ok',v]:['warn',v||'運行中（待停用）']},
 ];
 function renderOps(){
   $('#ops').innerHTML=OPS.map(o=>{ const v=ST.ops[o.k]||''; const [c,txt]=o.judge(v);
     return `<div class="row"><span class="k">${o.l}</span><span><span class="pill ${c}">${esc(txt)}</span> ${o.auto?'':`<input data-k="${o.k}" value="${esc(v)}" placeholder="${o.ph}">`}</span></div>`; }).join('')
     +`<div class="hint" style="margin-top:8px">改完自動存雲端。備份策略：Supabase 每週自動備份（Free 方案 7 天）→ mini 到貨後 pg_dump 週備份進 NAS → 半年一次離線硬碟。</div>`;
-  $('#ops').querySelectorAll('input').forEach(i=>i.addEventListener('change',()=>{ ST.ops[i.dataset.k]=i.value.trim(); saveState('ops'); renderOps(); }));
+  $('#ops').querySelectorAll('input').forEach(i=>i.addEventListener('change',()=>{ let v=i.value.trim(); const d=v.replace(/\D/g,''); if(i.dataset.k==='last_backup'&&/^\d{8}$/.test(d)) v=`${d.slice(0,4)}-${d.slice(4,6)}-${d.slice(6,8)}`; ST.ops[i.dataset.k]=v; saveState('ops'); renderOps(); }));
 }
 
 // ═══════════════════ 即時統計 ═══════════════════
