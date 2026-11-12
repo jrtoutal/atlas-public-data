@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#0e1012">
-<title>ATLAS 案件中心 v3.13</title>
+<title>ATLAS 案件中心 v3.14</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Space+Mono:wght@400;700&display=swap');
 :root{--bg:#0e1012;--sb:#141618;--panel:#1a1d21;--card:#1f2328;--border:#2a2f36;--border2:#353b44;--gold:#d4a843;--gold2:#f0cc7a;--teal:#3aaa8c;--teal2:#4dc9a8;--red:#e06c6c;--indigo:#7b8cff;--amber:#e8b04a;--text:#dde2ee;--sub:#8a94a6;--muted:#4a5566}
@@ -82,6 +82,7 @@ a{color:var(--teal2)}
 .grid.g4{grid-template-columns:repeat(4,minmax(0,1fr));max-width:1000px;gap:2px 14px}
 .grid .c2{grid-column:span 2}.grid .c3{grid-column:span 3}.grid .full{grid-column:1/-1}
 .tree .row .rel.key{font-family:'Space Mono',monospace;font-size:10px;color:var(--teal2);margin-left:6px}
+.toast{position:fixed;left:50%;bottom:22px;transform:translate(-50%,20px);background:var(--card);border:1px solid var(--gold);color:var(--text);padding:9px 14px;border-radius:10px;font-size:13px;display:flex;gap:10px;align-items:center;opacity:0;pointer-events:none;transition:.2s;z-index:99;box-shadow:0 6px 24px rgba(0,0,0,.4)}.toast.on{opacity:1;transform:translate(-50%,0);pointer-events:auto}
 .row .todo{display:flex;flex-wrap:wrap;gap:4px 8px;margin-top:5px;font-size:11px}.row .todo span{color:var(--amber);background:rgba(232,176,74,.12);border:1px solid rgba(232,176,74,.35);padding:1px 7px;border-radius:5px}.row .todo .tcb{cursor:pointer;font-style:normal;font-weight:400;margin-right:4px;font-size:13px;line-height:1}.row .todo .tcb:hover{color:#fff}.row .todo i{font-style:normal;color:var(--gold2);font-family:'Space Mono',monospace;font-size:10px;margin-left:4px}.row .todo .late{color:#ff8a8a;background:rgba(224,108,108,.15);border-color:rgba(224,108,108,.5)}
 .grid.g5{grid-template-columns:repeat(5,minmax(0,1fr));max-width:860px;gap:2px 10px}.grid.g5 input[type=date]{padding-left:6px;padding-right:4px;font-size:12px}@media (max-width:900px){.grid.g5{grid-template-columns:1fr 1fr 1fr}}
 .pdfbox{background:var(--panel);border:1px dashed var(--border2);border-radius:10px;padding:12px 14px;max-width:860px}.pdfh{font-weight:500;margin-bottom:6px}.pdfh .sub{font-weight:400;font-size:12px;color:var(--sub);margin-left:8px}.pdfbox input[type=file]{font-size:12px}
@@ -194,6 +195,7 @@ a{color:var(--teal2)}
   <div class="topbar">
     <a class="brand" href="index.html" title="回帷幄首頁"><span class="mark">▲ ATLAS</span><h1>案件中心</h1></a>
     <a class="btn sm" href="index.html">⌂ 首頁</a>
+    <button class="btn sm" id="undoBtn" title="復原上一次刪除（⌘Z）" disabled>↶ 復原</button>
     <nav class="tabs">
       <button class="tab on" data-t="ur">都更案件</button>
       <button class="tab" data-t="jc">建材專案</button>
@@ -595,11 +597,22 @@ async function save(quiet=false){
 }
 // 離開前若有排程中的自動儲存，先存
 window.addEventListener('beforeunload',()=>{ if(AUTOSAVE){ clearTimeout(AUTOSAVE); AUTOSAVE=null; try{ save(true); }catch(e){} } });
+// ── 刪除可復原：刪除＝蓋 deleted_at（SQL 38），復原＝清掉；最多記 20 次，重新整理後清空 ──
+const UNDO=[]; let TOAST_T=null;
+async function softDel(items,label){ // items: [{table,ids}]
+  for(const it of items){ const {error}=await sb.from(it.table).update({deleted_at:new Date().toISOString()}).in('id',it.ids); if(error) throw error; }
+  UNDO.push({items,label,at:Date.now()}); if(UNDO.length>20) UNDO.shift(); undoUi(); toast(`已刪除 ${label}`,true); }
+async function undoLast(){ const u=UNDO.pop(); undoUi(); if(!u) return;
+  for(const it of u.items){ const {error}=await sb.from(it.table).update({deleted_at:null}).in('id',it.ids); if(error){ alert('復原失敗：'+error.message+'（請確認已跑 supabase_38）'); return; } }
+  toast(`已復原 ${u.label}`); await loadAll(); renderList(); if(CUR){ CUR=DATA[TAB].find(x=>x.id===CUR.id)||null; } showForm(); }
+function undoUi(){ const b=$('#undoBtn'); b.disabled=!UNDO.length; b.textContent=UNDO.length?`↶ 復原（${UNDO.length}）`:'↶ 復原'; }
+function toast(msg,withUndo){ const t=$('#toast'); t.innerHTML=esc(msg)+(withUndo?` <button class="btn sm" onclick="undoLast()">↶ 復原</button>`:''); t.classList.add('on'); clearTimeout(TOAST_T); TOAST_T=setTimeout(()=>t.classList.remove('on'),withUndo?12000:3000); }
+document.addEventListener('keydown',e=>{ if((e.metaKey||e.ctrlKey)&&!e.shiftKey&&e.key.toLowerCase()==='z'&&!/INPUT|TEXTAREA|SELECT/.test(document.activeElement?.tagName||'')){ if(UNDO.length){ e.preventDefault(); undoLast(); } } });
+$('#undoBtn').addEventListener('click',undoLast);
 async function del(){
-  if(!confirm(`確定刪除「${T[TAB].name(CUR)}」？相關聯絡人連結、待辦會一併處理。無法復原。`)) return;
-  const {error}=await sb.from(T[TAB].table).delete().eq('id',CUR.id);
-  if(error){ $('#st').className='st err'; $('#st').textContent='刪除失敗：'+error.message; return; }
-  DATA[TAB]=DATA[TAB].filter(x=>x.id!==CUR.id); CUR=null; await loadAll(); renderList(); $('#detail').innerHTML='<div class="empty">已刪除</div>';
+  if(!confirm(`確定刪除「${T[TAB].name(CUR)}」？（刪錯可按 ↶ 復原）`)) return;
+  try{ await softDel([{table:T[TAB].table,ids:[CUR.id]}],T[TAB].name(CUR)); }catch(e){ $('#st').className='st err'; $('#st').textContent='刪除失敗：'+e.message+'（請確認已跑 supabase_38）'; return; }
+  DATA[TAB]=DATA[TAB].filter(x=>x.id!==CUR.id); CUR=null; await loadAll(); renderList(); $('#detail').innerHTML='<div class="empty">已刪除，可按上方 ↶ 復原</div>';
 }
 
 // ── 關聯區：聯絡人、待辦、所屬案件 ──
@@ -650,8 +663,8 @@ function bindRel(){
     const {data,error}=await sb.from('tasks').insert(row).select().single(); if(error){ alert(error.message); return; } DATA.tasks.push(data); showForm(); });
   document.querySelectorAll('[data-task]').forEach(x=>x.addEventListener('click',async()=>{ const t=DATA.tasks.find(k=>k.id===+x.dataset.task); const done=t.status!=='完成';
     const {error}=await sb.from('tasks').update({status:done?'完成':'待辦',done_on:done?new Date().toISOString().slice(0,10):null}).eq('id',t.id); if(error){ alert(error.message); return; } t.status=done?'完成':'待辦'; showForm(); }));
-  document.querySelectorAll('[data-deltask]').forEach(x=>x.addEventListener('click',async()=>{ if(!confirm('刪除這筆待辦？')) return; const tid=+x.dataset.deltask;
-    const {error}=await sb.from('tasks').delete().eq('id',tid); if(error){ alert(error.message); return; } DATA.tasks=DATA.tasks.filter(k=>k.id!==tid); showForm(); }));
+  document.querySelectorAll('[data-deltask]').forEach(x=>x.addEventListener('click',async()=>{ const tid=+x.dataset.deltask; const t=DATA.tasks.find(k=>k.id===tid);
+    try{ await softDel([{table:'tasks',ids:[tid]}],'待辦「'+(t?.title||'')+'」'); }catch(e){ alert(e.message); return; } DATA.tasks=DATA.tasks.filter(k=>k.id!==tid); showForm(); }));
 }
 
 // ── 地號與所有權人（都更）──
@@ -941,8 +954,8 @@ function bindHoldings(){
     const n=+$('#hNum').value||1, d=+$('#hDen').value||1; if(n>d){ alert('分子不能大於分母'); return; }
     const row={parcel_id:pidv,contact_id:cid,owner_name:CUR.name,share_num:n,share_den:d,consent:$('#hCs').value,notes:$('#hNote').value.trim()||null,sort_order:DATA.po.filter(o=>o.parcel_id===pidv).length};
     const {data,error}=await sb.from('parcel_owners').insert(row).select().single(); if(error){ alert('加入失敗：'+error.message); return; } DATA.po.push(data); showForm(); });
-  document.querySelectorAll('[data-delown]').forEach(x=>x.addEventListener('click',async()=>{ const id=+x.dataset.delown; if(!confirm('刪除這筆持分？')) return;
-    const {error}=await sb.from('parcel_owners').delete().eq('id',id); if(error){ alert(error.message); return; } DATA.po=DATA.po.filter(o=>o.id!==id); showForm(); }));
+  document.querySelectorAll('[data-delown]').forEach(x=>x.addEventListener('click',async()=>{ const id=+x.dataset.delown; const o=DATA.po.find(k=>k.id===id);
+    try{ await softDel([{table:'parcel_owners',ids:[id]}],'持分 '+(o?.owner_name||'')); }catch(e){ alert(e.message); return; } DATA.po=DATA.po.filter(k=>k.id!==id); showForm(); }));
   document.querySelectorAll('[data-consent]').forEach(x=>x.addEventListener('change',async()=>{ const id=+x.dataset.consent; const o=DATA.po.find(k=>k.id===id);
     const upd={consent:x.value}; if(x.value==='同意'&&!o.signed_on) upd.signed_on=new Date().toISOString().slice(0,10); if(x.value!=='同意') upd.signed_on=null;
     const {error}=await sb.from('parcel_owners').update(upd).eq('id',id); if(error){ alert(error.message); return; } Object.assign(o,upd); showForm(); }));
@@ -966,8 +979,9 @@ function bindParcels(){
     const {data,error}=await sb.from('parcels').update(upd).eq('id',id).select().single(); if(error){ alert('儲存失敗：'+error.message); return; }
     Object.assign(DATA.pcl.find(k=>k.id===id),data); EDIT_PCL=null; showForm(); }));
   document.querySelectorAll('[data-delpcl]').forEach(x=>x.addEventListener('click',async()=>{ const id=+x.dataset.delpcl; const p=DATA.pcl.find(k=>k.id===id);
-    if(!confirm(`刪除地號 ${p.lot}？其所有權人持分一併刪除。`)) return;
-    const {error}=await sb.from('parcels').delete().eq('id',id); if(error){ alert(error.message); return; } DATA.pcl=DATA.pcl.filter(k=>k.id!==id); DATA.po=DATA.po.filter(o=>o.parcel_id!==id); showForm(); }));
+    if(!confirm(`刪除地號 ${p.lot}？其所有權人持分一併刪除（可復原）。`)) return;
+    const oids=DATA.po.filter(o=>o.parcel_id===id).map(o=>o.id); const items=[{table:'parcels',ids:[id]}]; if(oids.length) items.push({table:'parcel_owners',ids:oids});
+    try{ await softDel(items,`地號 ${p.lot}（含 ${oids.length} 筆持分）`); }catch(e){ alert(e.message); return; } DATA.pcl=DATA.pcl.filter(k=>k.id!==id); DATA.po=DATA.po.filter(o=>o.parcel_id!==id); showForm(); }));
   document.querySelectorAll('[data-ispub]').forEach(x=>x.addEventListener('change',async()=>{ const id=+x.dataset.ispub;
     const {error}=await sb.from('parcels').update({is_public:x.checked}).eq('id',id); if(error){ alert(error.message); x.checked=!x.checked; return; } DATA.pcl.find(k=>k.id===id).is_public=x.checked; showForm(); }));
   document.querySelectorAll('[data-insite]').forEach(x=>x.addEventListener('change',async()=>{ const id=+x.dataset.insite;
@@ -1017,8 +1031,8 @@ function bindParcels(){
       ins.push({parcel_id:id,contact_id:same?.contact_id||null,owner_name:same?DATA.ct.find(c=>c.id===same.contact_id)?.name||r.owner_name:r.owner_name,owner_key:r.owner_key,share_num:r.share_num,share_den:r.share_den,consent:'未接觸',sort_order:base++,notes:r.hasShare?null:'持分未填（謄本沒讀到）'}); }
     if(ins.length){ const {data,error}=await sb.from('parcel_owners').insert(ins).select(); if(error){ msg.textContent='失敗：'+error.message; return; } DATA.po.push(...data); added=data.length; }
     PASTE_PCL=null; showForm(); setTimeout(()=>alert(`加入 ${added} 人${skipped?`，略過重複 ${skipped} 人`:''}`),50); }));
-  document.querySelectorAll('[data-delown]').forEach(x=>x.addEventListener('click',async()=>{ const id=+x.dataset.delown; if(!confirm('刪除這筆持分？')) return;
-    const {error}=await sb.from('parcel_owners').delete().eq('id',id); if(error){ alert(error.message); return; } DATA.po=DATA.po.filter(o=>o.id!==id); showForm(); }));
+  document.querySelectorAll('[data-delown]').forEach(x=>x.addEventListener('click',async()=>{ const id=+x.dataset.delown; const o=DATA.po.find(k=>k.id===id);
+    try{ await softDel([{table:'parcel_owners',ids:[id]}],'持分 '+(o?.owner_name||'')); }catch(e){ alert(e.message); return; } DATA.po=DATA.po.filter(k=>k.id!==id); showForm(); }));
   document.querySelectorAll('[data-onote]').forEach(x=>x.addEventListener('change',async()=>{ const id=+x.dataset.onote; const o=DATA.po.find(k=>k.id===id); const notes=x.value.trim()||null; if(notes===(o.notes||null)) return;
     const {error}=await sb.from('parcel_owners').update({notes}).eq('id',id); if(error){ alert(error.message); return; } o.notes=notes; x.style.borderColor='var(--teal)'; setTimeout(()=>x.style.borderColor='',800); }));
   document.querySelectorAll('[data-consent]').forEach(x=>x.addEventListener('change',async()=>{ const id=+x.dataset.consent; const o=DATA.po.find(k=>k.id===id);
@@ -1037,5 +1051,6 @@ $('#detail').addEventListener('click',e=>{ const c=e.target.closest('.chip'); if
 sb.auth.onAuthStateChange(ev=>{ if(ev==='SIGNED_OUT') location.reload(); });
 boot();
 </script>
+<div class="toast" id="toast"></div>
 </body>
 </html>
