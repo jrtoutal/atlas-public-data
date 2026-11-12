@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#0e1012">
-<title>ATLAS 案件中心 v3.15</title>
+<title>ATLAS 案件中心 v3.16</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Space+Mono:wght@400;700&display=swap');
 :root{--bg:#0e1012;--sb:#141618;--panel:#1a1d21;--card:#1f2328;--border:#2a2f36;--border2:#353b44;--gold:#d4a843;--gold2:#f0cc7a;--teal:#3aaa8c;--teal2:#4dc9a8;--red:#e06c6c;--indigo:#7b8cff;--amber:#e8b04a;--text:#dde2ee;--sub:#8a94a6;--muted:#4a5566}
@@ -267,7 +267,7 @@ function cloud(st,txt){ $('#cloudDot').className=st; $('#cloudTxt').textContent=
 // ── 載入 ──
 async function loadAll(){
   cloud('wait','載入中…');
-  const [a,b,c,d,e,f,g,h,z,fs]=await Promise.all([
+  const [a,b,c,d,e,f,g,h,z,fs,fp]=await Promise.all([
     sb.from('ur_projects').select('*').order('updated_at',{ascending:false}),
     sb.from('jc_projects').select('*').order('updated_at',{ascending:false}),
     sb.from('contacts').select('*').order('name'),
@@ -278,10 +278,11 @@ async function loadAll(){
     sb.from('parcel_owners').select('*').order('id'),
     sb.from('zoning_rules').select('*').is('effective_to',null).order('city').order('far_pct'),
     sb.from('finder_state').select('data').eq('user_id',UID).maybeSingle(),
+    sb.from('far_plans').select('id,ur_project_id,name,regime,result,updated_at').order('updated_at',{ascending:false}),
   ]);
   const err=[a,b,c,d,e,f].find(x=>x.error)?.error; if(err){ cloud('err','讀取失敗：'+err.message); return; }
   // parcels 兩表還沒建（supabase_11 未跑）時不擋整頁
-  DATA={ur:a.data,jc:b.data,ct:c.data,tasks:d.data,urc:e.data,jcc:f.data,pcl:g.error?[]:g.data,po:h.error?[]:h.data,zr:z.error?[]:z.data,finder:fs.data?.data||null};
+  DATA={ur:a.data,jc:b.data,ct:c.data,tasks:d.data,urc:e.data,jcc:f.data,pcl:g.error?[]:g.data,po:h.error?[]:h.data,zr:z.error?[]:z.data,finder:fs.data?.data||null,far:fp.error?[]:fp.data};
   DATA.noParcels=!!g.error;
   cloud('ok','已同步');
 }
@@ -627,7 +628,11 @@ async function del(){
 // ── 關聯區：聯絡人、待辦、所屬案件 ──
 function relSections(){
   const id=CUR.id; let h='';
-  if(TAB==='ur') h+=parcelSection(id);
+  if(TAB==='ur'){ h+=parcelSection(id);
+    const fps=(DATA.far||[]).filter(p=>p.ur_project_id===id);
+    h+=`<div class="sec"><h3>容積獎勵 <span class="spacer"></span><span class="mono" style="font-weight:400">${fps.length} 個方案</span></h3>
+      ${fps.slice(0,4).map(p=>`<div class="it"><span class="pill ${p.regime==='dw'?'k2':'k1'}">${p.regime==='dw'?'危老':'都更'}</span><span class="t">${esc(p.name)}</span><span class="sub">${p.result?`獎勵 ${(p.result.pct*100).toFixed(1)}% · 允建 ${Math.round(p.result.total).toLocaleString()} ㎡ ≈ ${Math.round(p.result.total*.3025).toLocaleString()} 坪（${esc(p.result.rule||'')}）`:'尚未計算'} · ${fmtD(p.updated_at)}</span></div>`).join('')||'<div class="sub" style="font-size:12px">還沒有方案。地號與分區填好後，到容積獎勵頁勾選項目，允建容積會自動算。</div>'}
+      <div class="actions" style="margin-top:8px"><a class="btn" href="far.html?ur=${id}">容積獎勵 →</a></div></div>`; }
   if(TAB==='jc'){ const fp=finderProj(id), vs=finderVers(id); const cl=fp?(DATA.finder?.clients||[]).find(c=>c.id===fp.clientId):null;
     h+=`<div class="sec"><h3>選色表 <span class="spacer"></span><span class="mono" style="font-weight:400">${vs.length} 個版本</span></h3>
       ${fp?`<div class="it"><span class="pill k2">${esc(cl?.name||'')}</span><span>${esc(fp.name)}</span><span class="sub">${vs.map(v=>esc(v.name)).join('、')||'尚無版本'}</span><a class="btn sm" href="finder.html?jc=${id}" style="margin-left:auto;text-decoration:none">開選色表 →</a></div>`

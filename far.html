@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>ATLAS 容積獎勵 v0.1（原型）</title>
+<title>ATLAS 容積獎勵 v1.0</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Space+Mono&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#0e1012;--sb:#141618;--panel:#1a1d21;--card:#1f2328;--border:#2a2f36;--border2:#353b44;--gold:#d4a843;--gold2:#f0cc7a;--teal:#3aaa8c;--teal2:#4dc9a8;--red:#e06c6c;--indigo:#7b8cff;--amber:#e8b04a;--text:#dde2ee;--sub:#8a94a6;--muted:#4a5566}
@@ -72,6 +72,7 @@ h2.g1 .sum{font-family:'Space Mono',monospace;font-size:12px;color:var(--teal2)}
 .chk.on i::after{content:'✓';position:absolute;left:2px;top:-4px;color:#fff;font-size:11px}
 
 /* 右欄：上限計算（吃案件地號） */
+.side{position:sticky;top:150px;align-self:start}@media (max-width:900px){.side{position:static}}
 .side .box{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:12px}
 .side h3{font-size:11px;letter-spacing:.14em;color:var(--gold);font-weight:600;margin-bottom:8px;display:flex;align-items:center;gap:8px}
 .side h3 .c{margin-left:auto;font-family:'Space Mono',monospace;font-size:10px;color:var(--muted)}
@@ -109,15 +110,43 @@ h2.g1 .sum{font-family:'Space Mono',monospace;font-size:12px;color:var(--teal2)}
 .foot .s{font-size:12px;color:var(--sub);margin-right:auto}
 .tag{font-size:10.5px;padding:1px 7px;border-radius:5px;border:1px solid var(--border2);color:var(--sub)}
 .tag.src{color:var(--teal2);border-color:var(--teal)}
+
+#login{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+.login-box{width:100%;max-width:360px;background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:28px 26px}
+.login-box h1{font-size:18px;margin-bottom:4px}.login-box p{color:var(--sub);font-size:12.5px;margin-bottom:20px}
+.login-box .field{margin-bottom:12px}.login-box label{display:block;font-size:11px;color:var(--teal2);letter-spacing:.1em;margin-bottom:4px}.login-box input{width:100%;padding:9px 11px;background:var(--bg);border:1px solid var(--border2);border-radius:8px;color:var(--text)}
+.login-box .err{color:var(--red);font-size:12px;margin-top:8px;min-height:16px}.btn.w{width:100%;justify-content:center;margin-top:6px}
+#app{display:none}
+.top select{padding:6px 9px;background:var(--bg);border:1px solid var(--border2);border-radius:8px;color:var(--text);max-width:260px}
+.top .case a{color:var(--teal2);text-decoration:none}
+.st{font-size:12px;color:var(--sub)}.st.err{color:var(--red)}.st.ok{color:var(--teal2)}
+.planbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.planbar input{padding:6px 9px;background:var(--bg);border:1px solid var(--border2);border-radius:8px;color:var(--text);width:140px}
+.zone .ov{display:flex;gap:6px;align-items:center;font-size:11px;color:var(--sub);margin-top:3px}.zone .ov input{width:90px;padding:3px 6px;font-size:12px;font-family:'Space Mono',monospace}
+.empty{padding:40px;text-align:center;color:var(--sub)}
+.card input.n.wide{width:150px}
 </style>
 </head>
 <body>
-
+<div id="login">
+  <div class="login-box">
+    <div class="brand"><span class="mark" style="color:var(--gold);font-weight:700;letter-spacing:.18em">▲ ATLAS</span><h1>容積獎勵</h1></div>
+    <p>帷幄 · 僅限本人登入</p>
+    <form id="loginForm">
+      <div class="field"><label>EMAIL</label><input id="email" type="email" autocomplete="username" required></div>
+      <div class="field"><label>PASSWORD</label><input id="pw" type="password" autocomplete="current-password" required></div>
+      <button class="btn pri w" id="loginBtn" type="submit">登入</button>
+      <div class="err" id="loginErr"></div>
+    </form>
+  </div>
+</div>
+<div id="app">
 <div class="top">
-  <span class="brand">ATLAS · 容積獎勵<small>原型 v0.1 · 數據來自理事長 114 版試算表，上線前要對法規庫</small></span>
+  <a href="index.html" class="brand" style="text-decoration:none">ATLAS · 容積獎勵<small id="verLine">v1.0</small></a>
   <div class="seg" id="regime"><button data-r="ur" class="on">都市更新</button><button data-r="dw">危老重建</button></div>
-  <div class="seg" id="scheme"><button data-s="1" class="on">方案一</button><button data-s="2">方案二</button></div>
-  <span class="case">案件：<b>584 地號都更案</b> · 五股區五股段 · 住宅區 200%／50% <span class="tag src">案件中心帶入</span></span>
+  <div class="planbar"><select id="planSel"></select><input id="planName" placeholder="方案名稱"><button class="btn" id="planNew">＋ 新方案</button><button class="btn pri" id="planSave">存雲端</button><button class="btn" id="planDel" title="刪除方案">🗑</button><span class="st" id="planSt"></span></div>
+  <span class="case" id="caseLine"></span>
+  <button class="btn" id="logoutBtn" style="margin-left:6px">登出</button>
 </div>
 
 <div class="gauge">
@@ -127,7 +156,7 @@ h2.g1 .sum{font-family:'Space Mono',monospace;font-size:12px;color:var(--teal2)}
     <span class="warn" id="gWarn"></span>
   </div>
   <div class="bar"><div class="fill" id="gFill" style="width:0"></div><div class="tick" id="gTick" data-l="上限"></div></div>
-  <div class="legend"><span><b style="background:var(--teal)"></b>已選獎勵</span><span><b style="background:var(--gold2)"></b>上限線</span><span><b style="background:var(--red)"></b>超過上限會被砍到上限，多選無效</span></div>
+  <div class="legend"><span><b style="background:var(--teal)"></b>已選獎勵</span><span><b style="background:var(--gold2)"></b>上限線</span><span><b style="background:var(--red)"></b>超過上限會被砍到上限，多選無效</span><span id="itemsSrc" style="margin-left:auto"></span></div>
 </div>
 
 <div class="wrap">
@@ -139,147 +168,151 @@ h2.g1 .sum{font-family:'Space Mono',monospace;font-size:12px;color:var(--teal2)}
 <div class="drawer" id="drawer">
   <div class="dh"><span class="art" id="dArt"></span><span id="dTitle"></span><span class="x" id="dX">✕</span></div>
   <div class="body"><div class="law" id="dLaw"></div><div id="dText"></div>
-    <div class="mine"><h4>我的註記</h4><p id="dMine"></p><a class="go" href="#" id="dGo">在法規庫開啟這條 →</a></div></div>
+    <div class="mine"><h4>我的註記（法規庫同一筆）</h4><p id="dMine"></p><a class="go" href="#" id="dGo" target="_blank">在法規庫開啟這條 →</a></div></div>
 </div>
 
-<div class="foot"><span class="s" id="fS">原型：尚未接 Supabase，勾選只存在這一頁。正式版：方案存 far_plans（含當時獎勵表快照）。</span><button class="btn">存成方案</button><button class="btn pri">帶入成本分析 →</button></div>
-
+<div class="foot"><span class="s" id="fS"></span><a class="btn" id="backCase" href="cases.html">← 回案件</a><button class="btn pri" id="toCost" disabled title="成本分析模組做好後開放">帶入成本分析 →</button></div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.106.2/dist/umd/supabase.min.js"></script>
 <script>
-// ─────────────────────────────────────────────────────────────
-// 獎勵項目表（正式版放 Supabase far_bonus_items：regime/level/article/label/plain/options/excl/cap/effective_from/effective_to/law_article_id）
-// 數字抄自理事長 114 版 @都更容獎／@危老容獎；★ 標記＝上線前要對最新法規
-// ─────────────────────────────────────────────────────────────
-const ITEMS={
-ur:{
-  capCentral:.50, capLocal:.20,
-  groups:[
-   {id:'c',label:'中央 · 都市更新建築容積獎勵辦法（108.5.15）',level:'central',items:[
-    {id:'a5',art:'§5',law:'都市更新建築容積獎勵辦法',nm:'原建築容積高於基準容積',plain:'舊房子本來就蓋得比現在法規多，差額可以保留一部分。',type:'pick',opts:[['不適用',0],['依原容或法容 10%',.10]],text:'實施容積管制前已興建完成之合法建築物，其原建築容積高於基準容積者，得依原建築容積建築，或依原建築容積與基準容積之差額給予獎勵……★'},
-    {id:'a6',art:'§6',law:'都市更新建築容積獎勵辦法',nm:'危險建築物',plain:'被通知限期拆除，或結構評估不及格的房子。兩款擇一。',type:'pick',excl:true,opts:[['不適用',0],['限期拆除／強制拆除／危險之虞 10%',.10],['結構安全性能評估未達最低等級（R>45）8%',.08]],text:'一、經建築主管機關依建築法規、災害防救法規通知限期拆除、逕予強制拆除，或評估有危險之虞應限期補強或拆除者：基準容積百分之十。\n二、經結構安全性能評估結果未達最低等級：基準容積百分之八。\n前項各款獎勵容積額度不得累計申請。'},
-    {id:'a7',art:'§7',law:'都市更新建築容積獎勵辦法',nm:'捐贈公益設施',plain:'蓋好的社福／公益空間連同土地送給政府，依面積換容積。',type:'num',unit:'㎡ 公益設施樓地板',rate:1.0,note:'獎勵容積＝公益設施樓地板面積（免計容積部分不算）×係數 1；上限併入總上限。',text:'都市更新事業計畫範圍內依直轄市、縣（市）主管機關公告，提供指定之社會福利設施或其他公益設施，建築物及其土地產權無償登記為公有者，除不計入容積外，得依該設施樓地板面積給予獎勵容積……係數為一。'},
-    {id:'a8',art:'§8',law:'都市更新建築容積獎勵辦法',nm:'協助取得及開闢公共設施',plain:'幫政府把計畫範圍內或旁邊的公設用地買下來、做好、登記成公有。',type:'pick',opts:[['不適用',0],['協闢公設（上限 15%）',.15]],text:'協助取得及開闢都市更新事業計畫範圍內或其周邊公共設施用地，產權登記為公有者，得給予獎勵容積，其獎勵額度以基準容積百分之十五為上限。'},
-    {id:'a9',art:'§9',law:'都市更新建築容積獎勵辦法',nm:'古蹟、歷史建築保存維護',plain:'基地內有古蹟或歷史建築，修好並維護，依實際面積給獎勵。',type:'num',unit:'㎡ 保存建物面積',rate:1.5,note:'獎勵容積＝實際面積 × 1.5（辦理整體性保存、修復、再利用、管理維護）。',text:'都市更新事業計畫範圍內之古蹟、歷史建築、紀念建築及聚落建築群，辦理整體性保存、修復、再利用及管理維護者，依其實際面積之一點五倍給予獎勵容積……'},
-    {id:'a10',art:'§10',law:'都市更新建築容積獎勵辦法',nm:'候選綠建築證書',plain:'新建物拿到綠建築等級，等級越高獎勵越多。銅級、合格級只有小基地（<500㎡）能用。',type:'pick',excl:true,opts:[['不申請',0],['鑽石級 10%',.10],['黃金級 8%',.08],['銀級 6%',.06],['銅級 4%（基地<500㎡）',.04],['合格級 2%（基地<500㎡）',.02]],text:'取得候選綠建築證書，依下列等級給予獎勵容積：一、鑽石級：基準容積百分之十。二、黃金級：百分之八。三、銀級：百分之六。四、銅級：百分之四。五、合格級：百分之二。\n前項各款獎勵容積不得累計申請；銅級、合格級以基地面積未達五百平方公尺者為限。'},
-    {id:'a11',art:'§11',law:'都市更新建築容積獎勵辦法',nm:'候選智慧建築證書',plain:'同綠建築的邏輯，換成智慧建築標章。',type:'pick',excl:true,opts:[['不申請',0],['鑽石級 10%',.10],['黃金級 8%',.08],['銀級 6%',.06],['銅級 4%（基地<500㎡）',.04],['合格級 2%（基地<500㎡）',.02]],text:'取得候選智慧建築證書，依下列等級給予獎勵容積：鑽石級百分之十、黃金級百分之八、銀級百分之六、銅級百分之四、合格級百分之二。前項各款不得累計申請。'},
-    {id:'a12',art:'§12',law:'都市更新建築容積獎勵辦法',nm:'無障礙環境設計',plain:'拿到無障礙住宅標章，或住宅性能評估的無障礙等級。',type:'pick',excl:true,opts:[['不申請',0],['無障礙住宅建築標章 5%',.05],['住宅性能評估 無障礙第一級 4%',.04],['住宅性能評估 無障礙第二級 3%',.03]],text:'採無障礙環境設計者：一、取得無障礙住宅建築標章：基準容積百分之五。二、依住宅性能評估實施辦法辦理新建住宅性能評估之無障礙環境：第一級百分之四、第二級百分之三。前項各款不得累計申請。'},
-    {id:'a13',art:'§13',law:'都市更新建築容積獎勵辦法',nm:'耐震設計',plain:'結構比法規要求更好。耐震標章 10%，性能評估分三級。',type:'pick',excl:true,opts:[['不申請',0],['耐震設計標章 10%',.10],['結構安全性能 第一級 6%',.06],['結構安全性能 第二級 4%',.04],['結構安全性能 第三級 2%',.02]],text:'採建築物耐震設計者：一、取得耐震設計標章：基準容積百分之十。二、依住宅性能評估實施辦法辦理新建住宅性能評估之結構安全性能：第一級百分之六、第二級百分之四、第三級百分之二。前項各款不得累計申請。'},
-    {id:'a14',art:'§14',law:'都市更新建築容積獎勵辦法',nm:'時程獎勵',plain:'越早報核獎勵越多。有沒有被劃定為「應實施更新地區」差很多。★ 108.5.15 起算的期限已過第一個五年，現在落在第二段。',type:'pick',excl:true,opts:[['不適用',0],['劃定地區 · 施行日起 5 年內 10%',.10],['劃定地區 · 次 5 年內 5%',.05],['未劃定 · 施行日起 5 年內 7%',.07],['未劃定 · 次 5 年內 3.5%',.035]],text:'本辦法一百零八年五月十五日修正施行日起一定期間內報核者：一、劃定應實施更新之地區：五年內百分之十；屆滿之次日起五年內百分之五。二、未經劃定：五年內百分之七；次五年內百分之三點五。'},
-    {id:'a15',art:'§15',law:'都市更新建築容積獎勵辦法',nm:'規模獎勵',plain:'基地夠大或含完整街廓。3000㎡ 起跳 5%，每多 100㎡ 加 0.3%，上限 30%。',type:'pick',opts:[['不適用（<3000㎡）',0],['含一個以上完整計畫街廓 5%',.05],['3000–10000㎡：5%＋每100㎡ 0.3%',-1],['≥10000㎡ 30%',.30]],text:'一、更新單元重建區段含一個以上完整計畫街廓：基準容積百分之五。二、面積達三千平方公尺以上未滿一萬平方公尺：百分之五，每增加一百平方公尺另給予百分之零點三。三、面積達一萬平方公尺以上：百分之三十。'},
-    {id:'a16',art:'§16',law:'都市更新建築容積獎勵辦法',nm:'全體同意協議合建',plain:'報核時所有地主都同意用協議合建，而且更新前門牌 20 戶以上。',type:'pick',opts:[['不適用',0],['全體同意協議合建 5%',.05]],text:'都市更新事業計畫報核時，以協議合建方式實施且經全體土地及合法建築物所有權人同意，更新前門牌戶達二十戶以上者：基準容積百分之五。'},
-   ]},
-   {id:'l',label:'地方 · 臺北市都市更新建築容積獎勵辦法（108.12.19）★ 五股案適用新北版，此處先用台北示意',level:'local',items:[
-    {id:'t1',art:'§(一)',law:'臺北市都市更新建築容積獎勵辦法',nm:'建築規劃設計（退縮、通道、開放空間…）',plain:'六項設計條件：鄰 8m 以下道路退縮、鄰地境界 3m、4m 通道、200㎡ 廣場、挑高半戶外、立面不連續。符合 3 項 1%、4 項 2%、5 項以上 3%。',type:'count',max:6,ladder:[[3,.01],[4,.02],[5,.03]],text:'建築物鄰八公尺以下道路境界線之退縮……符合三項者給予百分之一，四項以上者百分之二，五項以上者百分之三。'},
-    {id:'t2',art:'§(二)',law:'臺北市都市更新建築容積獎勵辦法',nm:'雨水流出抑制',plain:'雨水貯留量做到法定兩倍以上。',type:'pick',opts:[['不申請',0],['達法定 2 倍以上 1%',.01]],text:'基地開發設置雨水流出抑制設施，達法定雨水貯留量二倍以上者：基準容積百分之一。'},
-    {id:'t3',art:'§(三)',law:'臺北市都市更新建築容積獎勵辦法',nm:'沿街步道／騎樓',plain:'面臨計畫道路留設延續性的人行步道或騎樓，依實際面積給。',type:'num',unit:'㎡ 留設面積',rate:1.0,note:'依實際留設面積給予獎勵（淨寬 2–6m）。',text:'基地面臨都市計畫道路……留設供人行走之地面道路或騎樓且具延續性……依實際留設面積給予獎勵。'},
-    {id:'t4',art:'§(四)',law:'臺北市都市更新建築容積獎勵辦法',nm:'符合審議會通案審議原則',plain:'設計全部符合審議會歷次通案原則。',type:'pick',opts:[['不申請',0],['全部符合 3%',.03]],text:'符合臺北市都市更新及爭議處理審議會歷次會議通案重要審議原則者：基準容積百分之三。'},
-    {id:'t5',art:'§(五)',law:'臺北市都市更新建築容積獎勵辦法',nm:'整修鄰近騎樓／人行道',plain:'幫同一街廓鄰居把騎樓順平，每棟 0.25%。',type:'count',max:8,per:.0025,text:'協助同一街廓或毗鄰街廓整修順平騎樓或無遮簷人行道……整修一棟給予基準容積百分之零點二五。'},
-    {id:'t6',art:'§(六)',law:'臺北市都市更新建築容積獎勵辦法',nm:'充電車位',plain:'汽機車充電車位達法定車位 30%。',type:'pick',opts:[['不申請',0],['達法定車位 30% → 1%',.01]],text:'建築基地提供充電汽車及機車停車位數為法定停車位百分之三十者：基準容積百分之一。'},
-    {id:'t7',art:'§(七)',law:'臺北市都市更新建築容積獎勵辦法',nm:'有助更新事業之實施（基金／老屋無電梯）',plain:'捐都更基金依金額換，或現有 4–5 層樓、30 年以上、無電梯、車位不足戶數 1/7。',type:'pick',opts:[['不適用',0],['4 層樓無電梯 2%',.02],['5 層樓無電梯 4%',.04]],text:'更新單元內現有合法建築物屋齡達三十年以上，樓層數為四層或五層，無電梯且法定停車位低於戶數十分之七者：四層樓百分之二、五層樓百分之四。'},
-   ]},
-  ]},
-dw:{
-  capA:.30, capTime:.10,
-  groups:[
-   {id:'A',label:'A · 基礎獎勵（危老條例建築容積獎勵辦法 §3–§6）',level:'central',items:[
-    {id:'d4',art:'§4',law:'都市危險及老舊建築物建築容積獎勵辦法',nm:'重建對象',plain:'為什麼算危老：被限期拆除 10%、結構評估不及格 8%、30 年以上耐震不足且改善不划算 6%。擇一。',type:'pick',excl:true,opts:[['未確認',0],['通知限期拆除／危險建築 10%',.10],['結構安全性能評估未達最低等級 8%',.08],['屋齡 30 年以上、耐震不足、改善不具效益 6%',.06]],text:'原建築物符合條例第三條第一項各款之一者，依下列規定給予獎勵：一、第一款：基準容積百分之十。二、第二款：百分之八。三、第三款：百分之六。'},
-    {id:'d3',art:'§3',law:'都市危險及老舊建築物建築容積獎勵辦法',nm:'原建築容積高於基準容積',plain:'選依原容積蓋，上限變原容 1.15 倍；或拿基準 10%。',type:'pick',opts:[['不適用',0],['原容積高於基準 10%',.10]],text:'原建築基地之原建築容積高於基準容積者，得依原建築容積建築，或依原建築容積與基準容積差額百分之十給予獎勵，二者擇一。'},
-    {id:'d5',art:'§5',law:'都市危險及老舊建築物建築容積獎勵辦法',nm:'退縮建築',plain:'從計畫道路／既有巷道退 4m 且離鄰地境界 2m（10%），或退 2m（8%）。住宅區／商業區門檻不同。',type:'pick',excl:true,opts:[['不退縮',0],['退縮 4m（住12／商9 以上）10%',.10],['退縮 2m 8%',.08]],text:'建築基地退縮建築，依下列規定給予獎勵：一、自計畫道路及現有巷道退縮淨寬四公尺以上建築，與鄰地境界線距離二公尺以上：百分之十。二、退縮淨寬二公尺以上：百分之八。'},
-    {id:'d6',art:'§6',law:'都市危險及老舊建築物建築容積獎勵辦法',nm:'耐震設計',plain:'耐震標章 10%，或住宅性能評估結構安全一／二／三級。',type:'pick',excl:true,opts:[['不申請',0],['耐震設計標章 10%',.10],['結構安全性能 第一級 6%',.06],['第二級 4%',.04],['第三級 2%',.02]],text:'取得耐震設計標章：基準容積百分之十；住宅性能評估結構安全性能第一級百分之六、第二級百分之四、第三級百分之二。不得累計。'},
-   ]},
-   {id:'B',label:'B · 增額獎勵（§7–§10，A 未達上限時適用）',level:'central',items:[
-    {id:'d7',art:'§7',law:'都市危險及老舊建築物建築容積獎勵辦法',nm:'綠建築',plain:'鑽石 10%～合格 2%。基地 >500㎡ 不能用銅級、合格級。',type:'pick',excl:true,opts:[['不申請',0],['鑽石級 10%',.10],['黃金級 8%',.08],['銀級 6%',.06],['銅級 4%（基地≤500㎡）',.04],['合格級 2%（基地≤500㎡）',.02]],text:'取得候選綠建築證書：鑽石級百分之十、黃金級百分之八、銀級百分之六、銅級百分之四、合格級百分之二；銅級、合格級以基地面積未超過五百平方公尺者為限。'},
-    {id:'d8',art:'§8',law:'都市危險及老舊建築物建築容積獎勵辦法',nm:'智慧建築',plain:'同綠建築的級距。',type:'pick',excl:true,opts:[['不申請',0],['鑽石級 10%',.10],['黃金級 8%',.08],['銀級 6%',.06],['銅級 4%（基地≤500㎡）',.04],['合格級 2%（基地≤500㎡）',.02]],text:'取得候選智慧建築證書：鑽石級百分之十、黃金級百分之八、銀級百分之六、銅級百分之四、合格級百分之二。'},
-    {id:'d9',art:'§9',law:'都市危險及老舊建築物建築容積獎勵辦法',nm:'無障礙設計',plain:'無障礙住宅標章 10%，或性能評估一級 4%、二級 3%。',type:'pick',excl:true,opts:[['不申請',0],['無障礙住宅標章 10%',.10],['住宅性能評估 第一級 4%',.04],['第二級 3%',.03]],text:'取得無障礙住宅建築標章：基準容積百分之十；住宅性能評估無障礙環境第一級百分之四、第二級百分之三。'},
-    {id:'d10',art:'§10',law:'都市危險及老舊建築物建築容積獎勵辦法',nm:'協助開闢公共設施',plain:'幫政府開闢周邊公設，上限 5%。',type:'pick',opts:[['不適用',0],['協闢公設（上限 5%）',.05]],text:'協助取得及開闢周邊公共設施用地，產權登記為公有者，給予獎勵容積，以基準容積百分之五為上限。'},
-   ]},
-   {id:'T',label:'時程＋規模獎勵（條例 §6，另計、合計上限 10%）',level:'time',items:[
-    {id:'dt',art:'條例§6',law:'都市危險及老舊建築物加速重建條例',nm:'時程獎勵',plain:'★ 逐年遞減：109.5.11 前 10%，之後每年少 2%（8→6→4→2），114.5.11 後歸零——要對現在的日期。',type:'pick',excl:true,opts:[['已無時程獎勵',0],['114.5.11 前申請 2%',.02],['（歷史）4%',.04],['（歷史）6%',.06]],text:'條例施行後三年內申請之重建計畫，得再給予基準容積百分之十之獎勵；其後逐年遞減……時程獎勵與規模獎勵合計不得超過基準容積百分之十。'},
-    {id:'ds',art:'條例§6',law:'都市危險及老舊建築物加速重建條例',nm:'規模獎勵',plain:'基地 200㎡ 起算 2%，每多 100㎡ 加 0.5%，最多 10%（扣掉時程後的餘額）。',type:'pick',opts:[['<200㎡ 不適用',0],['200㎡ 2%',.02],['300㎡ 2.5%',.025],['500㎡ 3.5%',.035],['1000㎡ 6%',.06],['≥1800㎡ 10%',.10]],text:'重建計畫範圍內基地面積達二百平方公尺者給予基準容積百分之二，每增加一百平方公尺另給予百分之零點五，合計上限百分之十。'},
-   ]},
-  ]}
-};
-
-// 案件帶入（正式版：cases.html 的 parcels 依分區分組；原容積來自合法建物層）
-const CASE={name:'584 地號都更案',zones:[
-  {z:'住宅區',far:200,bcr:50,area_m2:1287.5,orig_far:225,parcels:11,public_m2:142.3},
-]};
-
-// ─────────────────────────────────────────────────────────────
-let R='ur', S='1'; const SEL={ur:{1:{},2:{}},dw:{1:{},2:{}}}; let CAPRULE='auto';
+const SB_URL='https://riiflvhbxrnmzriwngjs.supabase.co', SB_KEY='sb_publishable_R69Hj9hcR5G4dp3Uz1J0PQ_1BabpwsN';
+const sb=supabase.createClient(SB_URL,SB_KEY);
 const $=s=>document.querySelector(s); const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const pct=v=>(Math.round(v*1000)/10).toLocaleString()+'%';
-const baseFA=()=>CASE.zones.reduce((a,z)=>a+(z.area_m2-0)*z.far/100,0); // 基準容積 ㎡（公有地先不扣，原型）
-const origFA=()=>CASE.zones.reduce((a,z)=>a+z.area_m2*z.orig_far/100,0);
+const pct=v=>(Math.round(v*1000)/10).toLocaleString()+'%'; const fmt=v=>Math.round(v||0).toLocaleString();
+const CAPS={ur:{central:.50,local:.20},dw:{ab:.30,time:.10}};
 
-function itemVal(it){ const v=SEL[R][S][it.id];
-  if(it.type==='pick'){ const i=+v||0; let r=it.opts[i]?.[1]||0; if(r===-1){ const a=CASE.zones.reduce((s,z)=>s+z.area_m2,0); r=a>=3000?.05+Math.floor((a-3000)/100)*.003:0; } return r; }
-  if(it.type==='num'){ const m2=+v||0; return m2*it.rate/baseFA(); }
-  if(it.type==='count'){ const n=+v||0; if(it.per) return n*it.per; let r=0; for(const [k,p] of it.ladder) if(n>=k) r=p; return r; }
+// ── 狀態 ──
+let ITEMS=[], CASE=null, PCL=[], ZR=[], PLANS=[], PLAN=null, R='ur', CITY='新北市', UID=null, DIRTY=false, AUTOS=null;
+const urId=+new URLSearchParams(location.search).get('ur')||null;
+
+// ── 登入 ──
+$('#loginForm').addEventListener('submit',async e=>{ e.preventDefault(); $('#loginBtn').disabled=true; $('#loginErr').textContent='';
+  const {error}=await sb.auth.signInWithPassword({email:$('#email').value.trim(),password:$('#pw').value}); $('#loginBtn').disabled=false;
+  if(error){ $('#loginErr').textContent='登入失敗：'+(error.message.includes('Invalid')?'帳號或密碼錯誤':error.message); return; } boot(); });
+$('#logoutBtn').addEventListener('click',async()=>{ await sb.auth.signOut(); location.reload(); });
+sb.auth.onAuthStateChange(ev=>{ if(ev==='SIGNED_OUT') location.reload(); });
+
+async function boot(){ const {data:{session}}=await sb.auth.getSession(); if(!session){ $('#login').style.display='flex'; $('#app').style.display='none'; return; }
+  UID=session.user.id; $('#login').style.display='none'; $('#app').style.display='block'; await loadAll(); }
+
+async function loadAll(){
+  const [it,zr]=await Promise.all([ sb.from('far_bonus_items').select('*').is('effective_to',null).order('sort'), sb.from('zoning_rules').select('*').is('effective_to',null) ]);
+  if(it.error){ $('#main').innerHTML=`<div class="empty">讀取獎勵表失敗：${esc(it.error.message)}（請先跑 supabase_40_far.sql）</div>`; return; }
+  ITEMS=it.data; ZR=zr.data||[];
+  $('#itemsSrc').textContent=`獎勵項目 ${ITEMS.length} 筆（Supabase far_bonus_items，現行版）`;
+  if(urId){ const [u,p,pl]=await Promise.all([ sb.from('ur_projects').select('*').eq('id',urId).single(), sb.from('parcels').select('*').eq('ur_project_id',urId).order('sort_order'), sb.from('far_plans').select('*').eq('ur_project_id',urId).order('updated_at',{ascending:false}) ]);
+    if(u.error){ $('#caseLine').innerHTML='<span style="color:var(--red)">找不到案件 #'+urId+'</span>'; } else { CASE=u.data; PCL=p.data||[]; PLANS=pl.data||[]; CITY=caseCity(); if(CASE.kind==='危老重建') R='dw'; }
+    $('#backCase').href=`cases.html?t=ur&id=${urId}`; }
+  if(!CASE){ $('#caseLine').innerHTML='未指定案件 — 快速試算（不存檔）。從案件中心的「容積獎勵 →」進來才會帶入地號並可存方案。'; }
+  else $('#caseLine').innerHTML=`案件：<b>${esc(CASE.name)}</b> · ${esc(CITY)} · ${PCL.length} 筆地號 <span class="tag src">案件中心帶入</span>`;
+  [...$('#regime').children].forEach(b=>b.classList.toggle('on',b.dataset.r===R));
+  if(PLANS.length) PLAN=PLANS[0]; else PLAN=newPlan('方案一'); renderPlanSel(); render(); }
+function caseCity(){ const t=(CASE?.address||'')+(PCL[0]?.section||''); return /臺北市|台北市/.test(t)?'臺北市':'新北市'; }
+function newPlan(name){ return {id:null,ur_project_id:urId,name,regime:R,city:CITY,picks:{},overrides:{},cap_rule:'auto'}; }
+
+// ── 基地：地號依分區分組（＝Excel 的 @.基地資料 一欄一區） ──
+function zones(){
+  if(!CASE) return [{z:'（示意）住宅區',far:200,bcr:50,area:1000,orig:0,parcels:0,pub:0,av:0}];
+  const by={}; for(const p of PCL){ if(p.in_site===false) continue; const z=p.zoning||'未填分區'; const r=ZR.find(r=>r.city===CITY&&r.zone===z&&!r.condition&&(!p.far_pct||r.far_pct===p.far_pct))||ZR.find(r=>r.city===CITY&&r.zone===z);
+    const o=(by[z]??={z,far:p.far_pct||r?.far_pct||0,bcr:r?.bcr_pct||0,area:0,orig:0,parcels:0,pub:0,av:0}); o.area+=+p.area_m2||0; o.parcels++; if(p.is_public) o.pub+=+p.area_m2||0; o.orig+=+p.bldg_floor_m2||0; o.av+=(+p.announced_value||0)*(+p.area_m2||0); }
+  return Object.values(by).map(o=>{ const ov=PLAN?.overrides?.[o.z]||{}; return {...o,far:ov.far??o.far,orig:ov.orig??o.orig,excludePub:!!ov.excludePub}; }); }
+const baseFA=()=>zones().reduce((a,z)=>a+(z.area-(z.excludePub?z.pub:0))*z.far/100,0);
+const origFA=()=>zones().reduce((a,z)=>a+z.orig,0);
+const siteArea=()=>zones().reduce((a,z)=>a+z.area,0);
+const avTotal=()=>zones().reduce((a,z)=>a+z.av,0);
+
+// ── 項目與計算 ──
+function liveItems(){ return ITEMS.filter(i=>i.regime===R&&(i.level!=='local'||i.city===CITY)); }
+function groupsOf(){ const g={}; for(const i of liveItems()) (g[i.grp]??={label:i.grp,level:i.level,sub:i.sub,items:[]}).items.push(i); return Object.values(g); }
+function itemVal(it){ const v=PLAN.picks[it.code]; const b=baseFA()||1;
+  if(it.kind==='pick'){ const i=+v||0; let r=+(it.opts?.[i]?.[1]||0); if(r===-1){ const a=siteArea(); r=a>=3000?.05+Math.floor((a-3000)/100)*.003:0; } return r; }
+  if(it.kind==='num'){ return (+v||0)*(+it.rate||1)/b; }
+  if(it.kind==='count'){ const n=+v||0; if(it.per) return n*+it.per; let r=0; for(const [k,p] of (it.ladder||[])) if(n>=k) r=+p; return r; }
+  if(it.kind==='cash'){ const amt=(+v||0)*1e4; const av=avTotal(); if(!amt||!av) return 0; return (amt/(av/b*1.4))/b; }
+  if(it.kind==='pct'){ return (+v||0)/100; }
   return 0; }
-function groupSum(g){ return g.items.reduce((a,it)=>a+itemVal(it),0); }
-
 function calc(){
-  const cfg=ITEMS[R]; const out={groups:{}};
-  for(const g of cfg.groups) out.groups[g.id]=groupSum(g);
-  if(R==='ur'){ out.central=Math.min(out.groups.c,cfg.capCentral); out.local=Math.min(out.groups.l,cfg.capLocal); out.raw=out.groups.c+out.groups.l; out.capped=out.central+out.local; out.cap=cfg.capCentral+cfg.capLocal; }
-  else { const ab=out.groups.A+out.groups.B; out.ab=Math.min(ab,cfg.capA); out.time=Math.min(out.groups.T,cfg.capTime); out.raw=ab+out.groups.T; out.capped=out.ab+out.time; out.cap=cfg.capA+cfg.capTime; }
-  // 允建上限（四種取法）
+  const gs=groupsOf(); const out={groups:{}}; let central=0,local=0,ab=0,time=0;
+  for(const g of gs){ const s=g.items.reduce((a,it)=>a+itemVal(it),0); out.groups[g.label]=s; if(R==='ur'){ if(g.level==='central') central+=s; else local+=s; } else { if(g.level==='time') time+=s; else ab+=s; } }
+  if(R==='ur'){ out.central=Math.min(central,CAPS.ur.central); out.local=Math.min(local,CAPS.ur.local); out.raw=central+local; out.capped=out.central+out.local; out.cap=CAPS.ur.central+CAPS.ur.local; }
+  else { out.ab=Math.min(ab,CAPS.dw.ab); out.time=Math.min(time,CAPS.dw.time); out.raw=ab+time; out.capped=out.ab+out.time; out.cap=CAPS.dw.ab+CAPS.dw.time; }
   const b=baseFA(), o=origFA();
   out.rules=R==='ur'?[['基準×1.5',b*1.5],['原容＋法容30%',o+b*.3],['原容×1.2',o*1.2],['原容×1.3',o*1.3]]:[['基準×1.3',b*1.3],['原容×1.15',o*1.15]];
-  out.ruleIdx=CAPRULE==='auto'?out.rules.reduce((m,r,i,a)=>r[1]>a[m][1]?i:m,0):+CAPRULE;
+  out.ruleIdx=PLAN.cap_rule==='auto'?out.rules.reduce((m,r,i,a)=>r[1]>a[m][1]?i:m,0):+PLAN.cap_rule;
   out.allow=out.rules[out.ruleIdx][1]+(R==='dw'?b*out.time:0);
-  out.bonusFA=b*out.capped; out.totalFA=Math.min(b+out.bonusFA,out.allow); out.cut=b+out.bonusFA>out.allow;
-  return out; }
+  out.base=b; out.orig=o; out.bonusFA=b*out.capped; out.totalFA=Math.min(b+out.bonusFA,out.allow); out.cut=b+out.bonusFA>out.allow; return out; }
 
+// ── 畫面 ──
 function render(){
-  const cfg=ITEMS[R], c=calc();
-  $('#main').innerHTML=cfg.groups.map(g=>{ const gs=groupSum(g); const cap=R==='ur'?(g.level==='central'?cfg.capCentral:cfg.capLocal):(g.level==='time'?cfg.capTime:null);
-    return `<h2 class="g1">${esc(g.label)}<span class="sum">${pct(gs)}${cap?' / 上限 '+pct(cap):''}</span><span class="c">${g.items.length} 項</span></h2>`+g.items.map(it=>card(it)).join(''); }).join('');
-  // gauge
-  $('#gTot').innerHTML=`${pct(c.capped)}<small>基準容積 · ${Math.round(c.bonusFA).toLocaleString()} ㎡ ≈ ${Math.round(c.bonusFA*.3025).toLocaleString()} 坪</small>`;
-  $('#gCap').innerHTML=R==='ur'?`中央 <b>${pct(c.central)}</b>／50% · 地方 <b>${pct(c.local)}</b>／20% · 允建上限 <b>${Math.round(c.allow).toLocaleString()} ㎡</b>（${c.rules[c.ruleIdx][0]}）`:`A＋B <b>${pct(c.ab)}</b>／30% · 時程規模 <b>${pct(c.time)}</b>／10% · 允建上限 <b>${Math.round(c.allow).toLocaleString()} ㎡</b>`;
-  $('#gWarn').textContent=c.raw>c.capped+1e-9?`已選 ${pct(c.raw)}，超過上限 ${pct(c.raw-c.capped)} 無效`:c.cut?`獎勵後總容積超過允建上限，會被砍到 ${Math.round(c.allow).toLocaleString()} ㎡`:'';
-  const w=Math.min(c.raw/ (c.cap*1.25),1)*100; $('#gFill').style.width=w+'%'; $('#gFill').className='fill'+(c.raw>c.cap+1e-9?' over':''); $('#gTick').style.left=(c.cap/(c.cap*1.25)*100)+'%'; $('#gTick').dataset.l='上限 '+pct(c.cap);
-  renderSide(c);
-}
-function card(it){ const v=SEL[R][S][it.id]; const val=itemVal(it); const on=val>0;
-  let ctl='';
-  if(it.type==='pick') ctl=`<select data-it="${it.id}">${it.opts.map((o,i)=>`<option value="${i}"${(+v||0)===i?' selected':''}>${esc(o[0])}</option>`).join('')}</select>`;
-  if(it.type==='num') ctl=`<input class="n" data-it="${it.id}" inputmode="decimal" value="${esc(v||'')}" placeholder="0"><span class="unit">${esc(it.unit)}</span>`;
-  if(it.type==='count') ctl=`<input class="n" data-it="${it.id}" inputmode="numeric" value="${esc(v||'')}" placeholder="0" max="${it.max}"><span class="unit">項／棟（最多 ${it.max}）</span>`;
-  return `<div class="card${on?' on':''}"><div class="hd"><span class="art" data-art="${it.id}" title="看法條">${esc(it.art)}</span><span class="nm">${esc(it.nm)}</span>${it.excl?'<span class="tag">同條不得累計</span>':''}</div>
-    <div class="plain">${esc(it.plain)}</div><div class="ctl">${ctl}</div>${it.note?`<div class="note">${esc(it.note)}</div>`:''}
-    <div class="pct">${on?pct(val):'—'}<small>${on?Math.round(val*baseFA()).toLocaleString()+' ㎡':'未選'}</small></div></div>`; }
-
-function renderSide(c){ const b=baseFA(), o=origFA();
-  $('#side').innerHTML=`<div class="box"><h3>基地（案件中心帶入）<span class="c">${CASE.zones.reduce((a,z)=>a+z.parcels,0)} 筆地號</span></h3>
-    ${CASE.zones.map(z=>`<div class="zone"><div class="z">${esc(z.z)}<small>容積 ${z.far}% · 建蔽 ${z.bcr}%</small></div>
-      <div class="kv"><span>基地面積</span><b>${z.area_m2.toLocaleString()} ㎡</b></div>
-      <div class="kv"><span>基準容積</span><b>${Math.round(z.area_m2*z.far/100).toLocaleString()} ㎡</b></div>
-      <div class="kv"><span>原建築容積 <span class="tag">合法建物</span></span><b>${Math.round(z.area_m2*z.orig_far/100).toLocaleString()} ㎡</b></div></div>`).join('')}
-    <div class="kv tot"><span>基準容積合計</span><b>${Math.round(b).toLocaleString()} ㎡</b></div><div class="kv"><span>原容積合計</span><b>${Math.round(o).toLocaleString()} ㎡</b></div></div>
+  const c=calc(); const gs=groupsOf();
+  $('#main').innerHTML=gs.length?gs.map(g=>{ const s=c.groups[g.label]; const cap=R==='ur'?(g.level==='central'?CAPS.ur.central:CAPS.ur.local):(g.level==='time'?CAPS.dw.time:null);
+    return `<h2 class="g1">${esc(g.label)}<span class="sum">${pct(s)}${cap?' / 上限 '+pct(cap):''}</span><span class="c">${g.items.length} 項</span></h2>`+g.items.map(card).join(''); }).join(''):`<div class="empty">沒有 ${R==='ur'?'都更':'危老'} 的獎勵項目（${esc(CITY)}）</div>`;
+  $('#gTot').innerHTML=`${pct(c.capped)}<small>基準容積 · ${fmt(c.bonusFA)} ㎡ ≈ ${fmt(c.bonusFA*.3025)} 坪</small>`;
+  $('#gCap').innerHTML=R==='ur'?`中央 <b>${pct(c.central)}</b>／50% · 地方 <b>${pct(c.local)}</b>／20% · 允建上限 <b>${fmt(c.allow)} ㎡</b>（${c.rules[c.ruleIdx][0]}）`:`A＋B <b>${pct(c.ab)}</b>／30% · 時程規模 <b>${pct(c.time)}</b>／10% · 允建上限 <b>${fmt(c.allow)} ㎡</b>`;
+  $('#gWarn').textContent=c.raw>c.capped+1e-9?`已選 ${pct(c.raw)}，超過上限 ${pct(c.raw-c.capped)} 無效`:c.cut?`獎勵後總容積超過允建上限，會被砍到 ${fmt(c.allow)} ㎡`:'';
+  $('#gFill').style.width=(Math.min(c.raw/(c.cap*1.25),1)*100)+'%'; $('#gFill').className='fill'+(c.raw>c.cap+1e-9?' over':''); $('#gTick').style.left=(c.cap/(c.cap*1.25)*100)+'%'; $('#gTick').dataset.l='上限 '+pct(c.cap);
+  renderSide(c); $('#fS').textContent=CASE?(PLAN.id?`方案「${PLAN.name}」· 改動後 3 秒自動存雲端`:'新方案尚未存雲端'):'快速試算不存檔'; }
+function card(it){ const v=PLAN.picks[it.code]; const val=itemVal(it); const on=val>0; let ctl='';
+  if(it.kind==='pick') ctl=`<select data-it="${it.code}">${(it.opts||[]).map((o,i)=>`<option value="${i}"${(+v||0)===i?' selected':''}>${esc(o[0])}</option>`).join('')}</select>`;
+  else if(it.kind==='num') ctl=`<input class="n" data-it="${it.code}" inputmode="decimal" value="${esc(v||'')}" placeholder="0"><span class="unit">${esc(it.unit||'㎡')} × ${it.rate}</span>`;
+  else if(it.kind==='count') ctl=`<input class="n" data-it="${it.code}" inputmode="numeric" value="${esc(v||'')}" placeholder="0"><span class="unit">項／棟（最多 ${it.max_n}）</span>`;
+  else if(it.kind==='cash') ctl=`<input class="n wide" data-it="${it.code}" inputmode="decimal" value="${esc(v||'')}" placeholder="0"><span class="unit">${esc(it.unit)}（公告現值總額 ${fmt(avTotal())} 元）</span>`;
+  else if(it.kind==='pct') ctl=`<input class="n" data-it="${it.code}" inputmode="decimal" value="${esc(v||'')}" placeholder="0"><span class="unit">% 基準容積（預估）</span>`;
+  return `<div class="card${on?' on':''}"><div class="hd"><span class="art" data-art="${it.code}" title="看法條">${esc(it.article||'')}</span><span class="nm">${esc(it.name)}</span>${it.excl?'<span class="tag">同條不得累計</span>':''}</div>
+    <div class="plain">${esc(it.plain||'')}</div><div class="ctl">${ctl}</div>${it.note?`<div class="note">${esc(it.note)}</div>`:''}
+    <div class="pct">${on?pct(val):'—'}<small>${on?fmt(val*baseFA())+' ㎡':'未選'}</small></div></div>`; }
+function renderSide(c){ const zs=zones();
+  $('#side').innerHTML=`<div class="box"><h3>基地（案件中心帶入）<span class="c">${zs.reduce((a,z)=>a+z.parcels,0)} 筆地號</span></h3>
+    ${zs.map(z=>`<div class="zone"><div class="z">${esc(z.z)}<small>容積 ${z.far}% · 建蔽 ${z.bcr||'?'}%</small></div>
+      <div class="kv"><span>基地面積${z.pub?`（含公有 ${fmt(z.pub)}）`:''}</span><b>${fmt(z.area)} ㎡</b></div>
+      ${z.pub?`<div class="ov"><label class="chk${z.excludePub?' on':''}" data-ov="excludePub" data-z="${esc(z.z)}"><i></i>基準容積不含公有地</label></div>`:''}
+      <div class="kv"><span>基準容積</span><b>${fmt((z.area-(z.excludePub?z.pub:0))*z.far/100)} ㎡</b></div>
+      <div class="kv"><span>原建築容積 <span class="tag">合法建物樓地板</span></span><b>${fmt(z.orig)} ㎡</b></div>
+      <div class="ov">覆寫：容積率 <input data-ov="far" data-z="${esc(z.z)}" value="${PLAN.overrides?.[z.z]?.far??''}" placeholder="${z.far}"> 原容積 <input data-ov="orig" data-z="${esc(z.z)}" value="${PLAN.overrides?.[z.z]?.orig??''}" placeholder="${fmt(z.orig)}"></div></div>`).join('')}
+    <div class="kv tot"><span>基準容積合計</span><b>${fmt(c.base)} ㎡</b></div><div class="kv"><span>原容積合計</span><b>${fmt(c.orig)} ㎡</b></div></div>
   <div class="box"><h3>允建總容積上限<span class="c">${R==='ur'?'都更 4 取法':'危老 2 取法'}</span></h3>
-    <div class="hint">Excel 下方那 17 欄做的事。預設取最有利的一種，也可以手動指定。</div>
-    <div class="pick"><div class="o${CAPRULE==='auto'?' on':''}" data-rule="auto">自動取最大<b>${c.rules[c.ruleIdx][0]}</b></div>${c.rules.map((r,i)=>`<div class="o${CAPRULE==String(i)?' on':''}" data-rule="${i}">${esc(r[0])}<b>${Math.round(r[1]).toLocaleString()} ㎡</b></div>`).join('')}</div></div>
+    <div class="hint">預設取最有利的一種，也可以手動指定。</div>
+    <div class="pick"><div class="o${PLAN.cap_rule==='auto'?' on':''}" data-rule="auto">自動取最大<b>${c.rules[c.ruleIdx][0]}</b></div>${c.rules.map((r,i)=>`<div class="o${PLAN.cap_rule==String(i)?' on':''}" data-rule="${i}">${esc(r[0])}<b>${fmt(r[1])} ㎡</b></div>`).join('')}</div></div>
   <div class="box"><h3>結果</h3>
-    <div class="kv"><span>基準容積</span><b>${Math.round(b).toLocaleString()} ㎡</b></div>
-    <div class="kv"><span>＋ 獎勵容積（${pct(c.capped)}）</span><b>${Math.round(c.bonusFA).toLocaleString()} ㎡</b></div>
-    <div class="kv"><span>允建上限</span><b>${Math.round(c.allow).toLocaleString()} ㎡</b></div>
-    <div class="kv tot hl"><span>允建總容積</span><b>${Math.round(c.totalFA).toLocaleString()} ㎡</b></div>
-    <div class="kv hl"><span>換算</span><b>${Math.round(c.totalFA*.3025).toLocaleString()} 坪 · ${(c.totalFA/b).toFixed(2)} 倍基準</b></div>
-    <div class="hint" style="margin-top:8px">這個數字接到成本分析的「允建容積 → 銷售面積」。</div></div>`;
-  document.querySelectorAll('[data-rule]').forEach(el=>el.addEventListener('click',()=>{ CAPRULE=el.dataset.rule; render(); }));
-}
+    <div class="kv"><span>基準容積</span><b>${fmt(c.base)} ㎡</b></div>
+    <div class="kv"><span>＋ 獎勵容積（${pct(c.capped)}）</span><b>${fmt(c.bonusFA)} ㎡</b></div>
+    <div class="kv"><span>允建上限</span><b>${fmt(c.allow)} ㎡</b></div>
+    <div class="kv tot hl"><span>允建總容積</span><b>${fmt(c.totalFA)} ㎡</b></div>
+    <div class="kv hl"><span>換算</span><b>${fmt(c.totalFA*.3025)} 坪 · ${c.base?(c.totalFA/c.base).toFixed(2):'—'} 倍基準</b></div></div>`;
+  document.querySelectorAll('[data-rule]').forEach(el=>el.addEventListener('click',()=>{ PLAN.cap_rule=el.dataset.rule; touch(); }));
+  document.querySelectorAll('input[data-ov]').forEach(el=>el.addEventListener('change',()=>{ const o=(PLAN.overrides[el.dataset.z]??={}); const v=el.value.trim(); if(v==='') delete o[el.dataset.ov]; else o[el.dataset.ov]=+v; touch(); }));
+  document.querySelectorAll('label[data-ov]').forEach(el=>el.addEventListener('click',()=>{ const o=(PLAN.overrides[el.dataset.z]??={}); o.excludePub=!o.excludePub; touch(); })); }
+function touch(){ DIRTY=true; render(); if(CASE){ clearTimeout(AUTOS); AUTOS=setTimeout(()=>savePlan(true),3000); } }
 
-document.addEventListener('change',e=>{ const id=e.target.dataset.it; if(!id) return; SEL[R][S][id]=e.target.value; render(); });
-document.addEventListener('input',e=>{ const id=e.target.dataset.it; if(!id||e.target.tagName!=='INPUT') return; SEL[R][S][id]=e.target.value; render(); });
-$('#regime').addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return; R=b.dataset.r; [...$('#regime').children].forEach(x=>x.classList.toggle('on',x===b)); render(); });
-$('#scheme').addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return; S=b.dataset.s; [...$('#scheme').children].forEach(x=>x.classList.toggle('on',x===b)); render(); });
-document.addEventListener('click',e=>{ const a=e.target.closest('[data-art]'); if(!a) return; const it=ITEMS[R].groups.flatMap(g=>g.items).find(x=>x.id===a.dataset.art);
-  $('#dArt').textContent=it.art; $('#dTitle').textContent=it.nm; $('#dLaw').textContent=it.law+' · 條文全文來自法規庫 law_articles（原型先內嵌）'; $('#dText').innerHTML=esc(it.text).replace(/\n/g,'<br>');
-  $('#dMine').textContent='（這裡顯示你在法規庫寫的「我的註記」，兩邊同一筆）'; $('#dGo').href='law.html#'+encodeURIComponent(it.law); $('#drawer').classList.add('open'); $('#scrim').classList.add('on'); });
+document.addEventListener('change',e=>{ const id=e.target.dataset.it; if(!id) return; PLAN.picks[id]=e.target.value; touch(); });
+let INP=null; document.addEventListener('input',e=>{ const id=e.target.dataset.it; if(!id||e.target.tagName!=='INPUT') return; PLAN.picks[id]=e.target.value; DIRTY=true; const c=calc(); $('#gTot').innerHTML=`${pct(c.capped)}<small>基準容積 · ${fmt(c.bonusFA)} ㎡ ≈ ${fmt(c.bonusFA*.3025)} 坪</small>`; clearTimeout(INP); INP=setTimeout(()=>{ const a=document.activeElement; const sel=a?.dataset?.it; touch(); if(sel){ const el=document.querySelector(`[data-it="${sel}"]`); el?.focus(); try{ el.setSelectionRange(el.value.length,el.value.length); }catch(_){} } },700); });
+$('#regime').addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return; R=b.dataset.r; PLAN.regime=R; [...$('#regime').children].forEach(x=>x.classList.toggle('on',x===b)); touch(); });
+
+// ── 方案 ──
+function renderPlanSel(){ const sel=$('#planSel'); sel.innerHTML=PLANS.map(p=>`<option value="${p.id}"${PLAN?.id===p.id?' selected':''}>${esc(p.name)}（${p.regime==='dw'?'危老':'都更'}）</option>`).join('')+(PLAN&&!PLAN.id?`<option value="new" selected>${esc(PLAN.name)}（未存）</option>`:''); $('#planName').value=PLAN?.name||''; sel.style.display=CASE?'':'none'; $('#planNew').style.display=$('#planSave').style.display=$('#planDel').style.display=CASE?'':'none'; }
+$('#planSel').addEventListener('change',e=>{ const p=PLANS.find(x=>String(x.id)===e.target.value); if(p){ PLAN=p; R=p.regime; [...$('#regime').children].forEach(x=>x.classList.toggle('on',x.dataset.r===R)); renderPlanSel(); render(); } });
+$('#planNew').addEventListener('click',()=>{ PLAN=newPlan(`方案${['一','二','三','四','五','六'][PLANS.length]||PLANS.length+1}`); renderPlanSel(); render(); });
+$('#planName').addEventListener('change',e=>{ PLAN.name=e.target.value.trim()||PLAN.name; touch(); });
+$('#planSave').addEventListener('click',()=>savePlan(false));
+async function savePlan(quiet){ if(!CASE) return; const st=$('#planSt'); st.className='st'; st.textContent='存雲端…'; const c=calc();
+  const row={ur_project_id:urId,name:PLAN.name,regime:R,city:CITY,picks:PLAN.picks,overrides:PLAN.overrides,cap_rule:PLAN.cap_rule,result:{pct:c.capped,base:c.base,bonus:c.bonusFA,allow:c.allow,total:c.totalFA,rule:c.rules[c.ruleIdx][0]},items_snapshot:liveItems().map(i=>({code:i.code,name:i.name,opts:i.opts,rate:i.rate,ladder:i.ladder,per:i.per,article:i.article}))};
+  const q=PLAN.id?sb.from('far_plans').update(row).eq('id',PLAN.id).select().single():sb.from('far_plans').insert(row).select().single(); const {data,error}=await q;
+  if(error){ st.className='st err'; st.textContent='存檔失敗：'+error.message; return; }
+  const i=PLANS.findIndex(p=>p.id===data.id); if(i>=0) PLANS[i]=data; else PLANS.unshift(data); PLAN=data; DIRTY=false; renderPlanSel(); st.className='st ok'; st.textContent=(quiet?'已自動存 ':'已存 ')+new Date().toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'}); render(); }
+$('#planDel').addEventListener('click',async()=>{ if(!PLAN.id){ return; } if(!confirm(`刪除方案「${PLAN.name}」？`)) return; const {error}=await sb.from('far_plans').update({deleted_at:new Date().toISOString()}).eq('id',PLAN.id); if(error){ alert(error.message); return; } PLANS=PLANS.filter(p=>p.id!==PLAN.id); PLAN=PLANS[0]||newPlan('方案一'); renderPlanSel(); render(); });
+window.addEventListener('beforeunload',()=>{ if(AUTOS){ clearTimeout(AUTOS); try{ savePlan(true); }catch(e){} } });
+
+// ── 法條側欄：從法規庫抓條文＋我的註記 ──
+document.addEventListener('click',async e=>{ const a=e.target.closest('[data-art]'); if(!a) return; const it=ITEMS.find(x=>x.code===a.dataset.art); if(!it) return;
+  $('#dArt').textContent=it.article||''; $('#dTitle').textContent=it.name; $('#dLaw').textContent=it.law_name||''; $('#dText').innerHTML=esc(it.law_text||'（無摘錄）').replace(/\n/g,'<br>'); $('#dMine').textContent='…'; $('#dGo').href='law.html?q='+encodeURIComponent(it.law_name||'');
+  $('#drawer').classList.add('open'); $('#scrim').classList.add('on');
+  const no=(it.article||'').match(/§\s*(\d+)/)?.[1]; if(!no||!it.law_name){ $('#dMine').textContent='（這條沒有對到法規庫條號）'; return; }
+  const {data}=await sb.from('law_articles').select('article_id,content,my_note,law_name').ilike('law_name','%'+it.law_name.replace(/^臺北市|^新北市/,'')+'%').eq('article_no',+no).limit(3);
+  const row=(data||[]).find(r=>r.law_name===it.law_name)||(data||[])[0];
+  if(row){ $('#dText').innerHTML=esc(row.content).replace(/\n/g,'<br>'); $('#dLaw').textContent=row.law_name+' · 法規庫現行條文'; $('#dMine').textContent=row.my_note||'（還沒寫註記；到法規庫這條寫，兩邊同步）'; $('#dGo').href='law.html?a='+encodeURIComponent(row.article_id); }
+  else $('#dMine').textContent='（法規庫沒有這部法規，先用試算表摘錄）'; });
 const closeD=()=>{ $('#drawer').classList.remove('open'); $('#scrim').classList.remove('on'); }; $('#dX').addEventListener('click',closeD); $('#scrim').addEventListener('click',closeD);
-render();
+boot();
 </script>
 </body>
 </html>
