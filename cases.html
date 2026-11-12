@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#0e1012">
-<title>ATLAS 案件中心 v3.14</title>
+<title>ATLAS 案件中心 v3.15</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Space+Mono:wght@400;700&display=swap');
 :root{--bg:#0e1012;--sb:#141618;--panel:#1a1d21;--card:#1f2328;--border:#2a2f36;--border2:#353b44;--gold:#d4a843;--gold2:#f0cc7a;--teal:#3aaa8c;--teal2:#4dc9a8;--red:#e06c6c;--indigo:#7b8cff;--amber:#e8b04a;--text:#dde2ee;--sub:#8a94a6;--muted:#4a5566}
@@ -87,6 +87,7 @@ a{color:var(--teal2)}
 .grid.g5{grid-template-columns:repeat(5,minmax(0,1fr));max-width:860px;gap:2px 10px}.grid.g5 input[type=date]{padding-left:6px;padding-right:4px;font-size:12px}@media (max-width:900px){.grid.g5{grid-template-columns:1fr 1fr 1fr}}
 .pdfbox{background:var(--panel);border:1px dashed var(--border2);border-radius:10px;padding:12px 14px;max-width:860px}.pdfh{font-weight:500;margin-bottom:6px}.pdfh .sub{font-weight:400;font-size:12px;color:var(--sub);margin-left:8px}.pdfbox input[type=file]{font-size:12px}
 .tbcard{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin-top:12px;max-width:1100px}.tbh{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap;margin-bottom:6px}.tbh b{color:var(--teal2)}.tbh .sub{font-size:12px;color:var(--sub)}.tbcard tr.dim{opacity:.45}.tbcard .pt td,.tbcard .pt th{font-size:12px;padding:4px 6px}
+#f-owner_key.bad{border-color:var(--red)!important}#f-owner_key.masked{border-color:var(--teal)!important}
 .dmask.bad{border-color:var(--red)!important}
 .grid .gh{grid-column:1/-1;font-size:11px;letter-spacing:.14em;color:var(--gold);margin:10px 0 4px;padding-bottom:4px;border-bottom:1px solid var(--border);display:flex;gap:8px;align-items:baseline}.grid .gh small{font-size:10.5px;color:var(--muted);letter-spacing:.04em}
 .grid.g4 .field{margin-bottom:8px}.grid.g4 .field label{font-size:11px;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.grid.g4 .field input,.grid.g4 .field select{padding:7px 9px}
@@ -451,6 +452,11 @@ async function tbImport(files){
     suggestGroups(rows); outs.push(tbPreview(f.name,h,rows)); }
   msg.textContent=''; $('#tbOut').innerHTML=outs.join(''); tbBind(); }
 const normKey=k=>(k||'').replace(/[*＊]/g,'');
+// 身分證／居留證完整號碼 → 遮罩（F120*****5，跟二類謄本同格式）＋ SHA-256；完整號碼不離開瀏覽器
+const TWID_OK=id=>{ const m=id.match(/^([A-Z])([12])(\d{8})$/); if(!m) return false; const L='ABCDEFGHJKLMNPQRSTUVXYWZIO'.indexOf(m[1])+10; const d=[Math.floor(L/10),L%10,+m[2],...m[3].split('').map(Number)]; const w=[1,9,8,7,6,5,4,3,2,1,1]; return d.reduce((a,x,i)=>a+x*w[i],0)%10===0; };
+const maskId=id=>id.slice(0,4)+'*****'+id.slice(9);
+async function sha256(t){ const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(t)); return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join(''); }
+let OWNER_HASH=null; // 表單暫存：這次輸入完整號碼算出的雜湊
 const isMasked=n=>/[＊*]/.test(n||''); // 姓名還是「陳＊＊」＝還沒確認，樹狀顯示識別碼方便分配
 function tbPreview(fname,h,rows){
   const cands=DATA.pcl.filter(p=>p.lot===h.lot&&(!h.section||p.section.includes(h.section.replace(/^.*?區/,''))||h.section.includes(p.section.replace(/^.*?區/,''))));
@@ -467,8 +473,8 @@ function tbBind(){ document.querySelectorAll('.tbcard').forEach(card=>{
   const rows=JSON.parse(card.dataset.rows), h=JSON.parse(card.dataset.h); const sel=card.querySelector('.tbPcl');
   const refresh=()=>{ const pid=+sel.value; const have=DATA.po.filter(o=>o.parcel_id===pid); let n=0,d=0;
     card.querySelectorAll('tr[data-i]').forEach(tr=>{ const r=rows[+tr.dataset.i]; const dup=have.find(o=>(r.owner_key&&o.owner_key&&normKey(o.owner_key)===normKey(r.owner_key))); r.dup=!!dup;
-      const k=normKey(r.owner_key); const byCt=!dup&&k?DATA.ct.find(c=>c.owner_key&&normKey(c.owner_key)===k):null; const same=!dup&&!byCt&&k?DATA.po.find(o=>o.contact_id&&o.owner_key&&normKey(o.owner_key)===k):null; r.contact_id=byCt?.id||same?.contact_id||null; const ct=r.contact_id?DATA.ct.find(c=>c.id===r.contact_id):null;
-      tr.querySelector('.tbSt').textContent=dup?'已有，略過':ct?'→ '+ct.name+(isMasked(ct.name)?'':' ✓已確認'):'新增'; tr.classList.toggle('dim',!!dup); dup?d++:n++; });
+      const k=normKey(r.owner_key); const cands=!dup&&k?DATA.ct.filter(c=>c.owner_key&&normKey(c.owner_key)===k):[]; const byCt=cands.length===1?cands[0]:null; r.ambig=cands.length>1?cands.map(c=>c.name).join('／'):null; const same=!dup&&!byCt&&k?DATA.po.find(o=>o.contact_id&&o.owner_key&&normKey(o.owner_key)===k):null; r.contact_id=byCt?.id||same?.contact_id||null; const ct=r.contact_id?DATA.ct.find(c=>c.id===r.contact_id):null;
+      tr.querySelector('.tbSt').textContent=dup?'已有，略過':r.ambig?'⚠ 同遮罩多人：'+r.ambig+'（先新增，請手動合併）':ct?'→ '+ct.name+(isMasked(ct.name)?'':' ✓已確認'):'新增'; tr.classList.toggle('dim',!!dup); dup?d++:n++; });
     const sum=rows.filter(r=>!r.dup).reduce((a,r)=>a+r.share_num/r.share_den,0)+have.reduce((a,o)=>a+o.share_num/o.share_den,0);
     card.querySelector('.tbRes').textContent=`新增 ${n}、略過 ${d}；寫入後持分合計 ${(sum*100).toFixed(2)}%${Math.abs(sum-1)>0.0005?'（≠100%，核對）':' ✓'}`; };
   sel.addEventListener('change',refresh); refresh();
@@ -492,6 +498,9 @@ function tbBind(){ document.querySelectorAll('.tbcard').forEach(card=>{
     card.querySelector('.tbRes').textContent=`完成：寫入 ${ins.length} 筆持分，${p.section} ${p.lot} 謄本 ${keys.size} 人`; card.querySelector('.tbWrite').disabled=true; renderList(); });
 }); }
 $('#detail').addEventListener('change',e=>{ if(e.target.id==='tbFile'&&e.target.files.length) tbImport([...e.target.files]); });
+$('#detail').addEventListener('change',async e=>{ if(e.target.id!=='f-owner_key') return; const k=e.target.value.replace(/＊/g,'*').trim().toUpperCase();
+  if(/^[A-Z][12]\d{8}$/.test(k)){ if(!TWID_OK(k)){ e.target.classList.add('bad'); e.target.title='檢查碼不對，可能打錯'; return; } OWNER_HASH=await sha256(k); e.target.value=maskId(k); e.target.classList.remove('bad'); e.target.title='已轉成遮罩，完整號碼不會存'; e.target.classList.add('masked'); setTimeout(()=>e.target.classList.remove('masked'),1500); }
+  else { OWNER_HASH=null; e.target.classList.remove('bad'); } });
 const pclsAllSorted=()=>[...DATA.pcl].sort((a,b)=>(DATA.ur.find(u=>u.id===a.ur_project_id)?.name||'').localeCompare(DATA.ur.find(u=>u.id===b.ur_project_id)?.name||'','zh-Hant')||a.lot.localeCompare(b.lot));
 $('#btnPasteCt').addEventListener('click',showPastePanel);
 // 分區容積率資料庫面板（滾動更新：改了就新增一列，舊列填失效日）
@@ -523,7 +532,7 @@ const chipVals=id=>[...document.querySelectorAll(`#f-${id} .chip.on`)].map(c=>c.
 const v=id=>{ const el=$('#f-'+id); return el?el.value.trim():''; };
 const num=id=>{ const s=v(id); return s===''?null:Number(s); };
 
-function showForm(){
+function showForm(){ OWNER_HASH=null;
   const r=CUR||{}, isNew=!CUR; let h='';
   if(TAB==='ur') h=`<div class="d-head"><h2>${isNew?'新增都更案件':esc(r.name)}</h2>${isNew?'':`<span class="id">${r.code?esc(r.code)+' · ':''}更新 ${fmtD(r.updated_at)}</span>`}</div><div class="grid g4">
     <div class="gh">基本</div>
@@ -549,7 +558,7 @@ function showForm(){
     ${chips('categories','類別（可複選）',JC_CAT,r.categories)}</div><div class="grid g4 g5" style="margin-top:4px">
     ${fld('applicant','起造人',r.applicant)}${fld('architect','設計人',r.architect)}${fld('supervisor','監造人',r.supervisor)}${fld('contractor','承造人',r.contractor)}${fld('track_date','追蹤／執行日',fmtD(r.track_date),'date')}</div>`;
   if(TAB==='ct') h=`<div class="d-head"><h2>${isNew?'新增聯絡人':esc(r.name)}</h2></div><div class="grid">
-    ${fld('name','姓名<b>＊</b>',r.name)}${fld('owner_key','識別碼（二類謄本遮罩，例 F120*****5）',r.owner_key)}
+    ${fld('name','姓名<b>＊</b>',r.name)}${fld('owner_key','識別碼（打完整號碼會自動轉成 F120*****5，只存遮罩＋雜湊）',r.owner_key)}
     ${sel('kind','類型',CT_KIND,r.kind)}<div class="field"><label>群組（家族／戶／公司）</label><input id="f-group_name" list="dl-group" value="${esc(r.group_name??'')}" placeholder="例：陳家三兄弟、41號公寓"><datalist id="dl-group">${[...new Set(DATA.ct.map(c=>c.group_name).filter(Boolean))].map(g=>`<option value="${esc(g)}">`).join('')}</datalist></div>
     ${fld('relation','關係／身分',r.relation)}
     ${fld('company','公司',r.company)}${fld('title','職稱',r.title)}
@@ -571,7 +580,7 @@ function showForm(){
 function payload(){
   if(TAB==='ur') return {name:v('name'),code:v('code')||null,kind:v('kind')||null,stage:v('stage')||null,address:v('address')||null,site_area_m2:num('site_area_m2'),consent_pct:num('consent_pct'),owners_official:num('owners_official'),land_owners_times:num('land_owners_times'),bldg_owners_official:num('bldg_owners_official'),consent_threshold:num('consent_threshold'),land_count:num('land_count'),land_private_m2:num('land_private_m2'),land_public_m2:num('land_public_m2'),bldg_count:num('bldg_count'),bldg_floor_m2:num('bldg_floor_m2'),bldg_private_m2:num('bldg_private_m2'),unreg_bldg_count:num('unreg_bldg_count'),unreg_bldg_notes:v('unreg_bldg_notes')||null,legal_flags:chipVals('legal_flags'),bonus_est:v('bonus_est')||null,checklist:v('checklist')||null,notes:v('notes')||null};
   if(TAB==='jc') return {name:v('name'),short_name:v('short_name')||null,client_kind:v('client_kind')||null,client_name:v('client_name')||null,categories:chipVals('categories'),permit_no:v('permit_no')||null,applicant:v('applicant')||null,architect:v('architect')||null,supervisor:v('supervisor')||null,contractor:v('contractor')||null,summary:v('summary')||null,track_date:v('track_date')||null};
-  return {name:v('name'),owner_key:(()=>{ const k=v('owner_key').replace(/＊/g,'*').trim(); if(/^[A-Za-z][12]\d{8}$/.test(k)){ alert('識別碼只存遮罩版（例 F120*****5），不存完整統一編號'); return null; } return k||null; })(),kind:v('kind')||null,group_name:v('group_name')||null,relation:v('relation')||null,company:v('company')||null,title:v('title')||null,phone:v('phone')||null,line_id:v('line_id')||null,background:v('background')||null,next_action:v('next_action')||null,next_date:v('next_date')||null};
+  return {name:v('name'),owner_key:(()=>{ const k=v('owner_key').replace(/＊/g,'*').trim().toUpperCase(); if(/^[A-Z][12]\d{8}$/.test(k)) return maskId(k); return k||null; })(),owner_hash:OWNER_HASH||CUR?.owner_hash||null,kind:v('kind')||null,group_name:v('group_name')||null,relation:v('relation')||null,company:v('company')||null,title:v('title')||null,phone:v('phone')||null,line_id:v('line_id')||null,background:v('background')||null,next_action:v('next_action')||null,next_date:v('next_date')||null};
 }
 function scheduleSave(){ clearTimeout(AUTOSAVE); const st=$('#st'); if(st){ st.className='st'; st.textContent='未儲存…'; } AUTOSAVE=setTimeout(()=>save(true),3000); }
 async function save(quiet=false){
