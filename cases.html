@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#0e1012">
-<title>ATLAS 案件中心 v3.16</title>
+<title>ATLAS 案件中心 v3.17</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Space+Mono:wght@400;700&display=swap');
 :root{--bg:#0e1012;--sb:#141618;--panel:#1a1d21;--card:#1f2328;--border:#2a2f36;--border2:#353b44;--gold:#d4a843;--gold2:#f0cc7a;--teal:#3aaa8c;--teal2:#4dc9a8;--red:#e06c6c;--indigo:#7b8cff;--amber:#e8b04a;--text:#dde2ee;--sub:#8a94a6;--muted:#4a5566}
@@ -558,14 +558,14 @@ function showForm(){ OWNER_HASH=null;
     ${fld('permit_no','建造執照',r.permit_no)}${fld('summary','工程概要（地下2層、地上7層、2棟1幢）',r.summary)}
     ${chips('categories','類別（可複選）',JC_CAT,r.categories)}</div><div class="grid g4 g5" style="margin-top:4px">
     ${fld('applicant','起造人',r.applicant)}${fld('architect','設計人',r.architect)}${fld('supervisor','監造人',r.supervisor)}${fld('contractor','承造人',r.contractor)}${fld('track_date','追蹤／執行日',fmtD(r.track_date),'date')}</div>`;
-  if(TAB==='ct') h=`<div class="d-head"><h2>${isNew?'新增聯絡人':esc(r.name)}</h2></div><div class="grid">
-    ${fld('name','姓名<b>＊</b>',r.name)}${fld('owner_key','識別碼（打完整號碼會自動轉成 F120*****5，只存遮罩＋雜湊）',r.owner_key)}
-    ${sel('kind','類型',CT_KIND,r.kind)}<div class="field"><label>群組（家族／戶／公司）</label><input id="f-group_name" list="dl-group" value="${esc(r.group_name??'')}" placeholder="例：陳家三兄弟、41號公寓"><datalist id="dl-group">${[...new Set(DATA.ct.map(c=>c.group_name).filter(Boolean))].map(g=>`<option value="${esc(g)}">`).join('')}</datalist></div>
-    ${fld('relation','關係／身分',r.relation)}
-    ${fld('company','公司',r.company)}${fld('title','職稱',r.title)}
-    ${fld('phone','電話',r.phone,'tel')}${fld('line_id','LINE ID',r.line_id)}
-    ${txt('background','背景與備註',r.background)}
-    ${fld('next_action','下一步待辦',r.next_action)}${fld('next_date','待辦日期',fmtD(r.next_date),'date')}</div>`;
+  if(TAB==='ct') h=`<div class="d-head"><h2>${isNew?'新增聯絡人':esc(r.name)}</h2>${isNew?'':`<span class="id">${r.owner_key?esc(r.owner_key)+' · ':''}更新 ${fmtD(r.updated_at)}</span>`}</div><div class="grid g4">
+    <div class="gh">基本</div>
+    ${fld('name','姓名<b>＊</b>',r.name)}${fld('owner_key','識別碼／ID',r.owner_key)}${sel('kind','類型',CT_KIND,r.kind)}${fld('relation','關係／身分',r.relation)}
+    <div class="field"><label>群組（家族／戶／公司）</label><input id="f-group_name" list="dl-group" value="${esc(r.group_name??'')}" placeholder="例：陳家三兄弟、41號公寓"><datalist id="dl-group">${[...new Set(DATA.ct.map(c=>c.group_name).filter(Boolean))].map(g=>`<option value="${esc(g)}">`).join('')}</datalist></div>
+    ${fld('company','公司',r.company)}${fld('title','職稱',r.title)}<div></div>
+    <div class="gh">聯絡</div>
+    ${fld('phone','電話',r.phone,'tel')}${fld('line_id','LINE ID',r.line_id)}${fld('next_action','下一步待辦',r.next_action)}${fld('next_date','待辦日期',fmtD(r.next_date),'date')}
+    ${txt('background','背景與備註',r.background,'full')}</div>`;
   h+=`<div class="actions"><button class="btn pri" id="btnSave">${isNew?'建立':'儲存'}</button>${isNew?'':`<button class="btn danger sm" id="btnDel">刪除</button>`}<span class="st" id="st"></span>${isNew?'':'<span class="autosv">改動後 3 秒自動儲存</span>'}</div>`;
   if(!isNew) h+=relSections();
   $('#detail').innerHTML=h;
