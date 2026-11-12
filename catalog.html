@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ATLAS 原廠型錄 v0.1（原型）</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Space+Mono&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0e1012;--sb:#141618;--panel:#1a1d21;--card:#1f2328;--border:#2a2f36;--border2:#353b44;--gold:#d4a843;--gold2:#f0cc7a;--teal:#3aaa8c;--teal2:#4dc9a8;--red:#e06c6c;--indigo:#7b8cff;--amber:#e8b04a;--text:#dde2ee;--sub:#8a94a6;--muted:#4a5566}
+*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.6}
+.mono{font-family:'Space Mono',monospace}button,select,input{font-family:inherit;font-size:inherit}
+.top{position:sticky;top:0;z-index:20;background:var(--sb);border-bottom:1px solid var(--border);padding:10px 16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.top .brand{font-weight:700;letter-spacing:.18em;font-size:12px;color:var(--gold)}.top .brand small{color:var(--sub);letter-spacing:.04em;font-weight:400;margin-left:8px}
+.top select{padding:6px 9px;background:var(--bg);border:1px solid var(--border2);border-radius:8px;color:var(--text)}
+.seg{display:inline-flex;border:1px solid var(--border2);border-radius:8px;overflow:hidden}.seg button{padding:6px 12px;background:transparent;border:0;color:var(--sub);cursor:pointer}.seg button.on{background:var(--gold);color:#1a1200;font-weight:700}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 13px;border-radius:8px;border:1px solid var(--border2);background:var(--card);color:var(--text);cursor:pointer;font-size:13px}.btn.pri{background:var(--gold);border-color:var(--gold);color:#1a1200;font-weight:700}.btn.sm{padding:4px 9px;font-size:12px}
+.stats{display:flex;gap:18px;padding:12px 16px;flex-wrap:wrap;border-bottom:1px solid var(--border);background:var(--sb)}
+.stats .s{display:flex;flex-direction:column}.stats .s b{font-size:22px;font-weight:700}.stats .s span{font-size:11px;color:var(--sub)}
+.s.imp b{color:var(--teal2)}.s.fut b{color:var(--amber)}.s.no b{color:var(--sub)}.s.ltd b{color:var(--red)}
+.wrap{display:grid;grid-template-columns:1fr 380px;gap:16px;padding:16px;max-width:1400px;margin:0 auto}
+@media (max-width:900px){.wrap{grid-template-columns:1fr}}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.tile{background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden;cursor:pointer;border-top:3px solid var(--muted);transition:.15s}
+.tile:hover{border-color:var(--gold)}.tile.on{outline:2px solid var(--gold)}
+.tile.imp{border-top-color:var(--teal)}.tile.fut{border-top-color:var(--amber)}.tile.ltd{border-top-color:var(--red)}.tile.no{opacity:.75}
+.tile .sw{height:84px;background:linear-gradient(135deg,#2b2f36,#3a3f48);display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:11px}
+.tile .sw.has{background:#2a2e35 url('') center/cover}
+.tile .b{padding:7px 9px}.tile .en{font-size:12px;font-weight:500;letter-spacing:.02em}.tile .ch{font-size:12.5px;color:var(--teal2);min-height:18px}.tile .ch.none{color:var(--muted);font-size:11px}
+.tile .st{font-size:10px;margin-top:3px;display:flex;gap:4px;flex-wrap:wrap}.tag{font-size:10px;padding:0 6px;border-radius:5px;border:1px solid var(--border2);color:var(--sub)}
+.tag.imp{color:var(--teal2);border-color:var(--teal)}.tag.fut{color:var(--amber);border-color:var(--amber)}.tag.ltd{color:#ff8a8a;border-color:var(--red)}.tag.no{color:var(--sub)}
+.side{position:sticky;top:120px;align-self:start}
+.box{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:12px}
+.box h3{font-size:11px;letter-spacing:.14em;color:var(--gold);font-weight:600;margin-bottom:8px;display:flex;gap:8px;align-items:center}.box h3 .c{margin-left:auto;font-family:'Space Mono',monospace;font-size:10px;color:var(--muted)}
+.hd{font-size:18px;font-weight:700}.hd small{display:block;font-size:12px;color:var(--teal2);font-weight:400}
+.kv{display:flex;justify-content:space-between;font-size:12px;color:var(--sub);padding:2px 0}.kv b{font-weight:400;color:var(--text)}
+table.spec{width:100%;border-collapse:collapse;font-size:12px}.spec th{text-align:left;font-weight:500;color:var(--sub);font-size:11px;padding:4px 6px;border-bottom:1px solid var(--border2)}.spec td{padding:5px 6px;border-bottom:1px solid var(--border)}
+.spec tr.have td{color:var(--teal2)}.spec tr.have td:first-child::before{content:'✓ ';}.spec tr.nohave td{color:var(--sub)}.spec tr.nohave td:first-child::before{content:'○ ';color:var(--muted)}
+.spec td.code{font-family:'Space Mono',monospace;font-size:11px}
+.field{margin:6px 0}.field label{display:block;font-size:11px;color:var(--teal2);margin-bottom:3px}.field select,.field input,.field textarea{width:100%;padding:6px 9px;background:var(--bg);border:1px solid var(--border2);border-radius:7px;color:var(--text)}
+.file{border:1px dashed var(--border2);border-radius:8px;padding:10px;font-size:12px;color:var(--sub);text-align:center}
+.legend{display:flex;gap:14px;font-size:11px;color:var(--sub);flex-wrap:wrap;margin-bottom:10px}.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+.note{font-size:11px;color:var(--amber);margin-top:6px}
+.hint{font-size:12px;color:var(--sub)}
+</style>
+</head>
+<body>
+<div class="top">
+  <span class="brand">ATLAS · 原廠型錄<small>原型 v0.1 · 資料：Fiandre 官網 46 款 × 新睦豐網站 30 款（2026-11-12 比對）</small></span>
+  <select><option>Graniti Fiandre</option><option disabled>Florim（待爬）</option><option disabled>Fondovalle（待爬）</option><option disabled>Italgraniti（待爬）</option><option disabled>Cotto d'Este（待爬）</option></select>
+  <select><option>Marmi Maximum（薄板）</option><option disabled>其他系列（待爬）</option></select>
+  <div class="seg" id="flt"><button data-f="all" class="on">全部</button><button data-f="imp">已進口</button><button data-f="fut">期貨</button><button data-f="no">未進口</button><button data-f="ltd">限量／下架</button></div>
+</div>
+<div class="stats">
+  <div class="s"><b id="nAll">46</b><span>原廠現行款</span></div>
+  <div class="s imp"><b id="nImp">27</b><span>已進口（有自編品名）</span></div>
+  <div class="s fut"><b id="nFut">0</b><span>期貨（網站列、無自編品名）</span></div>
+  <div class="s no"><b id="nNo">19</b><span>未進口 ＝ 明年選品候選</span></div>
+  <div class="s ltd"><b id="nLtd">3</b><span>限量／原廠已下架（庫存出完就沒）</span></div>
+  <div class="s"><b>10</b><span>Fiorenza 原廠規格 → 我們進 2（150×300 自然面／亮面）</span></div>
+</div>
+<div class="wrap">
+  <div>
+    <div class="legend"><span><i style="background:var(--teal)"></i>已進口</span><span><i style="background:var(--amber)"></i>期貨</span><span><i style="background:var(--muted)"></i>未進口</span><span><i style="background:var(--red)"></i>限量／原廠下架</span><span style="margin-left:auto">點一格看原廠規格 vs 我們進的</span></div>
+    <div class="grid" id="grid"></div>
+  </div>
+  <div class="side" id="side"></div>
+</div>
+<script>
+// 新睦豐網站的 30 款（中文自編品名 ↔ 原廠英文名）
+const BNF={'Fiorenza':'翡冷翠金','Opal White':'蛋白晶岩','Dama Bianca':'提香白','Silver Root':'銀根金','Breccia Imperiale':'皇家礫岩','Premium White':'卡拉拉','Calacatta Statuario':'雕刻白','Calacatta Bellissimo':'極品雕刻白','Invisible':'寒江雪','Pure Calacatta':'雕刻金','Bright Onyx':'波西白玉','Panda White':'熊貓白晶岩','Palissandro White':'白金沙','Breccia Sarda':'薩丁金岩','Patagonia':'潘朵拉','Camouflage':'寶格麗岩','Breccia Mirabile':'雕刻紫','Atlantic Grey':'大西洋灰(限量)','Nebula Grigia':'星雲灰','White Beauty':'冷翡翠','Irish Green':'愛爾蘭綠','Verde Fantastico':'波斯綠','Amazonite':'亞馬遜綠','Alpi Chiaro Venato':'GF阿爾卑斯綠','Soft Onyx':'清玉 (限量)','Bardiglio Sublime':'新巴迪歐','Divine Blue':'海月藍','Nero Damascato':'黑金崗','Pietra Grey':'特拉石','Dark Marquina':'極品黑白根 (限量)'};
+// Fiandre 官網 Marmi Maximum 46 款（現行頁）
+const FI=['Travessa','Dover White','Breccia Rosa','Alaska White','Opal White','Fiorenza','White Beauty','Verde Fantastico','Travertino','Taxos','Silver Root','Sahara Noir','Pure Calacatta','Premium White','Pietra Grey','Patagonia','Panda White','Palissandro White','Nero Damascato','Nebula Grigia','Majestic Onyx','Lepanto Rubino','Irish Green','Gold Onyx','Glam Bronze','Ethereal Travertino','Divine Blue','Deep Emperador','Dark Marquina','Dama Bianca','Cremo Superiore','Camouflage','Calacatta Statuario','Calacatta Dorato','Calacatta Bellissimo','Calacatta','Bright Onyx','Breccia Sarda','Breccia Mirabile','Breccia Imperiale','Blue Tempest','Bardiglio Sublime','Arabescato Orobico','Apuano Purissimo','Amazonite','Alpi Chiaro Venato'];
+// 原廠規格（目前只有 Fiorenza 是真的，其他款待爬）
+const SPEC={'Fiorenza':[['300×150','6','polished','MML33961530'],['300×150','6','natural','MMS33961530'],['150×150','6','polished','MML33961515'],['150×150','6','natural','MMS33961515'],['150×75','6','polished','MML3396715'],['150×75','6','natural','MMS3396715'],['75×75','6','polished','MML339677'],['75×75','6','natural','MMS339677'],['75×37.5','6','polished','MML339673'],['75×37.5','6','natural','MMS339673']]};
+// 我們進的規格（新睦豐網站變體；目前只有 Fiorenza 是真的）
+const OURS={'Fiorenza':[['翡冷翠金S','150x300','6','自然面','V3','R9'],['翡冷翠金L','150x300','6','亮面','V3','']]};
+const norm=s=>s.toLowerCase();
+const rows=[]; const fiSet=new Set(FI.map(norm));
+for(const en of FI){ const ch=BNF[en]; const ltd=ch&&/限量/.test(ch); rows.push({en,ch,status:ltd?'ltd':ch?'imp':'no',onFactory:true}); }
+for(const [en,ch] of Object.entries(BNF)) if(!fiSet.has(norm(en))) rows.push({en,ch,status:'ltd',onFactory:false});
+rows.sort((a,b)=>a.en.localeCompare(b.en));
+let F='all', SEL=null;
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const LBL={imp:'已進口',fut:'期貨',no:'未進口',ltd:'限量'};
+function render(){ const list=rows.filter(r=>F==='all'||r.status===F);
+  document.getElementById('grid').innerHTML=list.map(r=>`<div class="tile ${r.status}${SEL===r.en?' on':''}" data-en="${esc(r.en)}"><div class="sw">${SPEC[r.en]?'原廠圖（待抓）':'—'}</div><div class="b"><div class="en">${esc(r.en.toUpperCase())}</div><div class="ch${r.ch?'':' none'}">${esc(r.ch||'（未取中文名）')}</div><div class="st"><span class="tag ${r.status}">${LBL[r.status]}</span>${r.onFactory?'':'<span class="tag ltd">原廠已下架</span>'}${SPEC[r.en]?`<span class="tag">原廠 ${SPEC[r.en].length} 規格</span>`:''}${OURS[r.en]?`<span class="tag imp">進 ${OURS[r.en].length}</span>`:''}</div></div></div>`).join('');
+  document.querySelectorAll('.tile').forEach(t=>t.addEventListener('click',()=>{ SEL=t.dataset.en; render(); }));
+  renderSide(); }
+function renderSide(){ const r=rows.find(x=>x.en===SEL); const s=document.getElementById('side');
+  if(!r){ s.innerHTML=`<div class="box"><h3>怎麼看</h3><div class="hint">左邊一格＝原廠一款顏色。青綠＝我們有自編中文名、已進口；琥珀＝網站列了但沒中文名（期貨）；灰＝原廠有我們沒進；紅＝限量（原廠停產、庫存出完就沒）。<br><br>同仁拿到原廠目錄找不到中文名時，用英文名在這裡查，就知道有沒有進、進了哪些尺寸、原廠還有哪些尺寸可以叫。</div></div>
+    <div class="box"><h3>資料來源</h3><div class="kv"><span>原廠 46 款</span><b>fiandre.com 系列頁</b></div><div class="kv"><span>我們 30 款</span><b>bnf.com.tw（爬蟲 v2.0）</b></div><div class="kv"><span>原廠規格×代碼</span><b>fiandre.com 產品頁（Fiorenza 已抓，其餘待爬）</b></div><div class="kv"><span>目錄 PDF</span><b>selection／standard size／news（核對用）</b></div></div>`; return; }
+  const spec=SPEC[r.en], ours=OURS[r.en]||[];
+  const have=(sz,fin)=>ours.some(o=>o[1].replace('x','×').split('×').reverse().join('×')===sz&&((fin==='natural'&&o[3]==='自然面')||(fin==='polished'&&o[3]==='亮面')));
+  s.innerHTML=`<div class="box"><div class="hd">${esc(r.en.toUpperCase())}<small>${esc(r.ch||'尚未取中文名')} · Graniti Fiandre · Marmi Maximum</small></div>
+    <div class="kv"><span>狀態</span><b><span class="tag ${r.status}">${LBL[r.status]}</span> ${r.onFactory?'原廠現行':'<span class="tag ltd">原廠已下架</span>'}</b></div>
+    <div class="kv"><span>原廠頁</span><b><a style="color:var(--indigo)" href="https://www.fiandre.com/porcelain-slab/marmi-maximum/${r.en.toLowerCase().replace(/ /g,'-')}/" target="_blank">fiandre.com ↗</a></b></div></div>
+  <div class="box"><h3>原廠規格 vs 我們進的<span class="c">${spec?spec.length+' 規格':'待爬'}</span></h3>
+    ${spec?`<table class="spec"><tr><th>尺寸 cm</th><th>厚</th><th>表面</th><th>原廠代碼</th></tr>${spec.map(x=>`<tr class="${have(x[0],x[2])?'have':'nohave'}"><td>${x[0]}</td><td>${x[1]}</td><td>${x[2]}</td><td class="code">${x[3]}</td></tr>`).join('')}</table><div class="note">✓ 我們有進 · ○ 原廠有、我們沒進（可叫貨）</div>`:`<div class="hint">原廠產品頁還沒爬；爬了就會像 Fiorenza 一樣列出尺寸×表面×代碼。</div>`}
+    ${ours.length?`<div style="margin-top:10px;font-size:12px;color:var(--teal2)">我們的型號：${ours.map(o=>`<b>${esc(o[0])}</b> ${o[1]} ${o[2]}mm ${o[3]}${o[5]?' '+o[5]:''}`).join('、')}</div>`:''}</div>
+  <div class="box"><h3>狀態與原廠通知<span class="c">自己改，不用經過 Claude</span></h3>
+    <div class="field"><label>狀態</label><select><option${r.status==='imp'?' selected':''}>現行</option><option${r.status==='ltd'?' selected':''}>限量（原廠停產、出完為止）</option><option>停產（庫存也沒了）</option><option>期貨</option></select></div>
+    <div class="field"><label>備註（例：原廠 2026/03 停產通知，倉庫剩 120 ㎡）</label><input placeholder="${r.ch&&/限量/.test(r.ch)?'原廠已下架，庫存出完為止':''}"></div>
+    <div class="field"><label>原廠停產通知 PDF（國貿收到就直接放這裡）</label><div class="file">拖檔案進來 → 存到 Storage catalog-docs/${esc(r.en)}/，列在這款底下</div></div>
+    <div class="hint" style="margin-top:6px">爬蟲只會把「原廠現行頁沒有了」自動標成「疑似下架」提醒你，不會自己改成限量或停產；狀態永遠以你在這裡填的為準。</div></div>`; }
+document.getElementById('flt').addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return; F=b.dataset.f; [...e.currentTarget.children].forEach(x=>x.classList.toggle('on',x===b)); render(); });
+render();
+</script>
+</body></html>
