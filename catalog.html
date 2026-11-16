@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>ATLAS 型錄 v1.6</title>
+<title>ATLAS 型錄 v1.8</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Space+Mono&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#0e1012;--sb:#141618;--panel:#1a1d21;--card:#1f2328;--border:#2a2f36;--border2:#353b44;--gold:#d4a843;--gold2:#f0cc7a;--teal:#3aaa8c;--teal2:#4dc9a8;--red:#e06c6c;--indigo:#7b8cff;--amber:#e8b04a;--text:#dde2ee;--sub:#8a94a6;--muted:#4a5566}
@@ -88,12 +88,12 @@ table.mx{width:100%;border-collapse:collapse;font-size:12px}.mx th{font-weight:5
   <div class="crumb">
     <label><span class="lv">廠商</span><select id="selVendor"></select></label><span class="sep">▸</span>
     <label><span class="lv">品牌／原廠</span><select id="selBrand"></select></label><span class="sep">▸</span>
-    <label><span class="lv">系列</span><select id="selSeries"></select></label>
+    <label><span class="lv">系列</span><select id="selSeries" style="min-width:260px;max-width:420px"></select></label>
   </div>
   <span class="hint" style="margin-left:auto" id="meta"></span><button class="btn sm" id="logoutBtn">登出</button>
 </div>
 <div class="search">
-  <input type="search" id="q" placeholder="搜尋：中文名、原廠名、型號、系列（跨全部）">
+  <input type="search" id="q" placeholder="搜尋：中文名、原廠名、型號、系列（跨全部，不受狀態／等級篩選限制）">
   <span class="n" id="cnt"></span>
 </div>
 <div class="filt closed" id="filt"><div class="fh" id="fh"><b>篩選</b><span id="fsum">全部</span><span style="margin-left:auto">▾</span></div>
@@ -104,7 +104,7 @@ table.mx{width:100%;border-collapse:collapse;font-size:12px}.mx th{font-weight:5
     <div class="fg"><label>材質／分類</label><select id="fCat"><option value="">全部</option></select></div>
     <div class="fg" id="fgSt"><label>狀態（新睦豐）</label><select id="fSt"><option value="">全部</option><option>入庫</option><option>期貨</option><option>限量</option><option>停產</option></select></div>
     <div class="fg"><label>品牌等級</label><select id="fTier"><option value="">全部</option><option>常態</option><option>零星</option></select></div>
-    <div class="fg"><label>&nbsp;</label><button class="btn sm" id="fClear">清除篩選</button></div>
+    <div class="fg"><label>&nbsp;</label><button class="btn sm" id="fDef">回預設（常態入庫）</button> <button class="btn sm" id="fClear">全部顯示</button></div>
   </div></div>
 <div class="wrap">
   <div><div class="legend"><span><i style="background:var(--teal)"></i>入庫</span><span><i style="background:var(--amber)"></i>期貨</span><span><i style="background:var(--red)"></i>限量／停產</span><span style="margin-left:auto">點一格看規格與狀態</span></div><div class="grid" id="grid"></div></div>
@@ -122,7 +122,12 @@ const ALL='（全部）'; const ST_CLS={入庫:'imp',期貨:'fut',限量:'ltd',�
 const REASONS=['原廠已下架','原廠停產通知','庫存出清中','改版換名','其他'];
 const V_ZH={V1:'V1 均一（片片幾乎相同）',V2:'V2 輕微（色調小差異）',V3:'V3 中度（每片紋理明顯不同）',V4:'V4 強烈（鋪前要排版）'};
 const NAS='E:\\SynologyDrive\\BNF\\5.材料\\1.磁磚\\BNF\\圖檔\\';
-const isBNF=()=>V==='新睦豐'||V===ALL;
+const isBNF=()=>V==='新睦豐'||V===ALL; const bnfRow=r=>r.source==='bnf'||r.vendor==='新睦豐'; const bnfG=g=>g.vendor==='新睦豐'||g.rows.some(bnfRow);
+// 系列排序：英文（含數字）A→Z 在前，中文在後；不分大小寫、忽略前後空白
+const serKey=x=>String(x||'').trim(); const isCJK=x=>/^[\u4e00-\u9fff]/.test(serKey(x));
+const serSort=(a,b)=>(isCJK(a)?1:0)-(isCJK(b)?1:0)||(isCJK(a)?serKey(a).localeCompare(serKey(b),'zh-Hant-TW'):serKey(a).localeCompare(serKey(b),'en',{sensitivity:'base',numeric:true}));
+// 系列標籤：整個系列都是期貨→（期貨）、全限量→（限量）、全停產→（停產）；零星品牌→（零星）
+const serTag=rows=>{ const ss=rows.filter(bnfRow).map(r=>rst(r)); if(!ss.length) return ''; if(ss.every(x=>x==='停產')) return '停產'; if(ss.every(x=>x==='限量'||x==='停產')) return '限量'; if(!ss.includes('入庫')&&!ss.includes('限量')) return '期貨'; return ''; };
 const th=x=>String(x||'').replace(/mm/ig,'').trim();   // 8 與 8mm 視為同一個
 const sizesOf=r=>String(r.size||'').split(/\s*[|｜,，／\/]\s*/).map(x=>x.trim()).filter(Boolean);   // 「150x150 | 75x150」拆成兩個尺寸
 const szKey=z=>{ const m=String(z).match(/([\d.]+)\s*[xX×*]\s*([\d.]+)/); return m?[+m[1],+m[2]]:[9e9,9e9]; }; const szSort=(a,b)=>{ const [a1,a2]=szKey(a),[b1,b2]=szKey(b); return a1-b1||a2-b2||String(a).localeCompare(String(b)); };
@@ -134,16 +139,18 @@ $('#logoutBtn').addEventListener('click',async()=>{ await sb.auth.signOut(); loc
 async function boot(){ const {data:{session}}=await sb.auth.getSession(); if(!session){ $('#login').style.display='flex'; $('#app').style.display='none'; return; } UID=session.user.id; $('#login').style.display='none'; $('#app').style.display='block'; await load(); }
 async function load(){
   const all=[]; for(let i=0;;i+=1000){ const {data,error}=await sb.from('products').select('*').eq('hidden',false).order('brand').order('series').order('factory_code').order('model').range(i,i+999); if(error){ $('#grid').innerHTML=`<div class="empty">讀取失敗：${esc(error.message)}（請先跑 supabase_45）</div>`; return; } all.push(...data); if(data.length<1000) break; }
+  all.forEach(r=>{ if(!r.vendor) r.vendor=(r.source==='bnf'?'新睦豐':r.source); });   // 舊列沒 vendor 的補上，才會被狀態篩選管到
   ROWS=all.filter(r=>!(r.vendor!=='新睦豐'&&r.status==='停產'));   // 國產停產品不顯示
   const [d,b,u]=await Promise.all([sb.from('product_docs').select('*').order('created_at',{ascending:false}), sb.from('catalog_brands').select('*'), sb.from('ui_state').select('data').eq('user_id',UID).eq('key','catalog').maybeSingle()]);
   DOCS=d.data||[]; (b.data||[]).forEach(x=>BR[x.vendor+'|'+x.brand]=x); HID=new Set(u.data?.data?.hiddenPdfs||[]);
-  const vendors=[ALL,...new Set(ROWS.map(r=>r.vendor||r.source))]; V=vendors[1]||ALL; fillSel('#selVendor',vendors,V); onVendor();
+  const vendors=[ALL,...new Set(ROWS.map(r=>r.vendor||r.source))]; V=vendors[1]||ALL; fillSel('#selVendor',vendors,V); DEF(); onVendor();
   $('#fCat').innerHTML='<option value="">全部</option>'+[...new Set(ROWS.map(r=>r.category).filter(Boolean))].map(c=>`<option>${esc(c)}</option>`).join('');
-  $('#meta').textContent=`${ROWS.length} 款 · 最近抓取 ${(ROWS.map(r=>r.last_seen).sort().pop()||'')}`; }
+  $('#meta').textContent=`${new Set(ROWS.map(r=>[r.vendor,r.brand,r.series,r.factory_code||r.model].join('|'))).size} 品名 · ${ROWS.length} 型號 · 最近抓取 ${(ROWS.map(r=>r.last_seen).sort().pop()||'')}`; }
 const tier=(v,b)=>BR[v+'|'+b]?.tier||'常態';
 function fillSel(id,list,cur,lab){ $(id).innerHTML=list.map(x=>`<option value="${esc(x)}"${x===cur?' selected':''}>${esc(lab?lab(x):x)}</option>`).join(''); }
 function onVendor(){ const rs=ROWS.filter(r=>V===ALL||(r.vendor||r.source)===V); const bs=[...new Set(rs.map(r=>r.brand))].sort((a,b)=>(tier(V,a)==='常態'?0:1)-(tier(V,b)==='常態'?0:1)||a.localeCompare(b)); const brands=[ALL,...bs]; B=brands.includes(B)?B:brands[1]||ALL; fillSel('#selBrand',brands,B,x=>x===ALL?x:x+(tier(V,x)!=='常態'?'（'+tier(V,x)+'）':'')); $('#fgSt').style.display=isBNF()?'':'none'; onBrand(); }
-function onBrand(){ const ser=[ALL,...new Set(ROWS.filter(r=>(V===ALL||(r.vendor||r.source)===V)&&(B===ALL||r.brand===B)).map(r=>r.series))]; S=B===ALL?ALL:(ser.includes(S)?S:ser[1]||ALL); fillSel('#selSeries',ser,S); onSeries(); }
+function onBrand(){ const rs=ROWS.filter(r=>(V===ALL||(r.vendor||r.source)===V)&&(B===ALL||r.brand===B)); const ser=[ALL,...[...new Set(rs.map(r=>r.series))].sort(serSort)]; S=B===ALL?ALL:(ser.includes(S)?S:ser[1]||ALL);
+  fillSel('#selSeries',ser,S,x=>{ if(x===ALL) return x; const rows=rs.filter(r=>r.series===x); const tags=[]; const t=serTag(rows); if(t) tags.push(t); if(B===ALL){ const tz=tier(V,rows[0]?.brand); if(tz!=='常態') tags.push(tz); } return x+(tags.length?'（'+tags.join('・')+'）':''); }); onSeries(); }
 function onSeries(){ const rs=cur(); const opt=(id,vals,lab)=>{ const c=$(id).value; $(id).innerHTML='<option value="">全部</option>'+vals.map(v=>`<option${v===c?' selected':''}>${esc(v)}</option>`).join(''); };
   opt('#fSz',[...new Set(rs.filter(r=>!noSize(r)).flatMap(sizesOf))].sort(szSort)); opt('#fFin',[...new Set(rs.map(r=>r.finish).filter(Boolean))]); opt('#fTh',[...new Set(rs.filter(r=>!/陶磚/.test(r.category||'')&&r.brand!=='Sannini').map(r=>th(r.thickness)).filter(Boolean))].sort((a,b)=>parseFloat(a)-parseFloat(b))); SEL=null; render(); }
 $('#selVendor').addEventListener('change',e=>{ V=e.target.value; B=ALL; onVendor(); }); $('#selBrand').addEventListener('change',e=>{ B=e.target.value; onBrand(); }); $('#selSeries').addEventListener('change',e=>{ S=e.target.value; onSeries(); });
@@ -151,11 +158,14 @@ const cur=()=>ROWS.filter(r=>(V===ALL||(r.vendor||r.source)===V)&&(B===ALL||r.br
 function groups(){ const q=$('#q').value.trim().toLowerCase(); const base=q?ROWS.filter(r=>[r.import_name,r.factory_code,r.model,r.series,r.brand].join(' ').toLowerCase().includes(q)):cur();
   const g={}; for(const r of base){ const k=[r.vendor,r.brand,r.series,r.factory_code||r.model].join('|'); (g[k]??={k,vendor:r.vendor||r.source,brand:r.brand,series:r.series,en:nm(r.factory_code||r.model),ch:nm(r.import_name),ltd:isLtdName(r.import_name),isNew:/new/i.test((r.import_name||'')+(r.factory_code||'')),rows:[]}).rows.push(r); }
   const f={st:$('#fSt').value,fin:$('#fFin').value,th:$('#fTh').value,sz:$('#fSz').value,cat:$('#fCat').value,tier:$('#fTier').value};
-  const n=Object.values(f).filter(Boolean).length; $('#fsum').textContent=n?`${n} 個條件`:'全部';
+  const n=Object.values(f).filter(Boolean).length; $('#fsum').textContent=(f.st==='入庫'&&f.tier==='常態'&&n===2)?'預設：常態 × 入庫':n?`${n} 個條件`:'全部顯示';
   const ord=x=>(tier(x.vendor,x.brand)==='常態'?0:1);
-  return Object.values(g).sort((a,b)=>ord(a)-ord(b)||a.brand.localeCompare(b.brand)||a.series.localeCompare(b.series)).filter(x=>{ const rs=x.rows; if(f.st&&isBNF()&&!rs.some(r=>r.status===f.st)) return false; if(f.fin&&!rs.some(r=>r.finish===f.fin)) return false; if(f.th&&!rs.some(r=>th(r.thickness)===f.th)) return false; if(f.sz&&!rs.some(r=>sizesOf(r).includes(f.sz))) return false; if(f.cat&&!rs.some(r=>r.category===f.cat)) return false; if(f.tier&&tier(x.vendor,x.brand)!==f.tier) return false; return true; }); }
-const gstatus=g=>{ const ss=g.rows.map(r=>r.status); if(ss.length&&ss.every(s=>s==='停產')) return '停產'; if(ss.includes('限量')||g.rows.some(r=>isLtdName(r.import_name))) return '限量'; return ss.includes('入庫')?'入庫':'期貨'; };
-function render(){ const gs=groups(); $('#cnt').textContent=`${gs.length} 款`; const q=$('#q').value.trim(); const showCtx=q||B===ALL||S===ALL;
+  // 預設「入庫」＝只看常態庫存：帶限量／停產的型號一併剔除（整個品名都是限量就整格不顯示）
+  if(q){ f.st=''; f.tier=''; }   // 有打搜尋字＝跨全部找，狀態／等級篩選不套用（期貨、限量、零星自己搜）
+  return Object.values(g).sort((a,b)=>ord(a)-ord(b)||a.brand.localeCompare(b.brand)||serSort(a.series,b.series)).map(x=>{ if(!f.st||!bnfG(x)) return x; const rows=x.rows.filter(r=>rst(r)===f.st); return rows.length?{...x,rows,ltd:f.st==='限量'&&x.ltd}:null; }).filter(Boolean).filter(x=>{ const rs=x.rows; if(f.fin&&!rs.some(r=>r.finish===f.fin)) return false; if(f.th&&!rs.some(r=>th(r.thickness)===f.th)) return false; if(f.sz&&!rs.some(r=>sizesOf(r).includes(f.sz))) return false; if(f.cat&&!rs.some(r=>r.category===f.cat)) return false; if(f.tier&&tier(x.vendor,x.brand)!==f.tier) return false; return true; }); }
+const rst=r=>(r.status==='限量'||r.status==='停產')?r.status:(isLtdName(r.import_name)?'限量':r.status);   // 名稱帶「(限量)」也算限量
+const gstatus=g=>{ const ss=g.rows.map(rst); if(ss.length&&ss.every(s=>s==='停產')) return '停產'; if(ss.includes('限量')) return '限量'; return ss.includes('入庫')?'入庫':'期貨'; };
+function render(){ const gs=groups(); $('#cnt').textContent=`${gs.length} 品名 · ${gs.reduce((n,g)=>n+g.rows.filter(r=>!r.hidden).length,0)} 型號`; const q=$('#q').value.trim(); const showCtx=q||B===ALL||S===ALL;
   $('#grid').innerHTML=gs.map(g=>{ const st=gstatus(g); const img=g.rows.find(r=>r.image_url)?.image_url; const sizes=noSize(g.rows[0])?[]:[...new Set(g.rows.flatMap(sizesOf))].sort(szSort); const tz=tier(g.vendor,g.brand);
     return `<div class="tile ${g.vendor==='新睦豐'?ST_CLS[st]:''}${SEL===g.k?' on':''}" data-k="${esc(g.k)}"><div class="sw${img?'':' none'}">${img?`<img src="${img}" loading="lazy">`:'無圖'}</div><div class="b"><div class="en">${esc(g.en.toUpperCase())}</div><div class="ch${g.ch?'':' none'}">${esc(g.ch||'（期貨，未取中文名）')}${g.ltd?' <span class="tag ltd">限量</span>':''}${g.isNew?' <span class="tag" style="color:var(--gold2);border-color:var(--gold)">NEW</span>':''}</div>
       <div class="sizes">${sizes.map(z=>`<span class="sz have">${esc(z)}</span>`).join('')||(noSize(g.rows[0])?'':'<span class="sz unk">尺寸未抓到</span>')}</div><div class="st">${g.vendor==='新睦豐'?`<span class="tag ${ST_CLS[st]}">${st}</span>`:''}${tz!=='常態'?`<span class="tier z">${tz}</span>`:''}${showCtx?`<span class="tag">${esc(g.brand)} · ${esc(g.series)}</span>`:''}</div></div></div>`; }).join('')||'<div class="empty">沒有符合的款</div>';
@@ -204,7 +214,9 @@ function bindSide(g,st){
   document.querySelectorAll('[data-doc]').forEach(a=>a.addEventListener('click',async e=>{ e.preventDefault(); const {data,error}=await sb.storage.from('catalog-docs').createSignedUrl(a.dataset.doc,600); if(error){ alert(error.message); return; } window.open(data.signedUrl,'_blank'); }));
   document.querySelectorAll('[data-deldoc]').forEach(x=>x.addEventListener('click',async()=>{ if(!confirm('移除這份文件？')) return; const id=+x.dataset.deldoc; const d=DOCS.find(k=>k.id===id); await sb.storage.from('catalog-docs').remove([d.path]); await sb.from('product_docs').delete().eq('id',id); DOCS=DOCS.filter(k=>k.id!==id); renderSide(); })); }
 ['q','fSt','fFin','fTh','fSz','fCat','fTier'].forEach(id=>$('#'+id).addEventListener('input',()=>{ SEL=null; render(); }));
+const DEF=()=>{ ['fFin','fTh','fSz','fCat'].forEach(id=>$('#'+id).value=''); $('#fSt').value='入庫'; $('#fTier').value='常態'; };   // 預設只看「常態品牌 × 入庫」
 $('#fClear').addEventListener('click',()=>{ ['fSt','fFin','fTh','fSz','fCat','fTier'].forEach(id=>$('#'+id).value=''); render(); });
+$('#fDef').addEventListener('click',()=>{ DEF(); render(); });
 $('#fh').addEventListener('click',()=>$('#filt').classList.toggle('closed'));
 $('#lbX').addEventListener('click',()=>$('#lb').classList.remove('on')); $('#lb').addEventListener('click',e=>{ if(e.target.id==='lb') $('#lb').classList.remove('on'); }); document.addEventListener('keydown',e=>{ if(e.key==='Escape') $('#lb').classList.remove('on'); });
 sb.auth.onAuthStateChange(ev=>{ if(ev==='SIGNED_OUT') location.reload(); });
