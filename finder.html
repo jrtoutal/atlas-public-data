@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="ATLAS 選色表">
 <meta name="theme-color" content="#141618">
-<title>ATLAS 選色表 v6.9.2</title>
+<title>ATLAS 選色表 v7.0</title>
 <style>
 /* 大螢幕自動放大（外接螢幕）：1600px 以上 110%、2200px 以上 125% */
 @media (min-width:1600px){html{zoom:1.1}}
@@ -562,6 +562,7 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--text
     <div class="finder-hd">
       <span class="finder-lbl">專案</span>
       <button class="finder-add" onclick="addProject()" title="新增專案">＋</button>
+      <button class="finder-add" onclick="openListBuild()" title="從清單建立：貼上 區域／型號／尺寸 清單，自動建專案" style="font-size:12px">📋</button>
     </div>
     <div class="finder-list" id="col2-list"></div>
   </div>
@@ -1003,6 +1004,29 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--text
     <div class="m-actions">
       <button class="btn-cancel" onclick="closeModal('client-modal')">取消</button>
       <button class="btn-ok" onclick="saveClient()">儲存</button>
+    </div>
+  </div>
+</div>
+
+<!-- 從清單建立 Modal -->
+<div class="modal-bg" id="listbuild-modal">
+  <div class="modal" style="width:min(860px,96vw)">
+    <h2>📋 從清單建立專案</h2>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+      <div><label>建商／客戶</label><select id="lb-client"></select><input id="lb-client-new" placeholder="或輸入新名稱" style="margin-top:4px"></div>
+      <div><label>專案名稱</label><input id="lb-project" placeholder="例：板橋A案、王小姐自宅"></div>
+      <div><label>版本</label><input id="lb-version" value="V1 草稿"></div>
+    </div>
+    <label style="margin-top:8px">清單（一行一項：區域、型號、尺寸，順序隨意；編碼選填；空白或逗號、Tab 分隔）</label>
+    <textarea id="lb-text" rows="7" style="font-family:'Space Mono',monospace;font-size:12px" placeholder="電梯廳 DB6009 60x60
+外牆 短筋面磚 4.5x19.5 深色
+主浴 翡冷翠金S 150x300
+車道 車道磚 10x10 TL-04"></textarea>
+    <div style="display:flex;gap:8px;align-items:center;margin-top:6px;font-size:12px;color:var(--sub)"><button class="btn-ok" onclick="lbParse()" style="padding:5px 12px">解析</button><span id="lb-sum"></span><span style="margin-left:auto">排序：內裝 → 公設 → 外裝壁 → 外裝地（<a href="#" onclick="lbShowZones();return false">區域字典</a>）</span></div>
+    <div id="lb-preview" style="max-height:40vh;overflow:auto;margin-top:6px"></div>
+    <div class="m-actions">
+      <button class="btn-cancel" onclick="closeModal('listbuild-modal')">取消</button>
+      <button class="btn-ok" id="lb-go" onclick="lbCreate()" disabled>建立專案</button>
     </div>
   </div>
 </div>
@@ -1983,10 +2007,10 @@ document.addEventListener('click',e=>{
 const PROD_IMG=`${SB_URL}/storage/v1/object/public/products/`;
 function mapProduct(p){
   return {
-    _id:p.id, _img:p.image_path?PROD_IMG+p.image_path:null,
-    '型號':p.model||'', '產品名稱':p.name||'', '品牌':p.brand||'', '工廠':p.factory||'',
+    _id:p.key||p.id, _img:p.image_url||(p.image_path?PROD_IMG+p.image_path:null), _row:p,
+    '型號':p.model||'', '產品名稱':p.import_name||p.name||'', '品牌':p.brand||'', '工廠':p.factory||p.vendor||'', '原廠名':p.factory_code||'',
     '大類別':p.category||'', '系列':p.series||'', '尺寸':p.size||'', '顏色':p.color||'',
-    '用途':(p.usages||[]).join('、'), '紋理':p.texture||'', '面感':p.finish||'', '狀態':p.status||''
+    '用途':Array.isArray(p.usages)?p.usages.join('、'):(p.usages||''), '紋理':p.texture||'', '面感':p.finish||'', '狀態':p.status||''
   };
 }
 async function loadNocoFilters(silent){
@@ -1996,8 +2020,8 @@ async function loadNocoFilters(silent){
   try{
     const all=[]; let from=0;
     while(true){
-      const {data,error}=await sb.from('products').select('id,model,name,brand,factory,category,series,size,color,usages,texture,finish,status,image_path')
-        .eq('status','現行').order('brand').order('model').range(from,from+999);
+      const {data,error}=await sb.from('products').select('key,model,name,import_name,factory_code,brand,vendor,factory,category,series,size,color,usages,texture,finish,status,image_url,image_path')
+        .in('status',['入庫','現行']).eq('hidden',false).order('brand').order('model').range(from,from+999);   // 爬蟲版 products（SQL 41/45）
       if(error) throw error;
       all.push(...data); if(data.length<1000) break; from+=1000;
     }
@@ -3021,6 +3045,90 @@ async function boot(){
   await syncJc();                                      // 建商／專案 → 表二 jc_projects（案件中心看得到）
   if(openFromJc()){ loadActiveProject(); renderFinder(); }   // 從案件中心「開選色表」直達該專案
 }
+// ════════════════════════════════════════════
+//  v7.0 從清單建立（A 門市情境：店員貼 區域／型號／尺寸 清單 → 自動對產品庫 → 內裝→公設→外裝壁→外裝地 排序 → 建專案 V1）
+// ════════════════════════════════════════════
+const LB_GRPS=['內裝','公設','外裝壁','外裝地','其他'];
+// 內建區域字典（跟 supabase_48 finder_zones 同一份；雲端有就以雲端為準）
+let ZONES=[
+ ['玄關','內裝',10,[]],['客廳','內裝',20,['客餐廳']],['餐廳','內裝',21,[]],['廚房','內裝',30,['廚具區']],['主臥','內裝',40,['主臥室']],['次臥','內裝',41,['臥室','房間','次臥室']],['書房','內裝',42,[]],['更衣室','內裝',43,[]],
+ ['主浴','內裝',50,['主臥浴室','主浴室']],['客浴','內裝',51,['次浴','公共浴室']],['浴廁','內裝',52,['浴室','廁所','衛浴','衛生間']],['工作陽台','內裝',60,['後陽台']],['陽台','內裝',61,['前陽台','露臺']],['室內','內裝',70,['室內地坪','住家']],
+ ['大廳','公設',10,['門廳','一樓大廳','接待大廳']],['電梯廳','公設',20,['梯廳','電梯間','各樓層梯廳']],['走廊','公設',30,['廊道','公共走廊']],['樓梯','公設',40,['樓梯間','安全梯','逃生梯']],['信箱區','公設',45,[]],['交誼廳','公設',50,['休閒室','多功能室']],['健身房','公設',51,[]],
+ ['茶水間','公設',55,['廁所&茶水間']],['公共廁所','公設',56,['公廁']],['儲藏室','公設',60,['倉庫']],['垃圾儲藏室','公設',61,['垃圾間','垃圾室']],['機房','公設',70,['機電室','發電機室','水箱','水箱間']],['地下室','公設',80,['停車場','B1','B2','車位']],
+ ['外牆','外裝壁',10,['外壁','立面','正立面','側立面']],['女兒牆','外裝壁',20,[]],['柱','外裝壁',30,['柱子','柱面']],['圍牆','外裝壁',40,['圍籬','門柱']],
+ ['車道','外裝地',10,['車道入口','汽車坡道']],['騎樓','外裝地',20,['騎樓地坪']],['中庭','外裝地',30,['庭園','花園','景觀']],['戶外地坪','外裝地',40,['地坪','戶外','人行道','退縮地']],['露台','外裝地',50,['屋頂','屋突','頂樓']],['游泳池','外裝地',60,['泳池']]
+].map(([zone,grp,ord,aliases])=>({zone,grp,ord,aliases}));
+async function lbLoadZones(){ try{ const {data}=await sb.from('finder_zones').select('zone,grp,ord,aliases'); if(data&&data.length) ZONES=data.map(z=>({...z,aliases:z.aliases||[]})); }catch(e){} }
+function lbZone(txt){ // 區域字串 → {zone,grp,ord}；「浴廁–牆」先取根；找不到 → 其他
+  const t=(txt||'').trim(); const root=t.split(/[–—\-／/·‧,，、\s]/)[0].trim()||t;
+  let z=ZONES.find(z=>z.zone===root||z.aliases.includes(root))||ZONES.find(z=>root.includes(z.zone)||z.aliases.some(a=>root.includes(a)));
+  if(!z){ if(/牆|壁|立面/.test(root)) z={zone:root,grp:'外裝壁',ord:90}; else if(/地坪|道|庭|台$/.test(root)) z={zone:root,grp:'外裝地',ord:90}; else if(/廳|梯|廊|房$/.test(root)) z={zone:root,grp:'公設',ord:90}; else z={zone:root,grp:'其他',ord:99}; }
+  return z;
+}
+const LB_SIZE=/^(\d+(?:\.\d+)?)\s*[xX×*＊]\s*(\d+(?:\.\d+)?)\s*(?:cm|mm|公分)?$/;
+function lbParseLine(line){
+  const toks=line.trim().split(/[\t,，;；]+|\s{1,}/).map(t=>t.trim()).filter(Boolean); if(!toks.length) return null;
+  const r={area:'',code:'',size:'',num:'',rest:[],prod:null};
+  for(const t of toks){
+    if(!r.size&&LB_SIZE.test(t)){ const m=t.match(LB_SIZE); r.size=`${m[1]}x${m[2]}`; continue; }
+    if(!r.num&&/^[A-Za-z]{1,3}-\d{1,3}$/.test(t)&&!lbFindProd(t)){ r.num=t.toUpperCase(); continue; }
+    const p=lbFindProd(t); if(p&&!r.prod){ r.prod=p; r.code=t; continue; }
+    if(!r.area&&/[\u4e00-\u9fff]/.test(t)&&!/^[A-Za-z0-9]/.test(t)&&lbZone(t).grp!=='其他'){ r.area=t; continue; }
+    if(!r.code&&/^[A-Za-z]{1,6}[-_]?\d{2,}[A-Za-z0-9-]*$/.test(t)){ r.code=t.toUpperCase(); continue; }
+    r.rest.push(t);
+  }
+  if(!r.area&&r.rest.length){ const i=r.rest.findIndex(t=>/[\u4e00-\u9fff]/.test(t)); if(i>=0) r.area=r.rest.splice(i,1)[0]; }
+  if(r.prod&&!r.size) r.size=(r.prod['尺寸']||'').split(/\s*[|｜,，／/]\s*/)[0]||'';
+  r.name=r.rest.join(' ')||(r.prod?(r.prod['產品名稱']||r.prod['系列']):'');
+  const z=lbZone(r.area); r.grp=z.grp; r.ord=z.ord; r.zone=z.zone;
+  return r;
+}
+function lbFindProd(t){ const u=(t||'').toUpperCase(); if(!u||u.length<3) return null;
+  return nocoAllRows.find(p=>(p['型號']||'').toUpperCase()===u)||nocoAllRows.find(p=>(p['產品名稱']||'').toUpperCase()===u||(p['原廠名']||'').toUpperCase()===u)||null; }
+let LB_ROWS=[];
+function openListBuild(){
+  const sel=document.getElementById('lb-client'); sel.innerHTML=db.clients.map(c=>`<option value="${c.id}"${c.id===activeClientId?' selected':''}>${esc(c.name)}</option>`).join('')+'<option value="">（新建商／客戶）</option>';
+  document.getElementById('lb-client-new').value=''; document.getElementById('lb-project').value=''; document.getElementById('lb-version').value='V1 草稿'; document.getElementById('lb-preview').innerHTML=''; document.getElementById('lb-sum').textContent=''; document.getElementById('lb-go').disabled=true; LB_ROWS=[];
+  if(!nocoAllRows.length) loadNocoFilters(true); lbLoadZones();
+  document.getElementById('listbuild-modal').classList.add('open'); setTimeout(()=>document.getElementById('lb-text').focus(),80);
+}
+function lbParse(){
+  const lines=document.getElementById('lb-text').value.split(/\r?\n/); LB_ROWS=lines.map(lbParseLine).filter(Boolean);
+  lbSort(); lbRender();
+}
+function lbSort(){ LB_ROWS.forEach((r,i)=>r._i=i); LB_ROWS.sort((a,b)=>LB_GRPS.indexOf(a.grp)-LB_GRPS.indexOf(b.grp)||a.ord-b.ord||a._i-b._i); }
+function lbRender(){
+  const hit=LB_ROWS.filter(r=>r.prod).length, unk=LB_ROWS.filter(r=>r.grp==='其他').length;
+  document.getElementById('lb-sum').textContent=`${LB_ROWS.length} 項 · 對到產品庫 ${hit} · 區域不明 ${unk}`;
+  document.getElementById('lb-preview').innerHTML=LB_ROWS.length?`<table style="width:100%;border-collapse:collapse;font-size:12px"><tr style="color:var(--sub)"><th style="text-align:left;padding:4px">組</th><th style="text-align:left">區域</th><th style="text-align:left">編碼</th><th style="text-align:left">型號</th><th style="text-align:left">名稱</th><th style="text-align:left">尺寸</th><th style="text-align:left">產品庫</th></tr>${LB_ROWS.map((r,i)=>`<tr style="border-top:1px solid var(--border)"><td style="padding:3px 4px"><select data-lbg="${i}" style="width:auto;padding:2px 4px;font-size:11px">${LB_GRPS.map(g=>`<option${g===r.grp?' selected':''}>${g}</option>`).join('')}</select></td><td><input data-lbf="area" data-i="${i}" value="${esc(r.area)}" style="padding:2px 4px;font-size:11px;width:110px${r.grp==='其他'?';border-color:var(--red)':''}"></td><td><input data-lbf="num" data-i="${i}" value="${esc(r.num)}" style="padding:2px 4px;font-size:11px;width:60px"></td><td><input data-lbf="code" data-i="${i}" value="${esc(r.code)}" style="padding:2px 4px;font-size:11px;width:110px"></td><td><input data-lbf="name" data-i="${i}" value="${esc(r.name)}" style="padding:2px 4px;font-size:11px;width:140px"></td><td><input data-lbf="size" data-i="${i}" value="${esc(r.size)}" style="padding:2px 4px;font-size:11px;width:80px"></td><td style="white-space:nowrap">${r.prod?`<span style="color:var(--teal2)">✓ ${esc(r.prod['品牌'])}${r.prod._img?' 🖼':''}</span>`:'<span style="color:var(--sub)">— 只記型號</span>'}</td></tr>`).join('')}</table>`:'<div class="srch-status">沒有可解析的行</div>';
+  document.getElementById('lb-go').disabled=!LB_ROWS.length;
+  document.querySelectorAll('[data-lbg]').forEach(s=>s.addEventListener('change',e=>{ LB_ROWS[+s.dataset.lbg].grp=e.target.value; lbSort(); lbRender(); }));
+  document.querySelectorAll('[data-lbf]').forEach(inp=>inp.addEventListener('change',e=>{ const r=LB_ROWS[+inp.dataset.i]; r[inp.dataset.lbf]=e.target.value.trim(); if(inp.dataset.lbf==='area'){ const z=lbZone(r.area); r.grp=z.grp; r.ord=z.ord; lbSort(); } if(inp.dataset.lbf==='code'){ r.prod=lbFindProd(r.code); } lbRender(); }));
+}
+function lbShowZones(){ const by={}; ZONES.forEach(z=>(by[z.grp]??=[]).push(z.zone)); alert(LB_GRPS.filter(g=>by[g]).map(g=>`${g}：${by[g].join('、')}`).join('\n\n')+'\n\n要加區域或同義字 → Supabase finder_zones 表（supabase_48）'); }
+function lbCreate(){
+  if(!LB_ROWS.length) return;
+  const pname=document.getElementById('lb-project').value.trim(); if(!pname){ alert('請填專案名稱'); return; }
+  let cid=document.getElementById('lb-client').value; const cnew=document.getElementById('lb-client-new').value.trim();
+  if(cnew){ cid='c'+Date.now(); db.clients.push({id:cid,name:cnew,kind:'建設'}); }
+  if(!cid){ alert('請選建商／客戶或輸入新名稱'); return; }
+  saveActiveProject();
+  const pid='p'+Date.now(), vid='v'+(Date.now()+1);
+  db.projects.push({id:pid,clientId:cid,name:pname,note:'從清單建立',items:[],proRows:[],meta:{}});
+  let n=0; const its=LB_ROWS.map(r=>{ n++; const p=r.prod; const it={num:r.num||('TL-'+String(n).padStart(2,'0')),imgUrl:p?._img||null,pal:PALS[1],
+      imgCtrl:{mode:'cover',zoom:100,offsetX:0,offsetY:0,bg:'transparent',borderWidth:0,borderColor:'#dddddd'},
+      name:r.name||p?.['產品名稱']||'',code:r.code||p?.['型號']||'',color:p?.['顏色']||'',size:r.size||'',area:r.area||r.zone||'',producer:p?.['品牌']||p?.['工廠']||'',note:p?.['系列']||'',grp:r.grp};
+    if(it.imgUrl){ const im=new Image(); im.onload=()=>{ it.imgCtrl.naturalW=im.naturalWidth; it.imgCtrl.naturalH=im.naturalHeight; saveActiveProject(); }; im.src=it.imgUrl; }
+    return it; });
+  const grps=[...new Set(LB_ROWS.map(r=>r.grp))].filter(g=>g!=='其他');
+  if(!db.versions) db.versions=[];
+  db.versions.push({id:vid,projectId:pid,name:document.getElementById('lb-version').value.trim()||'V1 草稿',items:its,proRows:its.map((_,i)=>({type:'item',ref:i})),
+    meta:{docTitle:'建材選色提案',owner:'',project:`${(db.clients.find(c=>c.id===cid)||{}).name||''}-${pname}`,spacedesc:grps.join('、'),version:'V1.0',notes:''}});
+  activeClientId=cid; activeProjectId=pid; activeVersionId=vid;
+  saveDb(); closeModal('listbuild-modal'); loadActiveProject(); renderFinder(); syncJc();
+  const client=db.clients.find(c=>c.id===cid); document.getElementById('tb-project').textContent=`${client?.name||''} ／ ${pname}`;
+}
+
 sb.auth.onAuthStateChange((ev)=>{ if(ev==='SIGNED_OUT'){ location.reload(); } });
 boot();
 </script>

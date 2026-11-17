@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ATLAS 成本分析 v0.1（測試）</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Space+Mono&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0e1012;--sb:#141618;--panel:#1a1d21;--card:#1f2328;--border:#2a2f36;--border2:#353b44;--gold:#d4a843;--gold2:#f0cc7a;--teal:#3aaa8c;--teal2:#4dc9a8;--red:#e06c6c;--indigo:#7b8cff;--amber:#e8b04a;--text:#dde2ee;--sub:#8a94a6;--muted:#4a5566}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.6;min-height:100vh}
+.mono{font-family:'Space Mono',monospace}button,input,select,textarea{font-family:inherit;font-size:inherit}a{color:var(--indigo)}
+.top{position:sticky;top:0;z-index:20;background:var(--sb);border-bottom:1px solid var(--border);padding:10px 16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.top .brand{font-weight:700;letter-spacing:.18em;font-size:12px;color:var(--gold)}.top .brand small{color:var(--sub);letter-spacing:.04em;font-weight:400;margin-left:8px}
+.seg{display:inline-flex;border:1px solid var(--border2);border-radius:8px;overflow:hidden}.seg button{padding:6px 14px;background:transparent;border:0;color:var(--sub);cursor:pointer}.seg button.on{background:var(--gold);color:#1a1200;font-weight:700}
+.top .case{margin-left:auto;font-size:12px;color:var(--sub)}.top .case b{color:var(--text);font-weight:500}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 13px;border-radius:8px;border:1px solid var(--border2);background:var(--card);color:var(--text);cursor:pointer;font-size:13px}.btn:hover{border-color:var(--gold);color:var(--gold2)}.btn.pri{background:var(--gold);border-color:var(--gold);color:#1a1200;font-weight:700}.btn.sm{padding:3px 9px;font-size:12px}
+.top select,.top input{padding:6px 9px;background:var(--bg);border:1px solid var(--border2);border-radius:8px;color:var(--text);max-width:260px}
+#login{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+.login-box{width:100%;max-width:360px;background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:28px 26px}
+.login-box h1{font-size:18px;margin-bottom:4px}.login-box p{color:var(--sub);font-size:12.5px;margin-bottom:20px}
+.login-box .field{margin-bottom:12px}.login-box label{display:block;font-size:11px;color:var(--teal2);letter-spacing:.1em;margin-bottom:4px}.login-box input{width:100%;padding:9px 11px;background:var(--bg);border:1px solid var(--border2);border-radius:8px;color:var(--text)}
+.login-box .err{color:var(--red);font-size:12px;margin-top:8px;min-height:16px}.btn.w{width:100%;justify-content:center;margin-top:6px}
+#app{display:none}
+
+.kpi{position:sticky;top:53px;z-index:19;background:var(--sb);border-bottom:1px solid var(--border);padding:10px 16px}
+.kpi .row{display:flex;gap:22px;flex-wrap:wrap;max-width:1180px;margin:0 auto}
+.kpi .k{display:flex;flex-direction:column}.kpi .k small{font-size:11px;color:var(--sub);letter-spacing:.06em}.kpi .k b{font-family:'Space Mono',monospace;font-size:20px;color:var(--gold2);font-weight:700}.kpi .k b.t{color:var(--teal2)}.kpi .k b.r{color:var(--red)}
+.wrap{max-width:1180px;margin:0 auto;padding:18px 16px 80px;display:grid;grid-template-columns:1fr 340px;gap:20px}
+@media (max-width:960px){.wrap{grid-template-columns:1fr}}
+h2.g1{font-size:11px;letter-spacing:.14em;color:var(--gold);font-weight:600;margin:14px 0 8px;display:flex;align-items:center;gap:10px}h2.g1 .sum{font-family:'Space Mono',monospace;font-size:12px;color:var(--teal2);margin-left:auto}
+.hint{font-size:12px;color:var(--sub);margin-bottom:10px}
+.box{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:10px}
+.box h3{font-size:13px;color:var(--teal2);margin-bottom:8px;display:flex;align-items:center;gap:8px}.box h3 .c{font-size:11px;color:var(--muted);font-weight:400;margin-left:auto;font-family:'Space Mono',monospace}
+.ln{display:grid;grid-template-columns:28px 1fr 150px 70px;gap:8px;align-items:center;padding:4px 0;border-top:1px solid var(--border);font-size:13px}
+.ln:first-of-type{border-top:0}.ln .n{font-family:'Space Mono',monospace;font-size:10px;color:var(--muted)}.ln .lb{color:var(--text)}.ln .lb small{display:block;font-size:11px;color:var(--sub)}
+.ln input,.ln select{width:100%;padding:4px 8px;background:var(--bg);border:1px solid var(--border2);border-radius:6px;color:var(--text);text-align:right;font-family:'Space Mono',monospace;font-size:12.5px}
+.ln .v{font-family:'Space Mono',monospace;font-size:12.5px;text-align:right;color:var(--gold2)}.ln .v.sub{color:var(--text)}.ln .u{font-size:11px;color:var(--sub)}
+.ln.src .lb::after{content:' 案件帶入';font-size:10px;color:var(--teal2);border:1px solid var(--teal);border-radius:4px;padding:0 4px;margin-left:6px}
+.ln.par .lb::after{content:' 參數';font-size:10px;color:var(--indigo);border:1px solid var(--indigo);border-radius:4px;padding:0 4px;margin-left:6px}
+.ok{color:var(--teal2);font-weight:700}.ng{color:var(--red);font-weight:700}
+table.sens{width:100%;border-collapse:collapse;font-family:'Space Mono',monospace;font-size:11.5px}table.sens td,table.sens th{border:1px solid var(--border);padding:4px 6px;text-align:right}table.sens th{color:var(--sub);font-weight:400}table.sens td.c{background:rgba(212,168,67,.15);color:var(--gold2)}
+.side .box{position:sticky;top:120px}
+.pt{width:100%;border-collapse:collapse;font-size:12.5px}.pt th{text-align:left;color:var(--sub);font-weight:400;font-size:11px;padding:4px 6px;border-bottom:1px solid var(--border2)}.pt td{padding:4px 6px;border-bottom:1px solid var(--border);vertical-align:top}.pt td.m{font-family:'Space Mono',monospace;text-align:right;color:var(--gold2)}.pt .x{color:var(--muted);cursor:pointer}.pt .x:hover{color:var(--red)}
+.pt input,.pt select{padding:3px 6px;background:var(--bg);border:1px solid var(--border2);border-radius:6px;color:var(--text);width:100%}
+.grp{font-size:11px;letter-spacing:.12em;color:var(--gold);margin:14px 0 4px}
+.tag{font-size:10px;border:1px solid var(--border2);border-radius:4px;padding:0 5px;color:var(--sub)}
+.empty{color:var(--sub);text-align:center;padding:40px}
+.st{font-size:12px;color:var(--sub);margin-left:8px}.st.err{color:var(--red)}.st.ok{color:var(--teal2)}
+</style>
+</head>
+<body>
+<div id="login"><div class="login-box"><div class="brand"><span style="color:var(--gold);font-weight:700;letter-spacing:.18em">▲ ATLAS</span><h1>成本分析（測試）</h1></div><p>帷幄 · 僅限本人登入</p>
+<form id="loginForm"><div class="field"><label>EMAIL</label><input id="email" type="email" autocomplete="username" required></div><div class="field"><label>PASSWORD</label><input id="pw" type="password" autocomplete="current-password" required></div><button class="btn pri w" id="loginBtn" type="submit">登入</button><div class="err" id="loginErr"></div></form></div></div>
+
+<div id="app">
+<div class="top"><span class="brand">ATLAS · 成本分析<small>v0.1 測試 · 對應 Excel「1.概算方式」41 項</small></span>
+  <div class="seg" id="tabs"><button class="on" data-t="calc">概算</button><button data-t="params">參數表</button></div>
+  <div class="seg" id="mode"><button class="on" data-m="合建">合建</button><button data-m="委建">委建</button><button data-m="自建">自建土開</button></div>
+  <span class="case" id="caseLine"></span>
+  <select id="planSel" title="方案"></select><button class="btn sm" id="planNew">＋方案</button><button class="btn sm pri" id="planSave">存方案</button><span class="st" id="planSt"></span>
+  <a class="btn sm" id="backCase" href="index.html">⌂ 首頁</a><button class="btn sm" id="logoutBtn">登出</button></div>
+
+<div class="kpi" id="kpi"></div>
+<div class="wrap" id="calcView"><div id="main"></div><div class="side"><div class="box" id="sideBox"></div></div></div>
+<div class="wrap" id="paramsView" style="display:none;grid-template-columns:1fr"><div id="params"></div></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script>
+const SB_URL='https://riiflvhbxrnmzriwngjs.supabase.co', SB_KEY='sb_publishable_R69Hj9hcR5G4dp3Uz1J0PQ_1BabpwsN';
+const sb=supabase.createClient(SB_URL,SB_KEY);
+const $=s=>document.querySelector(s); const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const urId=new URLSearchParams(location.search).get('ur');
+let UID=null, CASE=null, PCL=[], FARP=[], PARAMS=[], PLANS=[], PLAN=null, MODE='合建', TAB='calc', CITY='新北市';
+const fmt=(n,d=0)=>isFinite(n)?(+n).toLocaleString('zh-TW',{maximumFractionDigits:d,minimumFractionDigits:d}):'—';
+const wan=n=>fmt(n/1e4,0)+' 萬'; const pct=n=>fmt(n*100,1)+'%';
+const P2M=3.305785;   // 1 坪＝3.305785 ㎡
+
+$('#loginForm').addEventListener('submit',async e=>{ e.preventDefault(); $('#loginBtn').disabled=true; const {error}=await sb.auth.signInWithPassword({email:$('#email').value.trim(),password:$('#pw').value}); $('#loginBtn').disabled=false; if(error){ $('#loginErr').textContent='登入失敗：'+(error.message.includes('Invalid')?'帳號或密碼錯誤':error.message); return; } boot(); });
+$('#logoutBtn').addEventListener('click',async()=>{ await sb.auth.signOut(); location.reload(); });
+async function boot(){ const {data:{session}}=await sb.auth.getSession(); if(!session){ $('#login').style.display='flex'; $('#app').style.display='none'; return; } UID=session.user.id; $('#login').style.display='none'; $('#app').style.display='block'; await loadAll(); }
+
+async function loadAll(){
+  const pr=await sb.from('cost_params').select('*').is('effective_to',null).order('sort').order('id');
+  if(pr.error){ $('#main').innerHTML=`<div class="empty">讀取參數表失敗：${esc(pr.error.message)}（請先跑 supabase_49_cost.sql）</div>`; return; }
+  PARAMS=pr.data;
+  if(urId){ const [u,p,f,c]=await Promise.all([ sb.from('ur_projects').select('*').eq('id',urId).single(), sb.from('parcels').select('*').eq('ur_project_id',urId), sb.from('far_plans').select('id,name,regime,result').eq('ur_project_id',urId).is('deleted_at',null).order('updated_at',{ascending:false}), sb.from('cost_plans').select('*').eq('ur_project_id',urId).is('deleted_at',null).order('updated_at',{ascending:false}) ]);
+    if(!u.error){ CASE=u.data; PCL=p.data||[]; FARP=f.data||[]; PLANS=c.data||[]; CITY=/臺北市|台北市/.test((CASE.address||'')+(PCL[0]?.section||''))?'臺北市':'新北市'; $('#backCase').href=`cases.html?t=ur&id=${urId}`; $('#backCase').textContent='← 案件'; } }
+  $('#caseLine').innerHTML=CASE?`案件：<b>${esc(CASE.name)}</b> · ${CITY} · ${PCL.length} 筆地號`:'未指定案件 — 快速試算（不存檔）';
+  if(PLANS.length) PLAN=PLANS[0]; else PLAN=newPlan('方案一');
+  MODE=PLAN.mode||'合建'; renderPlanSel(); render(); }
+
+// ── 參數讀取 ──
+const par=(key,label,city)=>{ const c=city||CITY; return PARAMS.find(p=>p.key===key&&(label?p.label.startsWith(label):true)&&p.city===c)||PARAMS.find(p=>p.key===key&&(label?p.label.startsWith(label):true)&&p.city==='全國')||null; };
+const pv=(key,label,dflt)=>{ const p=par(key,label); return p&&p.value!=null?+p.value:dflt; };
+const ladder=(key,amt)=>{ const p=par(key); const t=p?.table||[]; for(const s of t){ if(s.upto==null||amt<=s.upto) return +s.rate; } return 0; };
+
+// ── 本案輸入（＝Excel 1.概算方式 左欄要填的）；案件帶入優先，沒有就用預設 ──
+function siteArea(){ return PCL.filter(p=>p.in_site!==false).reduce((a,p)=>a+(+p.area_m2||0),0); }
+function origBldg(){ return PCL.reduce((a,p)=>a+(+p.bldg_floor_m2||0),0); }
+function farBase(){ const by={}; PCL.forEach(p=>{ if(p.in_site===false) return; by[p.zoning||'?']=(by[p.zoning||'?']||0)+(+p.area_m2||0)*(+p.far_pct||0)/100; }); return Object.values(by).reduce((a,b)=>a+b,0); }
+function newPlan(name){ return {id:null,ur_project_id:urId?+urId:null,name,mode:'合建',regime:'ur',inputs:{}}; }
+const DEF=()=>({ land_p:CASE?siteArea()/P2M:300, far:(CASE&&farBase()>0)?farBase()/siteArea()*100:200, orig_p:CASE?origBldg()/P2M:0, orig_pub:pv('概算係數','原建物公設比',0.08), units:30, lots:10, floors:15,
+  bonus:FARP[0]?.result?.pct!=null?FARP[0].result.pct*100:0, transfer_p:0, k_build:pv('概算係數','營建面積係數',1.65), cost_p:180000, k_ind:pv('概算係數','間接成本係數',0.15), relocate:pv('拆遷安置','搬遷費',50000),
+  pm_pct:5, rate:pv('利率','貸款利率',3.13), years:3, transfer_cost:0, k_sale:pv('概算係數','總銷坪係數',1.45), price_p:600000, cars:30, car_price:1800000, pub_new:pv('概算係數','新建物公設比',0.33), floors_old:4 });
+const IN=k=>{ const v=PLAN.inputs[k]; return (v===''||v==null)?(DEF()[k]??0):+v; };
+
+// ── 41 項主線 ──
+function calc(){
+  const land=IN('land_p'), far=IN('far')/100, base=land*far;                                   // 基準容積（坪）
+  const origFloor=IN('orig_p')||land*pv('概算係數','原建物建蔽率推測',0.8)*(IN('floors_old')||4);   // 原建物面積：沒填就用 建蔽推測×舊樓層
+  const bonus=IN('bonus')/100, allow=base*(1+bonus)+IN('transfer_p');                         // 允建容積（含容移）
+  const build=allow*IN('k_build');                                                             // 營建面積（總樓地板）
+  const eng=build*IN('cost_p');                                                                // 工程費
+  const indirect=eng*IN('k_ind');                                                              // 間接成本（規劃設計、鑑定、地籍、管理…以係數概算）
+  const design=eng*ladder('設計費級距',eng), fund=eng*ladder('管理基金級距',eng);                // 參數表級距（參考，已含在間接）
+  const reloc=IN('relocate')*IN('units');                                                      // 拆遷安置補償
+  const pm=(eng+indirect)*IN('pm_pct')/100;                                                    // 專案管理費
+  const interest=(eng+indirect+reloc)*IN('rate')/100*IN('years')/2;                            // 利息（簡化：平均動用一半、工期年數）
+  const tcost=eng+indirect+reloc+pm+interest+IN('transfer_cost');                              // 總建造成本
+  const salep=allow*IN('k_sale');                                                              // 總銷坪
+  const sales=salep*IN('price_p')+IN('cars')*IN('car_price');                                  // 總銷售金額
+  const ratio=sales?tcost/sales:0;                                                             // 成本比例
+  const share={自建:1,合建:1-ratio,委建:1-ratio};                                               // 住戶分回比例（自建＝全拿、自付成本）
+  const sh=share[MODE];
+  const value=sales*sh, valueNoCar=value-IN('cars')*IN('car_price')*sh;                        // 分回價值、扣車位
+  const share_p=valueNoCar/IN('price_p');                                                      // 分回權狀坪
+  const inner_p=share_p*(1-IN('pub_new'));                                                     // 分回室內坪
+  const per_new=inner_p/IN('units'), per_old=origFloor*(1-IN('orig_pub'))/IN('units');          // 每戶室內坪 新 vs 舊
+  return {base,origFloor,bonus,allow,build,eng,indirect,design,fund,reloc,pm,interest,tcost,salep,sales,ratio,share,sh,value,valueNoCar,share_p,inner_p,per_new,per_old,ok:per_new>=per_old,
+    bcr_design:land?Math.min(allow*IN('k_build')/(IN('floors')||15)/land,1):0};
+}
+function sens(){ const c0=IN('cost_p'), p0=IN('price_p'); const cs=[-2,-1,0,1,2].map(i=>c0+i*10000), ps=[-2,-1,0,1,2].map(i=>p0+i*25000); const save={...PLAN.inputs};
+  const g=cs.map(c=>ps.map(p=>{ PLAN.inputs.cost_p=c; PLAN.inputs.price_p=p; const r=calc(); return MODE==='自建'?r.ratio:r.sh; })); PLAN.inputs=save; return {cs,ps,g}; }
+
+// ── 畫面 ──
+const line=(n,lbl,key,unit,opt={})=>{ const src=opt.src?' src':'', parc=opt.par?' par':''; return `<div class="ln${src}${parc}"><span class="n">${n}</span><span class="lb">${lbl}${opt.sub?`<small>${opt.sub}</small>`:''}</span>${opt.sel?`<select data-k="${key}">${opt.sel.map(o=>`<option${IN(key)==o[0]?' selected':''} value="${o[0]}">${o[1]}</option>`).join('')}</select>`:`<input data-k="${key}" value="${PLAN.inputs[key]??''}" placeholder="${fmt(DEF()[key],2)}">`}<span class="u">${unit}</span></div>`; };
+const out=(n,lbl,val,unit,sub)=>`<div class="ln"><span class="n">${n}</span><span class="lb">${lbl}${sub?`<small>${sub}</small>`:''}</span><span class="v${/^\d/.test(n)?'':' sub'}">${val}</span><span class="u">${unit}</span></div>`;
+function render(){
+  $('#calcView').style.display=TAB==='calc'?'grid':'none'; $('#paramsView').style.display=TAB==='params'?'grid':'none';
+  [...$('#mode').children].forEach(b=>b.classList.toggle('on',b.dataset.m===MODE)); [...$('#tabs').children].forEach(b=>b.classList.toggle('on',b.dataset.t===TAB));
+  if(TAB==='params'){ renderParams(); return; }
+  const c=calc();
+  $('#kpi').innerHTML=`<div class="row"><div class="k"><small>總建造成本</small><b>${wan(c.tcost)}</b></div><div class="k"><small>總銷售金額</small><b>${wan(c.sales)}</b></div><div class="k"><small>成本比例</small><b class="t">${pct(c.ratio)}</b></div><div class="k"><small>住戶分回比例（${MODE}）</small><b class="t">${pct(c.sh)}</b></div><div class="k"><small>分回室內坪／戶</small><b>${fmt(c.per_new,1)}</b></div><div class="k"><small>重建前／戶</small><b class="t">${fmt(c.per_old,1)}</b></div><div class="k"><small>財務平衡</small><b class="${c.ok?'t':'r'}">${c.ok?'OK':'NG'} ${fmt(c.per_new-c.per_old,1)} 坪</b></div></div>`;
+  const far=FARP[0];
+  $('#main').innerHTML=`
+  <h2 class="g1">A 基本資料<span class="sum">基準容積 ${fmt(c.base,0)} 坪</span></h2><div class="box">
+    ${line(1,'土地面積','land_p','坪',{src:!!CASE,sub:CASE?`案件 ${PCL.length} 筆 ${fmt(siteArea(),1)} ㎡`:'未接案件，手填'})}
+    ${line(2,'基準容積率','far','%',{src:!!CASE&&farBase()>0,sub:CASE&&farBase()>0?`依地號分區加權 ${fmt(farBase()/siteArea()*100,0)}%`:''})}
+    ${line(3,'原建物面積（權狀）','orig_p','坪',{src:!!CASE&&origBldg()>0,sub:'沒填→土地×建蔽推測 0.8×舊樓層'})}
+    ${line('3b','舊建物樓層','floors_old','層')}
+    ${line(6,'原建物公設比','orig_pub','',{par:true})}
+    ${line(7,'總戶數','units','戶')}${line(8,'土地筆數','lots','筆')}${line('8b','新建樓層','floors','層')}
+  </div>
+  <h2 class="g1">B 獎勵容積<span class="sum">允建 ${fmt(c.allow,0)} 坪</span></h2><div class="box">
+    ${line(9,'容積獎勵','bonus','%',{src:!!far,sub:far?`容積獎勵頁方案「${esc(far.name)}」${far.result?.pct!=null?' '+fmt(far.result.pct*100,1)+'%':''}（<a href="far.html?ur=${urId}">改</a>）`:'手填；接案件可從容積獎勵頁帶入'})}
+    ${line(11,'容積移轉','transfer_p','坪')}
+    ${out(12,'允建容積（含容移）',fmt(c.allow,0),'坪','基準 × (1＋獎勵) ＋ 容移')}
+  </div>
+  <h2 class="g1">C 成本<span class="sum">${wan(c.tcost)}</span></h2><div class="box">
+    ${line(13,'營建面積係數','k_build','',{par:true,sub:'總樓地板／容積（含免計、地下）'})}
+    ${out('','營建面積',fmt(c.build,0),'坪')}
+    ${line(14,'營造成本','cost_p','元/坪',{sub:'含加成；參數表有標準單價表可查'})}
+    ${out('','工程費',wan(c.eng),'')}
+    ${line(15,'間接成本係數','k_ind','',{par:true,sub:`設計費級距 ${pct(ladder('設計費級距',c.eng))} ＋ 管理基金 ${pct(ladder('管理基金級距',c.eng))} ＋ 鑑定、地籍、估價…`})}
+    ${out('','間接成本',wan(c.indirect),'')}
+    ${line(16,'搬遷費／戶','relocate','元',{par:true})}${out('','拆遷安置補償',wan(c.reloc),'',`× ${IN('units')} 戶`)}
+    ${line(17,'專案管理費率','pm_pct','%')}${out('','專案管理費',wan(c.pm),'')}
+    ${line(18,'貸款利率','rate','%',{par:true})}${line('18b','工期','years','年')}${out('','利息',wan(c.interest),'','簡化：成本 × 利率 × 工期 ÷ 2；第二期改現金流')}
+    ${line('19a','容移成本','transfer_cost','元')}
+    ${out(19,'總建造成本',wan(c.tcost),'')}
+  </div>
+  <h2 class="g1">D 收入<span class="sum">${wan(c.sales)}</span></h2><div class="box">
+    ${line(20,'總銷坪係數','k_sale','',{par:true,sub:'銷售面積／容積'})}${out('','總銷坪',fmt(c.salep,0),'坪')}
+    ${line(21,'平均售價','price_p','元/坪')}${line(22,'車位數','cars','位')}${line(23,'車位單價','car_price','元')}
+    ${out(24,'總銷售金額',wan(c.sales),'')}
+  </div>
+  <h2 class="g1">E・F 分回<span class="sum">${MODE} ${pct(c.sh)}</span></h2><div class="box">
+    ${out(25,'成本比例',pct(c.ratio),'','總建造成本 ÷ 總銷')}
+    ${out(26,'住戶應分回比例',`自建 ${pct(c.share.自建)} · 合建 ${pct(c.share.合建)} · 委建 ${pct(c.share.委建)}`,'','合建／委建＝1－成本比例；自建全拿但自付成本')}
+    ${out(27,'應分配價值',wan(c.value),'')}${out(28,'扣車位後',wan(c.valueNoCar),'')}
+    ${out(29,'分回權狀坪',fmt(c.share_p,0),'坪')}${line('','新建物公設比','pub_new','',{par:true})}${out(30,'分回室內坪',fmt(c.inner_p,0),'坪')}
+    ${out(32,'財務平衡',`<span class="${c.ok?'ok':'ng'}">${c.ok?'OK':'NG'}</span> 每戶室內 ${fmt(c.per_new,1)} vs 重建前 ${fmt(c.per_old,1)} 坪`,'')}
+  </div>
+  <h2 class="g1">敏感度（${MODE==='自建'?'成本比例':'分回比例'}）</h2><div class="box"><table class="sens" id="sens"></table><div class="hint" style="margin-top:6px">列＝營造成本 ±1、2 萬/坪；欄＝售價 ±2.5、5 萬/坪。中間格＝目前。</div></div>`;
+  const s=sens(); $('#sens').innerHTML=`<tr><th>造價＼售價</th>${s.ps.map(p=>`<th>${fmt(p/1e4,1)}萬</th>`).join('')}</tr>`+s.cs.map((cc,i)=>`<tr><th>${fmt(cc/1e4,0)}萬</th>${s.g[i].map((v,j)=>`<td class="${i===2&&j===2?'c':''}">${pct(v)}</td>`).join('')}</tr>`).join('');
+  $('#sideBox').innerHTML=`<h3>這頁怎麼對 Excel</h3><div class="hint">每一行的編號＝Excel「1.概算方式」的項次。標 <span class="tag" style="color:var(--teal2);border-color:var(--teal)">案件帶入</span> 的從案件中心讀，標 <span class="tag" style="color:var(--indigo);border-color:var(--indigo)">參數</span> 的預設值來自參數表（可覆寫，只影響本方案）。</div>
+    <div class="hint">目前參數表 ${PARAMS.length} 筆 · ${CITY}。<a href="#" id="toParams">看參數表 →</a></div>
+    <div class="hint" style="color:var(--amber)">測試版簡化：間接成本用係數（Excel 是六張費用表逐項算）、利息用平均動用（Excel 是現金流 FV）。要逐項時我再把六張表接進來。</div>
+    ${PLAN.id?`<div class="hint">方案 #${PLAN.id} · ${esc(PLAN.updated_at||'')}</div>`:''}`;
+  $('#toParams')?.addEventListener('click',e=>{ e.preventDefault(); TAB='params'; render(); });
+  document.querySelectorAll('[data-k]').forEach(el=>el.addEventListener('change',e=>{ PLAN.inputs[el.dataset.k]=e.target.value; render(); touch(); }));
+}
+let _t=null; function touch(){ if(!CASE) return; clearTimeout(_t); _t=setTimeout(()=>savePlan(true),3000); }
+function renderPlanSel(){ const sel=$('#planSel'); sel.innerHTML=PLANS.map(p=>`<option value="${p.id}"${PLAN?.id===p.id?' selected':''}>${esc(p.name)}（${esc(p.mode)}）</option>`).join('')+(PLAN&&!PLAN.id?`<option value="new" selected>${esc(PLAN.name)}（未存）</option>`:''); sel.style.display=CASE?'':'none'; $('#planNew').style.display=CASE?'':'none'; $('#planSave').style.display=CASE?'':'none'; }
+$('#planSel').addEventListener('change',e=>{ const p=PLANS.find(x=>String(x.id)===e.target.value); if(p){ PLAN=p; MODE=p.mode||'合建'; render(); } });
+$('#planNew').addEventListener('click',()=>{ PLAN=newPlan(`方案${['一','二','三','四','五'][PLANS.length]||PLANS.length+1}`); MODE='合建'; renderPlanSel(); render(); });
+$('#planSave').addEventListener('click',()=>savePlan(false));
+async function savePlan(quiet){ if(!CASE) return; const st=$('#planSt'); st.className='st'; st.textContent='存雲端…'; const c=calc();
+  const row={ur_project_id:+urId,name:PLAN.name,mode:MODE,regime:PLAN.regime||'ur',inputs:PLAN.inputs,params_snapshot:PARAMS.map(p=>({key:p.key,city:p.city,label:p.label,value:p.value,table:p.table})),results:{tcost:c.tcost,sales:c.sales,ratio:c.ratio,share:c.sh,per_new:c.per_new,per_old:c.per_old,ok:c.ok},far_plan_id:FARP[0]?.id||null,updated_at:new Date().toISOString()};
+  const q=PLAN.id?sb.from('cost_plans').update(row).eq('id',PLAN.id).select().single():sb.from('cost_plans').insert(row).select().single(); const {data,error}=await q;
+  if(error){ st.className='st err'; st.textContent='存檔失敗：'+error.message; return; } Object.assign(PLAN,data); if(!PLANS.includes(PLAN)) PLANS.unshift(PLAN); renderPlanSel(); st.className='st ok'; st.textContent=(quiet?'已自動存 ':'已存 ')+new Date().toLocaleTimeString('zh-TW',{hour12:false}); }
+[...$('#mode').children].forEach(b=>b.addEventListener('click',()=>{ MODE=b.dataset.m; PLAN.mode=MODE; render(); touch(); }));
+[...$('#tabs').children].forEach(b=>b.addEventListener('click',()=>{ TAB=b.dataset.t; render(); }));
+
+// ── 參數表維護 ──
+function renderParams(){ const by={}; PARAMS.forEach(p=>(by[p.key]??=[]).push(p));
+  $('#params').innerHTML=`<div class="hint">全站共用參數（理事長 Excel 每張費用表的「上半部」）。改這裡＝以後所有新方案都用新值；舊方案存檔時有快照不受影響。要換年度版本：把舊的填「截止日」，再新增一筆。</div>
+  <div style="margin-bottom:10px"><button class="btn sm" id="pAdd">＋ 新增參數</button></div>
+  ${Object.entries(by).map(([k,ps])=>`<div class="grp">${esc(k)}</div><table class="pt"><tr><th style="width:70px">地區</th><th>名稱</th><th style="width:120px">數值</th><th style="width:60px">單位</th><th>級距／表</th><th style="width:90px">生效</th><th>出處</th><th style="width:28px"></th></tr>${ps.map(p=>`<tr data-id="${p.id}"><td>${esc(p.city)}</td><td>${esc(p.label)}</td><td class="m"><input data-pf="value" value="${p.value??''}" style="text-align:right;font-family:'Space Mono',monospace"></td><td>${esc(p.unit||'')}</td><td style="font-family:'Space Mono',monospace;font-size:11px;color:var(--sub)">${p.table?esc(p.table.map(s=>s.k!=null?`${s.k}:${s.v??'—'}`:`≤${s.upto==null?'∞':fmt(s.upto/1e4)+'萬'} ${(s.rate*100).toFixed(2)}%`).join(' · ')):''}</td><td style="font-family:'Space Mono',monospace;font-size:11px">${esc(p.effective_from||'')}</td><td style="font-size:11px;color:var(--sub)">${esc(p.source||'')}</td><td><span class="x" data-pdel="${p.id}" title="填截止日（停用）">✕</span></td></tr>`).join('')}</table>`).join('')}`;
+  document.querySelectorAll('[data-pf]').forEach(inp=>inp.addEventListener('change',async()=>{ const id=+inp.closest('tr').dataset.id; const v=inp.value===''?null:+inp.value; const {error}=await sb.from('cost_params').update({value:v,updated_at:new Date().toISOString()}).eq('id',id); if(error){ alert(error.message); return; } const p=PARAMS.find(x=>x.id===id); p.value=v; inp.style.borderColor='var(--teal)'; }));
+  document.querySelectorAll('[data-pdel]').forEach(x=>x.addEventListener('click',async()=>{ const id=+x.dataset.pdel; if(!confirm('停用這筆參數（填今天為截止日，保留歷史）？')) return; const {error}=await sb.from('cost_params').update({effective_to:new Date().toISOString().slice(0,10)}).eq('id',id); if(error){ alert(error.message); return; } PARAMS=PARAMS.filter(p=>p.id!==id); render(); }));
+  $('#pAdd').addEventListener('click',async()=>{ const key=prompt('群組鍵（例：法定造價、稅率、概算係數）'); if(!key) return; const label=prompt('名稱'); if(!label) return; const city=prompt('地區（全國／臺北市／新北市）','全國')||'全國'; const value=prompt('數值（級距表請之後在 Supabase 填 table 欄）'); const unit=prompt('單位','')||null;
+    const {data,error}=await sb.from('cost_params').insert({key,label,city,value:value===''?null:+value,unit,source:'手動新增'}).select().single(); if(error){ alert(error.message); return; } PARAMS.push(data); render(); });
+}
+sb.auth.onAuthStateChange(ev=>{ if(ev==='SIGNED_OUT') location.reload(); });
+boot();
+</script>
+</body>
+</html>
