@@ -217,10 +217,11 @@ h2.sec small{font-family:'Space Mono',monospace;font-size:10px;color:var(--muted
   <div class="grid3" style="grid-template-columns:repeat(4,1fr)">
     <a class="card link" href="cases.html"><div class="ic">🏗</div><h3>案件中心</h3><div class="d">都更案件、建材專案、聯絡人：地號與持分、同意比例自動算、自動儲存。</div><div class="meta" id="m-cases">–</div><span class="arrow">→</span></a>
     <a class="card link" href="law.html"><div class="ic">📜</div><h3>法規條文庫</h3><div class="d">領域 → 面向 → 法規 三層樹、全文搜尋、實務註記、PDF 原檔。</div><div class="meta" id="m-law">–</div><span class="arrow">→</span></a>
-    <a class="card link" href="finder.html"><div class="ic">🎨</div><h3>選色表</h3><div class="d">建商／專案／版本、產品搜尋、圖片裁剪、PDF 輸出。資料自動同步雲端。</div><div class="meta">v6.9.2 · Supabase 同步</div><span class="arrow">→</span></a>
+    <a class="card link" href="finder.html"><div class="ic">🎨</div><h3>選色表</h3><div class="d">建商／專案／版本、產品搜尋、圖片裁剪、PDF 輸出；📋 從清單建立（貼 區域／型號／尺寸 → 自動建專案）。資料自動同步雲端。</div><div class="meta">v7.0 · Supabase 同步 · 區域字典 SQL 48</div><span class="arrow">→</span></a>
     <a class="card link" href="far.html"><div class="ic">📐</div><h3>容積獎勵</h3><div class="d">都更／危老獎勵項目一條一卡、上限即時顯示、允建容積吃案件地號、方案存雲端。成本分析模組第一段。</div><div class="meta">v1.0 · 38 項獎勵 · 新北／台北地方表</div><span class="arrow">→</span></a>
-    <a class="card link" href="catalog.html"><div class="ic">📚</div><h3>型錄</h3><div class="d">廠商 ▸ 品牌 ▸ 系列 ▸ 品名。新睦豐 20 家原廠 135 系列已入庫；狀態兩層、原廠通知 PDF；國產五家與原廠官網陸續接入。</div><div class="meta">v1.0 · 爬蟲 v2.12 · 每晚更新</div><span class="arrow">→</span></a>
-    <a class="card link" href="https://supabase.com/dashboard/project/riiflvhbxrnmzriwngjs/editor" target="_blank" rel="noopener"><div class="ic">🗄</div><h3>資料表</h3><div class="d">幕後資料庫：跑 SQL、拖 PDF、查資料。日常輸入請用案件中心。</div><div class="meta">Supabase · 16 張表</div><span class="arrow">↗</span></a>
+    <a class="card link" href="catalog.html"><div class="ic">📚</div><h3>型錄</h3><div class="d">廠商 ▸ 品牌 ▸ 系列 ▸ 品名。新睦豐 20 家原廠 135 系列已入庫；狀態兩層、原廠通知 PDF；國產五家與原廠官網陸續接入。</div><div class="meta">v1.9 · 爬蟲 v2.17 · 每月 1 號更新 · 原廠型錄 Fiandre 測試中</div><span class="arrow">→</span></a>
+    <a class="card link" href="cost.html"><div class="ic">🧮</div><h3>成本分析</h3><div class="d">理事長概算模組網頁版：「1.概算方式」41 項主線、合建／委建／自建切換、敏感度；參數表（造價、費率、稅率）集中維護。內部工具，不給業主看。</div><div class="meta">v0.1 測試 · SQL 49 · cost-map.html 關聯圖</div><span class="arrow">→</span></a>
+    <a class="card link" href="https://supabase.com/dashboard/project/riiflvhbxrnmzriwngjs/editor" target="_blank" rel="noopener"><div class="ic">🗄</div><h3>資料表</h3><div class="d">幕後資料庫：跑 SQL、拖 PDF、查資料。日常輸入請用案件中心。</div><div class="meta">Supabase · 22 張表</div><span class="arrow">↗</span></a>
   </div>
 
   <h2 class="sec">案件清單 <small>CASES · 讀 ur_projects / jc_projects</small></h2>
@@ -326,7 +327,7 @@ PDF 原檔   law.html 上「⬇」的法規＝還沒有 PDF</pre></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.106.2/dist/umd/supabase.min.js"></script>
 <script>
-const APP_VER='v6.8 · 2026-11-14'; // 首頁版本：每次改 index.html 就改這行，「交接版本」自動跟著
+const APP_VER='v6.9 · 2026-11-18'; // 首頁版本：每次改 index.html 就改這行，「交接版本」自動跟著
 const SCH_SLOT = {sat:'週六', sun:'週日', hol:'連假', any:'零碎'};
 const SCH = [
   { id:'A', t:'階段 A · 法規庫上線', d:'9月中 → 10月中',
@@ -421,14 +422,14 @@ const SCH = [
        w:'PDF 拆章節；可先只做目錄 + 關鍵表格'},
       {n:'★ Supabase 備份：每週 pg_dump → NAS（mini 到貨後排程）', s:'sat', h:2,
        w:'Free plan 沒有自動備份。mini 到貨前先每月手動 Dashboard → Database → Backups 看一次'},
-      {n:'全站配色統一（第一層金、第二層青綠、待辦琥珀、過期紅；法規庫紫保留給中央／地方）', s:'any', h:2,
-       w:'以 cases v3.11 為準逐頁調 law／finder／index'},
+      {n:'全站配色統一（第一層金、第二層青綠、待辦琥珀、過期紅；法規庫紫保留給中央／地方）', s:'any', h:2, done:true,
+       w:'✅ 2026-11-18 finder v7.0 主色藍→金；far／catalog／cost 共用同一組 :root；law 保留紫'},
       {n:'成本分析模組 ①：far.html 接雲端（far_bonus_items 獎勵表＋新北市地方獎勵＋法規庫連結）', s:'sun', h:4, done:true,
        w:'✅ 2026-11-12 far v1.0，SQL 40（38 項：中央都更 12、台北地方 7、危老 10、新北地方 9）。方案存 far_plans 含快照；案件頁有「容積獎勵」區塊'},
-      {n:'成本分析模組 ②：cost_params 參數表＋維護頁（法定造價、標準單價、設計費、估價費、管理費、稅率、拆除、地籍）', s:'sun', h:4,
-       w:'跟分區容積率同一套：值＋生效日＋來源；造價表要抓新資料（北市 7/1 公告、新北版）'},
+      {n:'成本分析模組 ②：cost_params 參數表＋維護頁（法定造價、標準單價、設計費、估價費、管理費、稅率、拆除、地籍）', s:'sun', h:4, done:true,
+       w:'✅ 2026-11-18 cost.html v0.1 測試版＋SQL 49（60 筆種子）；標準單價表骨架待造價新資料（北市 7/1 公告、新北版）'},
       {n:'成本分析模組 ③：主線 41 項（1.概算方式）＋三方案切換＋敏感度；方案存 cost_plans（含參數快照）', s:'sun', h:8,
-       w:'內部工具，不給業主看；對外版等找到以前給業主的表再做。用 Excel 同組輸入對答案'},
+       w:'v0.1 已有主線＋敏感度＋方案存檔；待：六張費用表逐項取代係數、現金流利息、用 Excel 同組輸入對答案。內部工具，不給業主看'},
       {n:'（往後移）建物層：建號 × 所有權人（§37 建物人數比／樓地板面積比）', s:'sun', h:4,
        w:'新表 buildings + building_owners；資料來源建物謄本'},
       {n:'年底驗收：手機實測完整流程一次', s:'sat', h:2,
@@ -594,7 +595,7 @@ const OPS=[
   {k:'law_pdf',auto:true,l:'地方法規 PDF 最後上傳（法規庫自動記）',judge:()=>{ const r=SYNC.law_pdf; if(!r) return ['bad','未記錄（開一次法規庫即寫入）']; const d=(Date.now()-new Date(r.ran_at))/864e5; return [d>100?'warn':'ok',new Date(r.ran_at).toLocaleDateString('zh-TW')+' · '+Math.round(d)+' 天前'+(r.note?' · '+r.note:'')]; }},
   {k:'schema',auto:true,l:'資料庫結構最後更新（SQL 檔尾自動記）',judge:()=>{ const r=SYNC.schema; if(!r) return ['warn','未記錄（跑 supabase_35 起自動寫）']; const d=(Date.now()-new Date(r.ran_at))/864e5; return ['ok',new Date(r.ran_at).toLocaleDateString('zh-TW')+' · '+Math.round(d)+' 天前'+(r.note?' · '+r.note:'')]; }},
   {k:'handover_ver',auto:true,l:'首頁／交接版本（index.html 自動）',judge:()=>['ok',APP_VER]},
-  {k:'handover_doc',l:'交接文件 .md 版本（Project 檔案）',ph:'例：v6 · 2026-11',judge:v=>{ if(!v) return ['warn','未填（目前 Project 內是 v5，已落後）']; const m=v.match(/(\d{4})-(\d{2})/); if(m){ const d=(Date.now()-new Date(m[1]+'-'+m[2]+'-01'))/864e5; if(d>60) return ['warn',v+' · 超過兩個月，該更新']; } return ['ok',v]; }},
+  {k:'handover_doc',l:'交接文件 .md 版本（Project 檔案）',ph:'例：v6 · 2026-11',judge:v=>{ if(!v) return ['warn','未填（Project 內最新是 claude/ATLAS-交接文件-v6.md，2026-11-18）']; const m=v.match(/(\d{4})-(\d{2})/); if(m){ const d=(Date.now()-new Date(m[1]+'-'+m[2]+'-01'))/864e5; if(d>60) return ['warn',v+' · 超過兩個月，該更新']; } return ['ok',v]; }},
   {k:'nocodb',l:'NocoDB 容器',ph:'運行中 / 已停用',judge:v=>v&&v.includes('停')?['ok',v]:['warn',v||'運行中（待停用）']},
 ];
 function renderOps(){
