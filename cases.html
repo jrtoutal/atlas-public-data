@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#0e1012">
-<title>ATLAS 案件中心 v3.19</title>
+<title>ATLAS 案件中心 v3.20</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Space+Mono:wght@400;700&display=swap');
 :root{--bg:#0e1012;--sb:#141618;--panel:#1a1d21;--card:#1f2328;--border:#2a2f36;--border2:#353b44;--gold:#d4a843;--gold2:#f0cc7a;--teal:#3aaa8c;--teal2:#4dc9a8;--red:#e06c6c;--indigo:#7b8cff;--amber:#e8b04a;--text:#dde2ee;--sub:#8a94a6;--muted:#4a5566}
@@ -117,6 +117,13 @@ a{color:var(--teal2)}
 .it.done .cb{background:var(--teal);border-color:var(--teal)}
 .it.done .cb::after{content:'✓';color:#fff;font-size:10px;position:absolute;left:2px;top:-3px}
 .addrow{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+/* 試燒／打樣記錄 */
+.smz{margin-top:10px}.smz h4{font-size:12px;color:var(--teal2);font-weight:600;margin:0 0 4px;display:flex;gap:8px;align-items:center}.smz h4 .n{font-family:'Space Mono',monospace;font-size:11px;color:var(--muted);font-weight:400}
+.sm{display:grid;grid-template-columns:1fr auto;gap:4px 10px;padding:8px 0;border-top:1px solid var(--border)}.sm .t{font-size:13px}.sm .t b{font-family:'Space Mono',monospace;color:var(--gold2);font-weight:600;margin-right:6px}.sm .sub{font-size:11.5px;color:var(--sub)}.sm .ops{display:flex;gap:8px;align-items:center;white-space:nowrap}.sm .ops .x{color:var(--muted);cursor:pointer;font-size:12px}.sm .ops .x:hover{color:var(--red)}
+.sm .ph{grid-column:1/-1;display:flex;gap:6px;flex-wrap:wrap}.sm .ph div{width:72px;height:72px;border-radius:7px;background:var(--bg) center/cover;border:1px solid var(--border2);cursor:zoom-in;position:relative}.sm .ph div i{position:absolute;left:0;right:0;bottom:0;background:rgba(0,0,0,.55);color:#fff;font-size:9px;font-style:normal;text-align:center;padding:1px 0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.pill.r0{border-color:var(--border2);color:var(--sub)}.pill.r1{border-color:var(--teal);color:var(--teal2)}.pill.r2{border-color:var(--amber);color:var(--amber)}.pill.r3{border-color:var(--red);color:var(--red)}
+.smform{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:6px;margin-top:8px;background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:10px}.smform label{display:block;font-size:10.5px;color:var(--teal2);letter-spacing:.06em;margin-bottom:2px}.smform input,.smform select,.smform textarea{width:100%;padding:6px 8px;background:var(--bg);border:1px solid var(--border2);border-radius:7px;color:var(--text);outline:none}.smform .full{grid-column:1/-1}
+.lbx{position:fixed;inset:0;background:rgba(0,0,0,.9);display:none;align-items:center;justify-content:center;z-index:60;padding:20px;cursor:zoom-out}.lbx.on{display:flex}.lbx img{max-width:100%;max-height:92vh;border-radius:8px}.lbx span{position:absolute;bottom:14px;left:0;right:0;text-align:center;color:#ddd;font-size:12px}
 .addrow input,.addrow select{padding:7px 10px;background:var(--bg);border:1px solid var(--border2);border-radius:7px;color:var(--text);outline:none;min-width:0}
 .addrow input{flex:1;min-width:140px}
 
@@ -248,7 +255,7 @@ const LAND_USE=['建','田','旱','林','道','水','雜','—'];
 const finderProj=jcId=>(DATA.finder?.projects||[]).find(p=>p.jcId===jcId)||null;
 const finderVers=jcId=>{ const p=finderProj(jcId); return p?(DATA.finder?.versions||[]).filter(v=>v.projectId===p.id):[]; };
 // ── 狀態 ──
-let UID=null, TAB='ur', CUR=null, DATA={ur:[],jc:[],ct:[],tasks:[],urc:[],jcc:[],pcl:[],po:[]};
+let UID=null, TAB='ur', CUR=null, SM_READY=false, SM_URL={}, DATA={ur:[],jc:[],ct:[],tasks:[],urc:[],jcc:[],pcl:[],po:[]};
 let AUTOSAVE=null, EDIT_PCL=null, PASTE_PCL=null; const ADDOPEN=new Set();
 let PCLOPEN=new Set(); try{ PCLOPEN=new Set(JSON.parse(localStorage.getItem('atlas-pcl-open')||'[]')); }catch(e){}
 let SECCLOSED=new Set(); try{ SECCLOSED=new Set(JSON.parse(localStorage.getItem('atlas-sec-closed')||'[]')); }catch(e){}
@@ -272,7 +279,7 @@ function cloud(st,txt){ $('#cloudDot').className=st; $('#cloudTxt').textContent=
 // ── 載入 ──
 async function loadAll(){
   cloud('wait','載入中…');
-  const [a,b,c,d,e,f,g,h,z,fs,fp,cp]=await Promise.all([
+  const [a,b,c,d,e,f,g,h,z,fs,fp,cp,sm]=await Promise.all([
     sb.from('ur_projects').select('*').order('updated_at',{ascending:false}),
     sb.from('jc_projects').select('*').order('updated_at',{ascending:false}),
     sb.from('contacts').select('*').order('name'),
@@ -285,10 +292,11 @@ async function loadAll(){
     sb.from('finder_state').select('data').eq('user_id',UID).maybeSingle(),
     sb.from('far_plans').select('id,ur_project_id,name,regime,result,updated_at').order('updated_at',{ascending:false}),
     sb.from('cost_plans').select('id,ur_project_id,name,mode,results,updated_at').is('deleted_at',null).order('updated_at',{ascending:false}),   // 成本分析（SQL 49；沒建表就空）
+    sb.from('samples').select('*').order('sample_date',{ascending:false}).order('seq',{ascending:false}),   // 試燒／打樣記錄（SQL 50）
   ]);
   const err=[a,b,c,d,e,f].find(x=>x.error)?.error; if(err){ cloud('err','讀取失敗：'+err.message); return; }
   // parcels 兩表還沒建（supabase_11 未跑）時不擋整頁
-  DATA={ur:a.data,jc:b.data,ct:c.data,tasks:d.data,urc:e.data,jcc:f.data,pcl:g.error?[]:g.data,po:h.error?[]:h.data,zr:z.error?[]:z.data,finder:fs.data?.data||null,far:fp.error?[]:fp.data,cost:cp.error?[]:cp.data};
+  DATA={ur:a.data,jc:b.data,ct:c.data,tasks:d.data,urc:e.data,jcc:f.data,pcl:g.error?[]:g.data,po:h.error?[]:h.data,zr:z.error?[]:z.data,finder:fs.data?.data||null,far:fp.error?[]:fp.data,cost:cp.error?[]:cp.data,samples:sm.error?[]:sm.data}; SM_READY=!sm.error;
   DATA.noParcels=!!g.error;
   cloud('ok','已同步');
 }
@@ -631,6 +639,57 @@ async function del(){
   DATA[TAB]=DATA[TAB].filter(x=>x.id!==CUR.id); CUR=null; await loadAll(); renderList(); $('#detail').innerHTML='<div class="empty">已刪除，可按上方 ↶ 復原</div>';
 }
 
+// ── 試燒／打樣記錄（samples，SQL 50）──
+const SM_RESULT=['待確認','通過','調色再燒','不採用']; const SM_RCLS={'待確認':'r0','通過':'r1','調色再燒':'r2','不採用':'r3'};
+const SM_ZONES=['外牆','大廳','電梯廳','走廊','樓梯','客廳','主浴','客浴','廚房','陽台','車道','騎樓','中庭','戶外地坪','露台'];
+function sampleSection(id){ if(!SM_READY) return `<div class="sec"><h3>試燒／打樣記錄</h3><div style="font-size:12px;color:var(--muted)">還沒建表：請先跑 supabase_50_samples.sql</div></div>`;
+  const rows=(DATA.samples||[]).filter(x=>x.jc_project_id===id); const byZ={}; rows.forEach(r=>(byZ[r.zone]??=[]).push(r));
+  const zoneOpts=[...new Set([...SM_ZONES,...rows.map(r=>r.zone)])];
+  return `<div class="sec" id="smSec"><h3>試燒／打樣記錄 <span class="spacer"></span><span class="mono" style="font-weight:400">${rows.length} 筆</span><button class="btn sm" id="smAddBtn">＋ 新增打樣</button></h3>
+    <div class="smform" id="smForm" style="display:none">
+      <div><label>區域</label><input id="sm-zone" list="dl-smz" placeholder="外牆"><datalist id="dl-smz">${zoneOpts.map(z=>`<option value="${esc(z)}">`).join('')}</datalist></div>
+      <div><label>第幾次（自動）</label><input id="sm-seq" type="number" min="1" placeholder="自動"></div>
+      <div><label>試燒編號</label><input id="sm-code" placeholder="工廠編號"></div>
+      <div><label>日期</label><input id="sm-date" type="date" value="${new Date().toISOString().slice(0,10)}"></div>
+      <div><label>廠商／工廠</label><input id="sm-vendor" placeholder="冠軍／Fiandre…"></div>
+      <div><label>型號／品名</label><input id="sm-model"></div>
+      <div><label>尺寸</label><input id="sm-size" placeholder="4.5x19.5"></div>
+      <div><label>結果</label><select id="sm-result">${SM_RESULT.map(x=>`<option>${x}</option>`).join('')}</select></div>
+      <div class="full"><label>備註（色差、客人意見、下次要調什麼）</label><textarea id="sm-notes" rows="2"></textarea></div>
+      <div class="full"><label>照片（可多張；手機可直接拍）</label><input id="sm-photos" type="file" accept="image/*" multiple style="padding:6px"></div>
+      <div class="full" style="display:flex;gap:8px;align-items:center"><button class="btn pri sm" id="smSave">建立</button><button class="btn sm" id="smCancel">取消</button><span class="st" id="smSt"></span></div>
+    </div>
+    ${Object.keys(byZ).sort().map(z=>`<div class="smz"><h4>${esc(z)}<span class="n">${byZ[z].length} 次</span></h4>${byZ[z].sort((a,b)=>b.seq-a.seq).map(r=>`<div class="sm" data-sm="${r.id}">
+      <div class="t"><b>第 ${r.seq} 次</b>${esc([r.code,r.vendor,r.model,r.size].filter(Boolean).join(' · '))} <span class="pill ${SM_RCLS[r.result]||'r0'}">${esc(r.result||'待確認')}</span></div>
+      <div class="ops"><span class="sub">${esc(fmtD(r.sample_date)||'')}</span><select data-smres="${r.id}" style="padding:2px 4px;font-size:11px;background:var(--bg);color:var(--text);border:1px solid var(--border2);border-radius:5px">${SM_RESULT.map(x=>`<option${x===r.result?' selected':''}>${x}</option>`).join('')}</select><label class="x" title="加照片" style="color:var(--teal2)">＋照片<input type="file" accept="image/*" multiple data-smadd="${r.id}" style="display:none"></label><span class="x" data-smdel="${r.id}">刪</span></div>
+      ${r.notes?`<div class="sub" style="grid-column:1/-1;white-space:pre-wrap">${esc(r.notes)}</div>`:''}
+      ${(r.photos||[]).length?`<div class="ph">${r.photos.map((p,i)=>`<div data-lb="${esc(p.path)}" data-cap="${esc(z)} 第 ${r.seq} 次 ${esc(r.code||'')} · ${esc(p.name||'')}" title="點開大圖；長按／右鍵可另存"><i>${esc(p.name||'')}</i><span class="x" data-smrm="${r.id}|${i}" style="position:absolute;top:1px;right:3px;color:#fff;font-size:11px;text-shadow:0 0 3px #000">✕</span></div>`).join('')}</div>`:''}
+    </div>`).join('')}</div>`).join('')||'<div style="font-size:12px;color:var(--muted)">尚無打樣記錄</div>'}</div>`; }
+async function smSigned(paths){ const need=paths.filter(p=>!SM_URL[p]||SM_URL[p].exp<Date.now()); if(need.length){ const {data}=await sb.storage.from('samples').createSignedUrls(need,3600); (data||[]).forEach((d,i)=>{ if(d.signedUrl) SM_URL[need[i]]={url:d.signedUrl,exp:Date.now()+3300e3}; }); } return paths.map(p=>SM_URL[p]?.url||''); }
+async function smThumbs(){ const els=[...document.querySelectorAll('#smSec .ph div[data-lb]')]; if(!els.length) return; const urls=await smSigned(els.map(e=>e.dataset.lb)); els.forEach((e,i)=>{ if(urls[i]) e.style.backgroundImage=`url('${urls[i]}')`; }); }
+function smShrink(file,max=1600){ return new Promise(res=>{ const img=new Image(); const u=URL.createObjectURL(file); img.onload=()=>{ let w=img.naturalWidth,h=img.naturalHeight; const k=Math.min(1,max/Math.max(w,h)); w=Math.round(w*k); h=Math.round(h*k); const c=document.createElement('canvas'); c.width=w; c.height=h; c.getContext('2d').drawImage(img,0,0,w,h); c.toBlob(b=>{ URL.revokeObjectURL(u); res(b||file); },'image/jpeg',.86); }; img.onerror=()=>res(file); img.src=u; }); }
+const smSafe=x=>String(x||'').replace(/[\\/:*?"<>|#%]+/g,'-').trim();
+async function smUpload(rec,files,st){ const out=[]; const jc=DATA.jc.find(x=>x.id===rec.jc_project_id); const base=(rec.photos||[]).length;
+  for(let i=0;i<files.length;i++){ if(st) st.textContent=`上傳照片 ${i+1}/${files.length}…`; const b=await smShrink(files[i]); const name=`${smSafe(jc?.short_name||jc?.name||rec.jc_project_id)}_${smSafe(rec.zone)}_第${rec.seq}次${rec.code?'_'+smSafe(rec.code):''}_${String(base+i+1).padStart(2,'0')}.jpg`; const path=`${rec.jc_project_id}/${name}`;
+    const {error}=await sb.storage.from('samples').upload(path,b,{contentType:'image/jpeg',upsert:true}); if(error){ alert('照片上傳失敗：'+error.message); continue; } out.push({path,name,note:''}); }
+  return out; }
+function smBind(){ const id=CUR?.id; if(!id||!SM_READY) return; smThumbs();
+  $('#smAddBtn')?.addEventListener('click',()=>{ const f=$('#smForm'); f.style.display=f.style.display==='none'?'grid':'none'; if(f.style.display==='grid') $('#sm-zone').focus(); });
+  $('#smCancel')?.addEventListener('click',()=>{ $('#smForm').style.display='none'; });
+  $('#sm-zone')?.addEventListener('change',()=>{ const z=$('#sm-zone').value.trim(); const n=(DATA.samples||[]).filter(x=>x.jc_project_id===id&&x.zone===z).length; $('#sm-seq').placeholder=String(n+1); });
+  $('#smSave')?.addEventListener('click',async()=>{ const zone=$('#sm-zone').value.trim(); if(!zone){ alert('請填區域'); return; } const st=$('#smSt'); st.className='st'; st.textContent='建立中…';
+    const same=(DATA.samples||[]).filter(x=>x.jc_project_id===id&&x.zone===zone); const seq=+$('#sm-seq').value||(Math.max(0,...same.map(x=>x.seq))+1);
+    const rec={jc_project_id:id,zone,seq,code:$('#sm-code').value.trim()||null,sample_date:$('#sm-date').value||null,vendor:$('#sm-vendor').value.trim()||null,model:$('#sm-model').value.trim()||null,size:$('#sm-size').value.trim()||null,result:$('#sm-result').value,notes:$('#sm-notes').value.trim()||null,photos:[],source:'web'};
+    const files=[...($('#sm-photos').files||[])]; if(files.length) rec.photos=await smUpload(rec,files,st);
+    const {data,error}=await sb.from('samples').insert(rec).select().single(); if(error){ st.className='st err'; st.textContent='失敗：'+error.message; return; }
+    DATA.samples.unshift(data); st.className='st ok'; st.textContent='已建立'; showForm(); toast(`已新增 ${zone} 第 ${seq} 次打樣`); });
+  document.querySelectorAll('[data-smres]').forEach(sel=>sel.addEventListener('change',async()=>{ const r=DATA.samples.find(x=>x.id===+sel.dataset.smres); const {error}=await sb.from('samples').update({result:sel.value,updated_at:new Date().toISOString()}).eq('id',r.id); if(error){ alert(error.message); return; } r.result=sel.value; showForm(); }));
+  document.querySelectorAll('[data-smadd]').forEach(inp=>inp.addEventListener('change',async()=>{ const r=DATA.samples.find(x=>x.id===+inp.dataset.smadd); const files=[...inp.files]; if(!files.length) return; toast(`上傳 ${files.length} 張…`); const add=await smUpload(r,files,null); const photos=[...(r.photos||[]),...add]; const {error}=await sb.from('samples').update({photos,updated_at:new Date().toISOString()}).eq('id',r.id); if(error){ alert(error.message); return; } r.photos=photos; showForm(); toast(`已加 ${add.length} 張照片`); }));
+  document.querySelectorAll('[data-smrm]').forEach(x=>x.addEventListener('click',async e=>{ e.stopPropagation(); const [rid,i]=x.dataset.smrm.split('|'); const r=DATA.samples.find(y=>y.id===+rid); if(!confirm('移除這張照片？（檔案保留在雲端桶裡，只從記錄拿掉）')) return; const photos=r.photos.filter((_,k)=>k!==+i); const {error}=await sb.from('samples').update({photos,updated_at:new Date().toISOString()}).eq('id',r.id); if(error){ alert(error.message); return; } r.photos=photos; showForm(); }));
+  document.querySelectorAll('[data-smdel]').forEach(x=>x.addEventListener('click',async()=>{ const r=DATA.samples.find(y=>y.id===+x.dataset.smdel); try{ await softDel([{table:'samples',ids:[r.id]}],`${r.zone} 第 ${r.seq} 次打樣`); }catch(e){ alert('刪除失敗：'+e.message); return; } DATA.samples=DATA.samples.filter(y=>y.id!==r.id); showForm(); }));
+  document.querySelectorAll('#smSec .ph div[data-lb]').forEach(el=>el.addEventListener('click',async()=>{ const [u]=await smSigned([el.dataset.lb]); if(!u) return; $('#lbxImg').src=u; $('#lbxCap').textContent=el.dataset.cap||''; $('#lbx').classList.add('on'); }));
+}
+
 // ── 關聯區：聯絡人、待辦、所屬案件 ──
 function relSections(){
   const id=CUR.id; let h='';
@@ -646,7 +705,8 @@ function relSections(){
   if(TAB==='jc'){ const fp=finderProj(id), vs=finderVers(id); const cl=fp?(DATA.finder?.clients||[]).find(c=>c.id===fp.clientId):null;
     h+=`<div class="sec"><h3>選色表 <span class="spacer"></span><span class="mono" style="font-weight:400">${vs.length} 個版本</span></h3>
       ${fp?`<div class="it"><span class="pill k2">${esc(cl?.name||'')}</span><span>${esc(fp.name)}</span><span class="sub">${vs.map(v=>esc(v.name)).join('、')||'尚無版本'}</span><a class="btn sm" href="finder.html?jc=${id}" style="margin-left:auto;text-decoration:none">開選色表 →</a></div>`
-        :`<div style="font-size:12px;color:var(--muted)">選色表裡還沒有這個專案。到 <a href="finder.html">選色表</a> 在對應建商下新增同名專案，它會自動連到這裡。</div>`}</div>`; }
+        :`<div style="font-size:12px;color:var(--muted)">選色表裡還沒有這個專案。到 <a href="finder.html">選色表</a> 在對應建商下新增同名專案，它會自動連到這裡。</div>`}</div>`;
+    h+=sampleSection(id); }
   if(TAB==='ur'||TAB==='jc'){
     const links=TAB==='ur'?DATA.urc.filter(x=>x.ur_project_id===id):DATA.jcc.filter(x=>x.jc_project_id===id);
     h+=`<div class="sec"><h3>相關聯絡人 <span class="spacer"></span><span class="mono" style="font-weight:400">${links.length}</span></h3>
@@ -673,6 +733,7 @@ function relSections(){
 function bindRel(){
   const id=CUR?.id; if(!id) return;
   bindParcels(); bindHoldings();
+  if(TAB==='jc') smBind();
   $('#btnLink')?.addEventListener('click',async()=>{ const cid=+$('#linkCt').value; if(!cid) return;
     const row=TAB==='ur'?{ur_project_id:id,contact_id:cid,role:$('#linkRole').value}:{jc_project_id:id,contact_id:cid};
     const {error}=await sb.from(TAB==='ur'?'ur_project_contacts':'jc_project_contacts').insert(row);
@@ -1076,5 +1137,6 @@ sb.auth.onAuthStateChange(ev=>{ if(ev==='SIGNED_OUT') location.reload(); });
 boot();
 </script>
 <div class="toast" id="toast"></div>
+<div class="lbx" id="lbx" onclick="this.classList.remove('on')"><img id="lbxImg" alt=""><span id="lbxCap"></span></div>
 </body>
 </html>
