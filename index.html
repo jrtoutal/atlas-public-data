@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#0d0f14">
-<title>ATLAS 帷幄 v6.8 — 指揮中心</title>
+<title>ATLAS 帷幄 v6.10 — 指揮中心</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Noto+Serif+TC:wght@600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
 :root[data-theme="dark"]{--bg:#0d0f14;--bg-2:#12151c;--panel:#161a22;--card:#1c2028;--card-2:#22262f;--border:#252c38;--border-2:#2e3648;--ink:#e4e8f2;--ink-2:#b2bacb;--muted:#6a7490;--dim:#434b60;--gold:#d4a843;--gold-2:#f0cc7a;--teal:#3aaa8c;--teal-2:#5dd4b0;--indigo:#5b7ec4;--red:#e07060;--amber:#e8b04a;--grid:rgba(255,255,255,.04)}
@@ -178,7 +178,7 @@ h2.sec small{font-family:'Space Mono',monospace;font-size:10px;color:var(--muted
 </div>
 
 <div class="top"><div class="in">
-  <div class="brand" onclick="go('home')"><span class="mk">▲ ATLAS</span><b>帷幄</b><span class="v">v6.4</span></div>
+  <div class="brand" onclick="go('home')"><span class="mk">▲ ATLAS</span><b>帷幄</b><span class="v">v6.10</span></div>
   <nav class="tabs">
     <button class="tab on" data-v="home"><span class="n">01</span>首頁</button>
     <button class="tab" data-v="sched"><span class="n">02</span>工作時程</button>
@@ -207,7 +207,7 @@ h2.sec small{font-family:'Space Mono',monospace;font-size:10px;color:var(--muted
         <div class="stat"><div class="k">PDF</div><div class="v" id="st-pdf">–</div><div class="s">原檔在 Storage</div></div>
         <div class="stat"><div class="k">NOTED</div><div class="v" id="st-noted">–</div><div class="s">已寫實務註記</div></div>
         <div class="stat"><div class="k">FINDER</div><div class="v" id="st-finder">–</div><div class="s">選色版本（雲端）</div></div>
-        <div class="stat"><div class="k">PRODUCTS</div><div class="v" id="st-prod">–</div><div class="s">產品庫（等爬蟲）</div></div>
+        <div class="stat"><div class="k">PRODUCTS</div><div class="v" id="st-prod">–</div><div class="s">產品庫（型錄入庫）</div></div>
       </div>
     </div>
     <div class="rings" id="rings"></div>
@@ -215,11 +215,11 @@ h2.sec small{font-family:'Space Mono',monospace;font-size:10px;color:var(--muted
 
   <h2 class="sec">入口 <small>ENTRY</small></h2>
   <div class="grid3" style="grid-template-columns:repeat(4,1fr)">
-    <a class="card link" href="cases.html"><div class="ic">🏗</div><h3>案件中心</h3><div class="d">都更案件、建材專案、聯絡人：地號與持分、同意比例自動算、自動儲存。</div><div class="meta" id="m-cases">–</div><span class="arrow">→</span></a>
+    <a class="card link" href="cases.html"><div class="ic">🏗</div><h3>案件中心</h3><div class="d">都更案件、建材專案、聯絡人：地號與持分、同意比例自動算；試燒／打樣記錄、專案進度、案件待辦都掛在案件底下。</div><div class="meta" id="m-cases">–</div><span class="arrow">→</span></a>
     <a class="card link" href="law.html"><div class="ic">📜</div><h3>法規條文庫</h3><div class="d">領域 → 面向 → 法規 三層樹、全文搜尋、實務註記、PDF 原檔。</div><div class="meta" id="m-law">–</div><span class="arrow">→</span></a>
-    <a class="card link" href="finder.html"><div class="ic">🎨</div><h3>選色表</h3><div class="d">建商／專案／版本、產品搜尋、圖片裁剪、PDF 輸出；📋 從清單建立（貼 區域／型號／尺寸 → 自動建專案）。資料自動同步雲端。</div><div class="meta">v7.0 · Supabase 同步 · 區域字典 SQL 48</div><span class="arrow">→</span></a>
+    <a class="card link" href="finder.html"><div class="ic">🎨</div><h3>選色表</h3><div class="d">建商／專案／版本、產品搜尋、圖片裁剪、PDF 輸出；📋 從清單建立（貼 區域／型號／尺寸 → 自動建專案）。資料自動同步雲端。</div><div class="meta">v7.4 · Supabase 同步 · 區域字典 SQL 48 · 原廠型號欄</div><span class="arrow">→</span></a>
     <a class="card link" href="far.html"><div class="ic">📐</div><h3>容積獎勵</h3><div class="d">都更／危老獎勵項目一條一卡、上限即時顯示、允建容積吃案件地號、方案存雲端。成本分析模組第一段。</div><div class="meta">v1.0 · 38 項獎勵 · 新北／台北地方表</div><span class="arrow">→</span></a>
-    <a class="card link" href="catalog.html"><div class="ic">📚</div><h3>型錄</h3><div class="d">廠商 ▸ 品牌 ▸ 系列 ▸ 品名。新睦豐 20 家原廠 135 系列已入庫；狀態兩層、原廠通知 PDF；國產五家與原廠官網陸續接入。</div><div class="meta">v1.9 · 爬蟲 v2.17 · 每月 1 號更新 · 原廠型錄 Fiandre 測試中</div><span class="arrow">→</span></a>
+    <a class="card link" href="catalog.html"><div class="ic">📚</div><h3>型錄</h3><div class="d">廠商 ▸ 品牌 ▸ 系列 ▸ 品名。新睦豐 20 家原廠 135 系列已入庫；狀態兩層、原廠通知 PDF、原廠完整規格與紋理圖；國產六家＋昌達與其他原廠陸續接入。</div><div class="meta">v1.13 · 爬蟲 v2.19 · 每月 1 號更新 · 原廠規格 Fiandre Marmi Maximum 測試中</div><span class="arrow">→</span></a>
     <a class="card link" href="cost.html"><div class="ic">🧮</div><h3>成本分析</h3><div class="d">理事長概算模組網頁版：「1.概算方式」41 項主線、合建／委建／自建切換、敏感度；參數表（造價、費率、稅率）集中維護。內部工具，不給業主看。</div><div class="meta">v0.1 測試 · SQL 49 · cost-map.html 關聯圖</div><span class="arrow">→</span></a>
     <a class="card link" href="https://supabase.com/dashboard/project/riiflvhbxrnmzriwngjs/editor" target="_blank" rel="noopener"><div class="ic">🗄</div><h3>資料表</h3><div class="d">幕後資料庫：跑 SQL、拖 PDF、查資料。日常輸入請用案件中心。</div><div class="meta">Supabase · 22 張表</div><span class="arrow">↗</span></a>
   </div>
@@ -245,7 +245,7 @@ h2.sec small{font-family:'Space Mono',monospace;font-size:10px;color:var(--muted
 
 <!-- ═══ 02 工作時程 ═══ -->
 <section class="view" id="v-sched">
-  <h2 class="sec" style="margin-top:4px">工作時程 <small>Q4 2026 → Q1 2027 · 勾選同步雲端</small></h2>
+  <h2 class="sec" style="margin-top:4px">工作時程 <small>Q4 2026 → 1 月中收尾 · 勾選同步雲端</small></h2>
   <div class="hint" style="margin-bottom:14px">完成的階段自動收合；只有進行中的攤開。點任務打勾。<span id="schSum"></span></div>
   <div id="stages"></div>
 </section>
@@ -303,11 +303,12 @@ Vercel 盯著這個 repo，檔案一變就自動重新部署（約 30–60 秒�
   放 Mac ~/Downloads；密鑰讀 ~/Downloads/.atlas_env
   目前三支：atlas_law_push_sb_v2.py（中央法規季更）
            atlas_local_laws.py（地方法規登記＋PDF 上傳）
-           atlas_crawler.py（建材爬蟲，重寫中）
+           atlas_crawler.py（建材爬蟲 v2.19，公司 PC「1.磁磚」資料夾，每月 1 號）
+           ar_excel_sync.py／ar_sync.py／run_ar_sync.bat（帳款核對，公司 PC 桌面 atlas 資料夾，週一～五 20:00）
 
 資料庫結構（SQL）
   每次改結構都是一支新的 supabase_NN_xxx.sql，在 Supabase SQL Editor 跑一次
-  已跑：01 法規條文 · 03 全表 · 04 Storage · 05 law-pdf · 06 法規主檔 · 07 ui_state · 08 刪法規 · 09 issuer · 10 ur_projects 中文化 · 11 地號與持分 · 11b 授權 · 12 角色 · 13 群組 · 14 官方人數 · 15 持分排序 · 16 建物人數 · 17 遮罩識別碼 · 18 公有地／代號 · 19 地號排序 · 20 公告現值 · 21 建物筆數面積 · 22 未登記建物 · 23 案件總覽 · 24 分區容積率 · 25 擷取日 · 26 新北容積種子 · 27–30 分區／地號群組 · 31 sync_log · 32 土管檢討／結案／倍數 · 33 建照欄位 · 34 業主簡稱 · 35 schema 記錄 · 36 二類謄本欄位 · 37 聯絡人識別碼 · 38 軟刪除 · 39 識別碼雜湊 · 40 容積獎勵表 · 41v2–43 products 爬蟲版 · 44 型錄狀態／通知
+  已跑：01 法規條文 · 03 全表 · 04 Storage · 05 law-pdf · 06 法規主檔 · 07 ui_state · 08 刪法規 · 09 issuer · 10 ur_projects 中文化 · 11 地號與持分 · 11b 授權 · 12 角色 · 13 群組 · 14 官方人數 · 15 持分排序 · 16 建物人數 · 17 遮罩識別碼 · 18 公有地／代號 · 19 地號排序 · 20 公告現值 · 21 建物筆數面積 · 22 未登記建物 · 23 案件總覽 · 24 分區容積率 · 25 擷取日 · 26 新北容積種子 · 27–30 分區／地號群組 · 31 sync_log · 32 土管檢討／結案／倍數 · 33 建照欄位 · 34 業主簡稱 · 35 schema 記錄 · 36 二類謄本欄位 · 37 聯絡人識別碼 · 38 軟刪除 · 39 識別碼雜湊 · 40 容積獎勵表 · 41v2–43 products 爬蟲版 · 44–45 型錄狀態／通知 · 46 清舊鍵 · 47 原廠規格 · 48 選色表區域字典 · 49 成本參數／方案 · 50 試燒打樣 · 51 專案進度 · 52 刪除函式 · 53 建材聯絡人角色
   改 SQL 不會動到資料；重建整個專案才需要從 01 依序跑
 
 版本號慣例
@@ -327,7 +328,7 @@ PDF 原檔   law.html 上「⬇」的法規＝還沒有 PDF</pre></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.106.2/dist/umd/supabase.min.js"></script>
 <script>
-const APP_VER='v6.9 · 2026-11-18'; // 首頁版本：每次改 index.html 就改這行，「交接版本」自動跟著
+const APP_VER='v6.10 · 2026-11-22'; // 首頁版本：每次改 index.html 就改這行，「交接版本」自動跟著
 const SCH_SLOT = {sat:'週六', sun:'週日', hol:'連假', any:'零碎'};
 const SCH = [
   { id:'A', t:'階段 A · 法規庫上線', d:'9月中 → 10月中',
@@ -363,7 +364,7 @@ const SCH = [
       {n:'開始寫法規「我的註記」：先補 10 條最常用的', s:'any', h:0,
        w:'在 law.html 直接寫，手機也能寫。這是 L2 經驗層的起點'},
       {n:'tasks（表九）：把 kind=系統 的待辦從儀表板搬進去', s:'sat', h:1,
-       w:'案件待辦 kind=案件；系統待辦 kind=系統。之後儀表板從這張表讀'},
+       w:'併到 F 段一起做：tasks 補欄位 → tasks.html → 首頁今日／本週面板'},
       {n:'每週檢視一次速記／註記，併進正式欄位', s:'any', h:0,
        w:'持續性任務'},
       {n:'淨零碳規劃管理師：讀書筆記寫進各法規／標準的「我的註記」', s:'any', h:0,
@@ -404,10 +405,10 @@ const SCH = [
   { id:'D', t:'階段 D · 產品庫與補強', d:'11月 → 12月',
     goal:'表五重建：<b>不搬舊的 787 筆</b>，爬蟲重抓現行型錄（加停產狀態、用途、紋理）。順便把地方法規與手冊入庫。',
     tasks:[
-      {n:'建材爬蟲 atlas_crawler.py 改寫 → Supabase products', s:'sun', h:4,
-       w:'UPSERT by (brand,model,size)；圖片縮圖進 Storage products/；note 欄永不覆蓋'},
+      {n:'建材爬蟲 atlas_crawler.py 改寫 → Supabase products', s:'sun', h:4, done:true,
+       w:'✅ 2026-11 中，爬蟲 v2.19，SQL 41–46。鍵含尺寸／面感；狀態、原廠料號、紋理等人工改的欄位爬蟲不覆蓋；同名跳過、不刪東西'},
       {n:'跑 6 家廠商型錄，驗證 finder 產品搜尋', s:'sat', h:3,
-       w:'跑完 finder「↻ 載入」應看到產品與圖片牆'},
+       w:'進行中：新睦豐 20 家原廠 135 系列已入庫，選色表 v7.4 已讀新欄位。國產六家＋昌達還沒接（見本段後面）'},
       {n:'地方法規核心 19 部（臺北 11／新北 8）登記主檔＋PDF', s:'sat', h:3, done:true,
        w:'✅ 2026-10-27。atlas_local_laws.py 登記；國土署擋爬蟲，PDF 手動下載後上傳'},
       {n:'地方法規其餘 71 筆行政規則：用到再補（TPE-23～／NTPC-17～）', s:'any', h:2,
@@ -436,6 +437,30 @@ const SCH = [
        w:'手機開 law.html 寫一條註記；開 finder.html 加一張建材；儀表板看得到'},
       {n:'更新 CONTEXT 檔，交接給明年', s:'sat', h:1,
        w:'記錄這一輪學到什麼、哪些估時不準'},
+      {n:'型錄 catalog.html：廠商 ▸ 品牌 ▸ 系列 ▸ 品名，狀態兩層（入庫／現行／限量／停產）、原廠通知 PDF、系列排序與標籤、「＋含限量」篩選、每個型號分開改狀態', s:'sun', h:10, done:true,
+       w:'✅ 2026-11-18 catalog v1.13。平常只顯示常態入庫；原廠通知停產 → 一鍵改限量（庫存消完不再進）'},
+      {n:'原廠規格層 factory_products：Fiandre Marmi Maximum 先測；型號尾碼 S／L 自動對原廠料號、紋理圖可刪可加、未對應清單可複製', s:'sun', h:6, done:true,
+       w:'✅ 2026-11-18，SQL 47。爬蟲 --series／--from-csv；人工改過的紋理圖爬蟲不覆蓋；規格旁附原廠官網連結'},
+      {n:'爬蟲 --tag：依雲端狀態把本機資料夾標【限量】【停產】，--upload 後自動跑', s:'any', h:1, done:true,
+       w:'✅ 2026-11-18 爬蟲 v2.19。只改資料夾名稱，不刪檔'},
+      {n:'選色表 v7.x：📋 從清單建立（A 門市情境）＋區域字典、原廠型號欄、帶入產品廠商欄＝品牌／系列、欄位可刪可復原、卡片值自動縮字', s:'sun', h:5, done:true,
+       w:'✅ 2026-11-21 finder v7.4，SQL 48。主色藍→金'},
+      {n:'未對應原廠料號：看公司系統後回報，一筆一筆記進對照', s:'any', h:0.5,
+       w:'型錄右上「未對應」清單可複製；停產的型號不用對'},
+      {n:'公司 PC 工作排程器掛 run_crawler.bat（每月 1 號）', s:'any', h:0.5,
+       w:'mini 到貨前先掛公司 PC；--rename 只在改檔名規則時手動跑'},
+      {n:'Fiandre 全系列（Marmi Maximum 確認沒問題後）＋其他國外品牌：只入庫指定系列', s:'sun', h:4,
+       w:'Sannini 先不做；每個品牌只挑會賣的幾個系列'},
+      {n:'國產六家＋昌達（黃山石、柏拉圖）接進爬蟲與型錄', s:'sun', h:6,
+       w:'品牌對照見 Project「廠商品牌對照表」v2'},
+      {n:'型錄：顏色篩選、以圖找相似', s:'sun', h:4,
+       w:'有原廠紋理圖之後才有料可比'},
+      {n:'選色表「從清單建立」B 情境', s:'sun', h:3,
+       w:'A 門市情境已上線'},
+      {n:'法規庫補檔（還沒有 PDF 的法規）', s:'any', h:1,
+       w:'law.html 上「⬇」的就是還沒有原檔'},
+      {n:'首頁改版：整間完成後出精簡版儀表板', s:'sat', h:3,
+       w:'等 F 段今日／本週面板做完一起收'},
     ]},
   { id:'E', t:'階段 E · Mac mini 幕後上線', d:'12月底 → 1月',
     goal:'mini 到貨後把<b>所有幕後工作</b>搬上去：爬蟲、法規同步、備份、Claude 常駐工作站。NAS 退回純儲存。',
@@ -451,6 +476,56 @@ const SCH = [
       {n:'（之後）地主／案件加鎖區：MFA aal2 policy', s:'any', h:2,
        w:'ur_projects / contacts 地主 / ledger 三張表改 aal2 policy；等資料真的有敏感內容再做'},
     ]},
+  { id:'F', t:'階段 F · 工作收件匣', d:'11月下旬 → 1月中',
+    goal:'一條線：東西丟進來 → AI 建檔歸到案件 → 變成有狀態、有到期日的事 → 到期機器人去追 → 要的時候一句話叫出來。<b>待辦、檔案、打樣全存帷幄</b>；行事曆交給 Google；LINE 只是入口。Notion 不再當任務層。',
+    tasks:[
+      {n:'試燒／打樣記錄：建材專案底下，同案同區域自動算第幾次、試燒編號、結果、多張照片', s:'sat', h:3, done:true,
+       w:'✅ 2026-11-19 cases v3.20，SQL 50（samples 表＋私有照片桶）。對應當年 NocoDB 表八'},
+      {n:'專案進度：日期、聯絡人、項目（下拉可自訂）、內容、追蹤日期', s:'sat', h:2, done:true,
+       w:'✅ 2026-11-21 cases v3.24，SQL 51。都更案件與建材專案都能掛；項目選單內容之後再定'},
+      {n:'案件中心小修：日期打數字自動跳、建材專案預設隱藏地主／住戶、待辦顯示建立日＆執行日', s:'any', h:1, done:true,
+       w:'✅ 2026-11-21 cases v3.21–3.23'},
+      {n:'刪除改走資料庫函式（修「刪除失敗 row-level security」）', s:'any', h:1, done:true,
+       w:'✅ 2026-11-21 cases v3.24，SQL 52 soft_delete／soft_restore'},
+      {n:'聯絡人綁案＋角色：進度的聯絡人下拉只列本案的人，選到沒綁的會問要不要加入；聯絡人搜尋可打案名', s:'sat', h:2, done:true,
+       w:'✅ 2026-11-21 cases v3.25，SQL 53（建材專案聯絡人加角色）'},
+      {n:'上線這一批：跑 SQL 50–53；上傳 cases v3.25、catalog v1.13、finder v7.4、cost.html、index v6.10', s:'any', h:0.5, now:true,
+       w:'上傳後看各頁分頁標題版本號；案件中心試刪一筆再按復原'},
+      {n:'tasks 補欄位：建立日／執行日分開、類型、狀態、負責人', s:'sat', h:1,
+       w:'待辦與行事曆是同一張表：有執行日的就是行事曆事件'},
+      {n:'tasks.html 待辦＆行事曆頁：看板／清單／月曆', s:'sun', h:6,
+       w:'月曆只顯示帷幄自己的待辦，家庭行程看 Google'},
+      {n:'首頁加「今日／本週」面板（行事曆＆提醒）', s:'sat', h:2,
+       w:'本週到期、逾期、等客人回的'},
+      {n:'執行日 → Google 行事曆：訂閱帷幄 ICS', s:'sat', h:2,
+       w:'第一版單向訂閱、零授權，手機提醒現成；要雙向再接 Calendar API'},
+      {n:'case_files 檔案歸檔（報價單、圖面）＋每晚鏡像到 NAS', s:'sun', h:4,
+       w:'案件頁多一個「檔案」區；NAS 路徑 BNF/案件/案名/'},
+      {n:'LINE AI 機器人：轉傳訊息／照片＋一句話 → 看懂哪個案、什麼事、到期日 → 自行建檔歸案', s:'sun', h:8,
+       w:'Claude API＋Edge Function，直接寫 tasks／case_files／samples；不留對話只留結果'},
+      {n:'機器人排程：逾期追助理、週一 8:00 週報（本週待辦＋逾期）', s:'sat', h:3,
+       w:'提醒兩層：Google 負責時間到叮一聲，機器人負責逾期追人'},
+      {n:'調閱：一句話叫出檔案（「XX案報價單」「外牆第一次試燒照片」）', s:'sat', h:3,
+       w:'靠案件 × 聯絡人 × 檔案三張表對得起來'},
+      {n:'專案進度「項目」選單內容定案', s:'any', h:0.5,
+       w:'現在是電話聯繫／拜訪／會議／報價／送樣／打樣／出貨／請款／其他，⚙ 可改'},
+    ]},
+  { id:'G', t:'階段 G · 公司固定工作自動化', d:'11月下旬',
+    goal:'每天要手動核對的事交給<b>公司 PC 工作排程器</b>（週一～五 20:00），不走 Claude。金鑰只放本機 .atlas_env；帳款檔不進同步資料夾、不上 NAS；公司主檔只讀。',
+    tasks:[
+      {n:'ar_sync.py：桌面應收帳款 Excel → Notion 帳款資料（應收／保留款／異保三個金額＋比對日）', s:'any', h:3, done:true,
+       w:'✅ 2026-11-20 v1.0。每次重讀 Notion（筆數會增減）；Notion 沒有的編號跳過；--dry 只列差異'},
+      {n:'ar_excel_sync.py：公司主檔 → 桌面 Excel 五個年度活頁比對更新，列順序完全照主檔，再重新整理 Power Query、依客戶編號排序', s:'sun', h:6, done:true,
+       w:'✅ 2026-11-21 v1.4。金額以主檔為準、多的刪少的插；自己填的欄位（K 欄以後）不碰；背景 Excel，不用開終端機'},
+      {n:'驗證 v1.4：跑一次，看新增列是不是落在主檔同一列', s:'any', h:0.5, now:true,
+       w:'E:\\Desktop\\atlas → py ar_excel_sync.py；看 ar_excel_sync.log'},
+      {n:'Notion 整合 token 填進 .atlas_env → py ar_sync.py --dry → 正式跑', s:'any', h:0.5, now:true,
+       w:'token 自己貼，不進對話、不寫進程式'},
+      {n:'工作排程器掛 run_ar_sync.bat：週一～五 20:00，勾「錯過盡快執行」', s:'any', h:0.5,
+       w:'PC 要開機登入、Excel 檔關著；Excel 那段失敗就不會動 Notion'},
+      {n:'連跑一週看 log，沒問題就刪桌面 src 的複製檔', s:'any', h:0.5,
+       w:'ar_sync_run.log 每天一段'},
+    ]},
 ];
 // ═══════════════════ 設定 ═══════════════════
 const SB_URL='https://riiflvhbxrnmzriwngjs.supabase.co';
@@ -462,6 +537,11 @@ let UID=null, ST={schedule:{}, ops:{}};
 
 // ═══════════════════ 決策紀錄（新的在上）═══════════════════
 const DECISIONS=[
+  {id:'D36',d:'2026-11-21',t:'刪除一律走資料庫函式 soft_delete／soft_restore，網頁不直接改 deleted_at',why:'軟刪除後那一列被讀取政策藏起來，直接更新會被擋成「row-level security」錯誤。函式只允許白名單的表，復原同一套。'},
+  {id:'D35',d:'2026-11-20',t:'公司固定工作（帳款核對）走公司 PC 排程腳本，不走 Claude',why:'每天晚上 8 點要自己跑完，不能靠有人開對話。金鑰只在本機 .atlas_env；帳款檔不進同步資料夾、不上 NAS；公司主檔只讀，自己填的欄位腳本不碰。'},
+  {id:'D34',d:'2026-11-19',t:'待辦與專案資料做在帷幄自己的資料庫；行事曆用 Google（訂閱帷幄 ICS）；Notion 不再當任務層',why:'Notion 免費版有資料限制，機器人也要多繞一層。自己的表沒有方案限制、AI 機器人直接寫；Google 行事曆手機提醒現成。'},
+  {id:'D33',d:'2026-11-18',t:'型錄分兩層：入庫品（products）× 原廠規格（factory_products）；人工改過的狀態、料號、紋理圖，爬蟲不覆蓋',why:'公司入庫的型號只是原廠的一部分，狀態（限量／停產）也是公司自己的判斷。兩層分開才能既看原廠完整規格、又保留自己的註記。帷幄不串公司系統，不顯示庫存量。'},
+  {id:'D32',d:'2026-11-18',t:'國外品牌只入庫指定系列；爬蟲改每月 1 號；國產加昌達（黃山石、柏拉圖）',why:'整個品牌全抓用不到又難維護。先 Fiandre Marmi Maximum 一個系列測通，再一個品牌挑幾個系列。'},
   {id:'D31',d:'2026-10-31',t:'資料輸入一律在帷幄網頁（案件中心），Supabase 退到幕後',why:'中文欄名、下拉、關聯在表編輯器做不到；輸入順手才會持續登，L2 經驗層才累積得起來。表編輯器只留 SQL／PDF／查資料。'},
   {id:'D30',d:'2026-10-27',t:'地方法規先收核心 19 部，其餘 71 筆行政規則等用到再補',why:'臺北 54／新北 37 筆行政規則多為收費、基金、單一議題處理原則；日常會翻的已在 19 部內。解釋函 72 筆不進法規樹，等 D 段另開函釋表。'},
   {id:'D29',d:'2026-10-17',t:'法規樹三層：領域 → 面向 → 法規；分類住在 laws 主檔，不寫死在腳本',why:'之後加綠建築、氣候變遷、CNS，面向可自由命名（建材用磁磚／石材）。純 PDF 法規（CNS、地方法規）也能掛在樹上，多版本並存。'},
@@ -479,34 +559,43 @@ const DECISIONS=[
 const ARCH={
   layers:[
     {k:'L0',t:'使用者',s:'手機 · Mac · 公司 PC',nodes:['user']},
-    {k:'L1',t:'前端 Vercel',s:'atlas-public-data.vercel.app',nodes:['index','law','finder','cases']},
-    {k:'L2',t:'Supabase',s:'Tokyo · Free',nodes:['auth','law_articles','laws','ui_state','finder_state','products','jc','ur','ops_tables','storage']},
-    {k:'L3',t:'幕後',s:'Mac（年底 → mini）',nodes:['push','local','crawler','backup','agent']},
-    {k:'L4',t:'儲存',s:'DS920+',nodes:['nas']},
+    {k:'L1',t:'前端 Vercel',s:'atlas-public-data.vercel.app',nodes:['index','cases','finder','catalog','far','cost','law','tasks_page']},
+    {k:'L2',t:'Supabase',s:'Tokyo · Free',nodes:['auth','law_articles','laws','ui_state','finder_state','products','factory','jc','ur','ops_tables','cost_tables','storage']},
+    {k:'L3',t:'幕後',s:'公司 PC · Mac（年底 → mini）',nodes:['push','local','crawler','pcjobs','backup','linebot','agent']},
+    {k:'L4',t:'儲存 · 外部',s:'DS920+ · Google',nodes:['nas','gcal']},
     {k:'X',t:'退場',s:'不再使用',nodes:['nocodb','tailscale','ghpages']},
   ],
   nodes:{
-    user:{n:'你',st:'live',p:'只用自己的 Mac、iPhone、公司 PC 登入；每個頁面都要帳密。',rel:['index','law','finder','cases']},
-    index:{n:'index.html 儀表板',st:'live',p:'這一頁。進度、入口、決策、時程；勾選狀態存 ui_state。',rel:['auth','ui_state','law','finder']},
+    user:{n:'你',st:'live',p:'只用自己的 Mac、iPhone、公司 PC 登入；每個頁面都要帳密。',rel:['index','law','finder','cases','catalog']},
+    index:{n:'index.html 儀表板',st:'live',p:'這一頁。進度、入口、決策、時程；勾選狀態存 ui_state。之後加今日／本週面板。',rel:['auth','ui_state','law','finder','cases','tasks_page']},
     law:{n:'law.html 法規條文庫',st:'live',p:'v2.2：領域→面向→適用範圍→法規 四層樹、搜尋、註記、PDF 多版本、法規屬性編輯。',rel:['auth','law_articles','laws','storage']},
-    finder:{n:'finder.html 選色表',st:'live',p:'v6.0.2：資料存 finder_state，圖片進 Storage/finder，產品搜尋讀 products。',rel:['auth','finder_state','products','storage','jc']},
-    cases:{n:'cases.html 案件中心',st:'live',p:'v1.0：都更案件／建材專案／聯絡人的清單與中文表單，含關聯聯絡人與案件待辦。寫 ur_projects、jc_projects、contacts、tasks。',rel:['auth','ur','jc','ops_tables']},
-    auth:{n:'Auth 登入',st:'live',p:'Email + 密碼，唯一使用者，關閉自助註冊。RLS 以 authenticated 角色放行。之後地主／案件表改 MFA（aal2）。',rel:['index','law','finder']},
+    finder:{n:'finder.html 選色表',st:'live',p:'v7.4：資料存 finder_state，圖片進 Storage/finder，產品搜尋讀 products（入庫／現行）；📋 從清單建立＋區域字典；原廠型號欄。',rel:['auth','finder_state','products','storage','jc']},
+    cases:{n:'cases.html 案件中心',st:'live',p:'v3.25：都更案件（地號／持分／同意比例／謄本匯入）、建材專案（建照欄位）、聯絡人（綁案＋角色）。案件底下掛試燒／打樣、專案進度、待辦、容積獎勵、成本分析。',rel:['auth','ur','jc','ops_tables','far','cost','finder']},
+    catalog:{n:'catalog.html 型錄',st:'live',p:'v1.13：廠商▸品牌▸系列▸品名；狀態兩層、原廠通知 PDF、原廠完整規格與紋理圖、未對應料號清單。',rel:['auth','products','factory','storage','crawler']},
+    far:{n:'far.html 容積獎勵',st:'live',p:'v1.0：都更／危老獎勵 38 項一條一卡，允建容積吃案件地號，方案存 far_plans。',rel:['auth','ur','cost','cost_tables']},
+    cost:{n:'cost.html 成本分析',st:'plan',p:'v0.1 測試：概算主線 41 項、合建／委建／自建、敏感度；參數集中在 cost_params。內部工具，不給業主看。待六張費用表逐項與現金流利息。',rel:['auth','ur','far','cost_tables']},
+    tasks_page:{n:'tasks.html 待辦＆行事曆',st:'plan',p:'看板／清單／月曆；有執行日的待辦就是行事曆事件，用 ICS 給 Google 行事曆訂閱。',rel:['ops_tables','gcal','index','linebot']},
+    auth:{n:'Auth 登入',st:'live',p:'Email + 密碼，唯一使用者，關閉自助註冊。RLS 以 authenticated 角色放行。之後地主／案件表改 MFA（aal2）。',rel:['index','law','finder','cases','catalog']},
     law_articles:{n:'law_articles 條文',st:'live',p:'568 條／17 部中央法規，一條一筆；my_note 永不被腳本覆蓋。',rel:['laws','law','push']},
     laws:{n:'laws 法規主檔',st:'live',p:'領域／面向／標籤／核心外圍／排序／法規註記。中央 17 + 地方 19 + CNS；law_domains 放領域清單。',rel:['law_articles','law','push','local']},
     ui_state:{n:'ui_state',st:'live',p:'儀表板跨裝置狀態：時程勾選（schedule）、備份備忘（ops）。',rel:['index']},
     finder_state:{n:'finder_state',st:'live',p:'選色表整包資料（建商／專案／版本／明細／排版），一人一列 jsonb。',rel:['finder']},
-    products:{n:'products 產品庫',st:'plan',p:'表五重建版：status／usages／texture／finish，(brand,model,size) 唯一。等爬蟲入庫。',rel:['finder','crawler','storage']},
-    jc:{n:'jc_projects · color_versions · version_items',st:'plan',p:'表二／表三／明細的正規化版。finder 之後改讀這裡，選色版本才能寫回個案明細。',rel:['finder','products']},
-    ur:{n:'ur_projects · contacts · ledger',st:'plan',p:'案件、聯絡人、帳務——加鎖區，之後改 aal2 policy。由案件中心輸入。',rel:['auth','ops_tables','cases']},
-    ops_tables:{n:'site_logs · firing_tests · tasks',st:'plan',p:'工地日誌、燒製測試、任務（kind 案件／系統）。',rel:['ur']},
-    storage:{n:'Storage',st:'live',p:'law-pdf（私有，法規 PDF 多版本）· finder（公開，選色圖片）· products（公開，型錄圖，service_role 寫）。',rel:['law','finder','products','local']},
+    products:{n:'products 入庫品',st:'live',p:'爬蟲版：公司入庫的型號，鍵含尺寸／面感。狀態（入庫／現行／限量／停產）與原廠料號是人工欄位，爬蟲不覆蓋。',rel:['finder','catalog','crawler','factory','storage']},
+    factory:{n:'factory_products 原廠規格',st:'live',p:'原廠官網的完整規格：品名×料號×尺寸×面感×厚度、停產記號、紋理圖。目前 Fiandre Marmi Maximum；用型號尾碼 S／L 對回入庫品。',rel:['products','catalog','crawler']},
+    jc:{n:'jc_projects 建材專案',st:'live',p:'建照欄位、業主→公司→工程樹；選色表的建商／專案讀這裡。聯絡人用 jc_project_contacts 綁案（含角色）。',rel:['finder','cases','ops_tables']},
+    ur:{n:'ur_projects · parcels · contacts',st:'live',p:'都更案件、地號與持分、聯絡人。統編／身分證字號不存不顯示（遮罩＋雜湊）。之後改 aal2 加鎖。',rel:['auth','ops_tables','cases','far']},
+    ops_tables:{n:'tasks · samples · progress',st:'live',p:'案件待辦、試燒／打樣記錄（照片在私有桶）、專案進度。刪除走 soft_delete 函式。之後加 case_files 檔案歸檔。',rel:['ur','jc','cases','tasks_page','linebot']},
+    cost_tables:{n:'far_bonus_items · far_plans · cost_params · cost_plans',st:'live',p:'容積獎勵項目表與方案、成本參數表與方案（方案存當下參數快照）。',rel:['far','cost']},
+    storage:{n:'Storage',st:'live',p:'law-pdf（私有，法規 PDF）· finder（公開，選色與型錄縮圖）· catalog-docs（私有，原廠通知）· samples（私有，打樣照片）。',rel:['law','finder','catalog','products','local','ops_tables']},
     push:{n:'atlas_law_push_sb_v2.py',st:'live',p:'全國法規資料庫 API zip → law_articles UPSERT；同步登記 laws；--add 強制納入；每季跑。',rel:['law_articles','laws']},
     local:{n:'atlas_local_laws.py',st:'live',p:'地方法規分類表 → laws 登記；PDF 手動下載後 --upload 進 law-pdf（國土署擋爬蟲）。',rel:['laws','storage']},
-    crawler:{n:'atlas_crawler.py 建材爬蟲',st:'plan',p:'6 家廠商型錄 → products + Storage/products。mini 到貨後排程月更。',rel:['products','storage']},
+    crawler:{n:'atlas_crawler.py 建材爬蟲',st:'live',p:'v2.19：新睦豐型錄 → products；原廠轉接器（Fiandre）→ factory_products；--tag 依狀態標資料夾。公司 PC 每月 1 號跑；國產六家＋昌達待接。',rel:['products','factory','storage','catalog']},
+    pcjobs:{n:'公司 PC 排程（帳款核對）',st:'plan',p:'腳本已完成，排程待掛。週一～五 20:00：公司主檔 → 桌面 Excel 比對更新 → Notion 帳款資料。不走 Claude、不進帷幄資料庫；金鑰只在本機。',rel:[]},
     backup:{n:'pg_dump 週備份',st:'plan',p:'mini 排程：Supabase → NAS。到貨前每月看一次 Dashboard Backups。',rel:['nas']},
+    linebot:{n:'LINE AI 機器人',st:'plan',p:'轉傳訊息／照片＋一句話 → 看懂哪個案、什麼事 → 自行建檔歸案；逾期追人、週一週報、一句話調閱。Claude API＋Edge Function。',rel:['ops_tables','tasks_page','storage']},
     agent:{n:'AI Agent 層',st:'plan',p:'service key 鎖在 mini；交辦型（Claude app 連 mini）與排程型。L1／L2 有料之後才啟用。',rel:['push','crawler']},
-    nas:{n:'DS920+ NAS',st:'live',p:'退回純儲存：備份落地、原始資料。不再是任何入口。',rel:['backup']},
+    nas:{n:'DS920+ NAS',st:'live',p:'退回純儲存：備份落地、型錄原始檔、之後案件檔案每晚鏡像。不再是任何入口。',rel:['backup','crawler']},
+    gcal:{n:'Google 行事曆',st:'plan',p:'訂閱帷幄的 ICS：有執行日的待辦自動出現，手機提醒。家庭行程留在 Google，不進帷幄。',rel:['tasks_page']},
     nocodb:{n:'NocoDB',st:'retired',p:'12 張表已盤點導出（noco_export/）。確認 Vercel 版穩定一週後停容器。',rel:[]},
     tailscale:{n:'Tailscale · Web Station · Nginx',st:'retired',p:'久不用連不上，整組放棄。',rel:[]},
     ghpages:{n:'GitHub Pages 靜態 JSON',st:'retired',p:'法規改直接讀 Supabase，不再導出 JSON。',rel:[]},
@@ -552,7 +641,11 @@ function saveState(key){
 
 // ═══════════════════ 時程 ═══════════════════
 // done:true 的任務第一次自動打勾（在雲端狀態載入後執行）
-function seedDone(){ let n=0; ST.schedule=ST.schedule||{}; SCH.forEach(S=>S.tasks.forEach((t,i)=>{ const k=S.id+i; if(t.done&&!(k in ST.schedule)){ ST.schedule[k]=true; n++; } })); return n; }
+// 注意：勾選鍵＝階段代號＋序號，所以任務只能加在每段「最後面」，不能插中間、不能調順序
+const SCH_SEED=2;   // 這個數字加 1 → 下次開首頁把所有 done:true 再補勾一次
+function seedDone(){ let n=0; ST.schedule=ST.schedule||{}; const force=(ST.schedule._seed||0)<SCH_SEED;
+  SCH.forEach(S=>S.tasks.forEach((t,i)=>{ const k=S.id+i; if(t.done&&(force?!ST.schedule[k]:!(k in ST.schedule))){ ST.schedule[k]=true; n++; } }));
+  if(force){ ST.schedule._seed=SCH_SEED; n++; } return n; }
 function stageStats(S){ const done=S.tasks.filter((_,i)=>ST.schedule[S.id+i]).length; return {done,total:S.tasks.length,pct:Math.round(done/S.tasks.length*100)}; }
 function currentStageId(){ for(const S of SCH){ if(stageStats(S).pct<100) return S.id; } return SCH[SCH.length-1].id; }
 function renderRings(){
@@ -579,7 +672,8 @@ $('#stages').addEventListener('click',e=>{ const t=e.target.closest('.task'); if
 
 // ═══════════════════ 首頁：三件事、決策、營運 ═══════════════════
 function renderNext(){
-  const out=[]; for(const S of SCH){ S.tasks.forEach((t,i)=>{ if(out.length<3&&!ST.schedule[S.id+i]) out.push({S,t,i}); }); if(out.length>=3) break; }
+  const out=[]; for(const S of SCH) S.tasks.forEach((t,i)=>{ if(t.now&&out.length<3&&!ST.schedule[S.id+i]) out.push({S,t,i}); });   // now:true＝眼前該做的，優先
+  for(const S of SCH){ S.tasks.forEach((t,i)=>{ if(out.length<3&&!t.now&&!ST.schedule[S.id+i]) out.push({S,t,i}); }); if(out.length>=3) break; }
   $('#next3').innerHTML=out.map(({S,t,i},n)=>`<div class="card"><div class="mono" style="font-size:10px;color:var(--gold);letter-spacing:.2em">STEP ${n+1}</div><h3 style="margin-top:4px">${esc(t.n)}</h3><div class="d" style="margin-top:4px">${esc(t.w||'')}</div><div style="margin-top:8px"><span class="tag">${esc(S.id)} 段</span><span class="tag">${SCH_SLOT[t.s]}</span><span class="tag">${t.h?t.h+' hr':'持續'}</span></div><span class="go" onclick="go('sched');openStage('${S.id}')">到時程表 →</span></div>`).join('')
     ||'<div class="card"><h3>全部完成 🎉</h3><div class="d">去開下一輪時程。</div></div>';
 }
