@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="ATLAS 選色表">
 <meta name="theme-color" content="#141618">
-<title>ATLAS 選色表 v7.2</title>
+<title>ATLAS 選色表 v7.3</title>
 <style>
 /* 大螢幕自動放大（外接螢幕）：1600px 以上 110%、2200px 以上 125% */
 @media (min-width:1600px){html{zoom:1.1}}
@@ -130,9 +130,9 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--text
 .col-vis{width:16px;height:16px;border-radius:2px;border:1px solid var(--border2);background:none;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;}
 .col-vis.off{color:var(--muted);opacity:.5;}
 .col-vis.on{color:var(--teal);}
-.col-lbl{flex:1;background:none;border:none;outline:none;color:var(--text);font-size:10px;font-family:inherit;}
+.col-lbl{flex:1;min-width:0;background:none;border:none;outline:none;color:var(--text);font-size:10px;font-family:inherit;}
 .col-key{width:68px;background:var(--bg);border:1px solid var(--border);border-radius:3px;color:var(--sub);padding:2px 4px;font-size:8px;font-family:'Space Mono',monospace;outline:none;text-align:center;}
-.col-del{background:none;border:1px solid transparent;border-radius:4px;color:var(--sub);cursor:pointer;font-size:12px;padding:1px 5px;line-height:1;}.col-del:hover{color:var(--red);border-color:var(--red)}
+.col-del{flex:none;background:none;border:1px solid transparent;border-radius:4px;color:var(--sub);cursor:pointer;font-size:12px;padding:1px 5px;line-height:1;}.col-del:hover{color:var(--red);border-color:var(--red)}
 .col-del:hover{color:var(--red);}
 .add-col{width:100%;padding:5px;border-radius:6px;background:none;border:1px dashed var(--border2);color:var(--sub);cursor:pointer;font-size:10px;font-family:inherit;transition:all .15s;margin-top:4px;}
 .add-col:hover{border-color:var(--accent);color:var(--accent);}
@@ -2178,9 +2178,12 @@ function renderColList(){
       <span class="col-vis ${c.vis?'on':'off'}" onclick="cols[${i}].vis=!cols[${i}].vis;renderColList();render();uiSave()">${c.vis?'👁':'○'}</span>
       <input class="col-lbl" value="${esc(c.lbl)}" onchange="cols[${i}].lbl=this.value;render();uiSave()">
       <input class="col-key" value="${esc(c.key)}" onchange="cols[${i}].key=this.value;render();uiSave()">
-      <button class="col-del" title="刪除這個欄位" onclick="if(confirm('刪除欄位「'+cols[${i}].lbl+'」？已填的內容會跟著不顯示')){cols.splice(${i},1);renderColList();render();uiSave()}">✕</button>
+      <button class="col-del" title="刪除這個欄位" onclick="delCol(${i})">✕</button>
     </div>`).join('');
 }
+let _lastCol=null;
+function delCol(i){ _lastCol={i,c:cols[i]}; cols.splice(i,1); renderColList(); render(); uiSave(); toast('已刪除欄位「'+_lastCol.c.lbl+'」',5000);
+  const t=document.getElementById('toast-msg'); if(t){ const bt=document.createElement('button'); bt.textContent='↶ 復原'; bt.style.cssText='margin-left:10px;background:none;border:1px solid currentColor;border-radius:4px;color:inherit;cursor:pointer;padding:0 6px;font-size:12px'; bt.onclick=()=>{ if(_lastCol){ cols.splice(_lastCol.i,0,_lastCol.c); _lastCol=null; renderColList(); render(); uiSave(); } t.remove(); }; t.appendChild(bt); } }
 function addCol(){cols.push({key:'c'+Date.now(),lbl:'自訂欄位',vis:true});renderColList();render();uiSave();}
 function onNcolsChange(){
   const nc=+document.getElementById('ncols').value;
