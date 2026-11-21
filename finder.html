@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="ATLAS 選色表">
 <meta name="theme-color" content="#141618">
-<title>ATLAS 選色表 v7.3</title>
+<title>ATLAS 選色表 v7.4</title>
 <style>
 /* 大螢幕自動放大（外接螢幕）：1600px 以上 110%、2200px 以上 125% */
 @media (min-width:1600px){html{zoom:1.1}}
@@ -86,7 +86,7 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--text
 .finder-empty{font-size:10px;color:var(--muted);padding:12px 10px;text-align:center;line-height:1.6;}
 
 /* ── Right panel (settings) ── */
-.rp{width:272px;min-width:272px;background:var(--sb);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow-y:auto;}
+.rp{width:272px;min-width:272px;background:var(--sb);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow-y:auto;padding-bottom:72px;}
 .rp-sec{padding:10px 12px;border-bottom:1px solid var(--border);}
 .rp-lbl.fold{cursor:pointer;user-select:none}.rp-lbl .fold-ar{display:inline-block;font-size:8px;transition:transform .15s;width:10px}.rp-lbl.fold.closed .fold-ar{transform:rotate(-90deg)}.fold-body.closed{display:none}
 .rp-lbl{font-size:9px;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase;font-weight:700;font-family:'Space Mono',monospace;margin-bottom:7px;}
@@ -752,7 +752,7 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--text
   </div>
 
   <!-- 建材清單 -->
-  <div class="rp-sec" style="flex:1">
+  <div class="rp-sec" style="flex:none">
     <div class="rp-lbl">建材清單 <span id="item-count" style="color:var(--teal2);font-size:9px"></span></div>
     <div class="item-list" id="item-list"></div>
     <button class="add-item" onclick="openItemModal(null)">＋ 手動新增</button>
@@ -2865,6 +2865,17 @@ function render(){ const ol=document.getElementById('owner-lbl'); if(ol) ol.text
       <tbody><tr><td>${body}</td></tr></tbody>
       <tfoot><tr><td>${foot}</td></tr></tfoot>
     </table>`;
+  fitVals();
+}
+// 卡片資料欄：先試一行（逐步縮到 7px），還是放不下才允許換行
+function fitVals(){
+  document.querySelectorAll('.mat-val-td').forEach(td=>{
+    if(!td.textContent.trim()||td.textContent.includes('\n')) return;
+    td.style.fontSize=''; td.style.whiteSpace='nowrap';
+    let fs=parseFloat(getComputedStyle(td).fontSize)||10;
+    while(td.scrollWidth>td.clientWidth+1&&fs>7){ fs-=0.5; td.style.fontSize=fs+'px'; }
+    if(td.scrollWidth>td.clientWidth+1){ td.style.whiteSpace=''; td.style.fontSize=''; }   // 真的太長就照舊換行
+  });
 }
 
 // ════════════════════════════════════════════
