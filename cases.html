@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#0e1012">
-<title>ATLAS 案件中心 v3.20</title>
+<title>ATLAS 案件中心 v3.21</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Space+Mono:wght@400;700&display=swap');
 :root{--bg:#0e1012;--sb:#141618;--panel:#1a1d21;--card:#1f2328;--border:#2a2f36;--border2:#353b44;--gold:#d4a843;--gold2:#f0cc7a;--teal:#3aaa8c;--teal2:#4dc9a8;--red:#e06c6c;--indigo:#7b8cff;--amber:#e8b04a;--text:#dde2ee;--sub:#8a94a6;--muted:#4a5566}
@@ -539,7 +539,10 @@ $('#btnZr').addEventListener('click',showZr);
 
 
 // ── 表單 ──
-const fld=(id,label,val,type='text',extra='')=>`<div class="field ${extra}"><label>${label}</label><input id="f-${id}" type="${type}" value="${esc(val??'')}"></div>`;
+const fld=(id,label,val,type='text',extra='')=>type==='date'
+  ?`<div class="field ${extra}"><label>${label}</label><input id="f-${id}" class="dmask" inputmode="numeric" maxlength="10" placeholder="${new Date().getFullYear()}/01/01" value="${esc(val?String(val).slice(0,10).replace(/-/g,'/'):'')}"></div>`   // 日期一律打數字：年打完自動跳月、再跳日
+  :`<div class="field ${extra}"><label>${label}</label><input id="f-${id}" type="${type}" value="${esc(val??'')}"></div>`;
+const vd=id=>{ const iso=dmaskIso(v(id)); return iso?iso.slice(0,10):null; };
 const sel=(id,label,opts,val,extra='')=>`<div class="field ${extra}"><label>${label}</label><select id="f-${id}"><option value="">—</option>${opts.map(o=>`<option${o===val?' selected':''}>${esc(o)}</option>`).join('')}</select></div>`;
 const txt=(id,label,val,extra='full')=>`<div class="field ${extra}"><label>${label}</label><textarea id="f-${id}">${esc(val??'')}</textarea></div>`;
 const chips=(id,label,opts,vals,extra='full')=>`<div class="field ${extra}"><label>${label}</label><div class="chips" id="f-${id}">${opts.map(o=>`<button type="button" class="chip${(vals||[]).includes(o)?' on':''}" data-v="${esc(o)}">${esc(o)}</button>`).join('')}<button type="button" class="chip add" data-add="1">＋ 自訂</button></div></div>`;
@@ -594,8 +597,8 @@ function showForm(){ OWNER_HASH=null;
 }
 function payload(){
   if(TAB==='ur') return {name:v('name'),code:v('code')||null,kind:v('kind')||null,stage:v('stage')||null,address:v('address')||null,site_area_m2:num('site_area_m2'),consent_pct:num('consent_pct'),owners_official:num('owners_official'),land_owners_times:num('land_owners_times'),bldg_owners_official:num('bldg_owners_official'),consent_threshold:num('consent_threshold'),land_count:num('land_count'),land_private_m2:num('land_private_m2'),land_public_m2:num('land_public_m2'),bldg_count:num('bldg_count'),bldg_floor_m2:num('bldg_floor_m2'),bldg_private_m2:num('bldg_private_m2'),unreg_bldg_count:num('unreg_bldg_count'),unreg_bldg_notes:v('unreg_bldg_notes')||null,legal_flags:chipVals('legal_flags'),bonus_est:v('bonus_est')||null,checklist:v('checklist')||null,notes:v('notes')||null};
-  if(TAB==='jc') return {name:v('name'),short_name:v('short_name')||null,client_kind:v('client_kind')||null,client_name:v('client_name')||null,categories:chipVals('categories'),permit_no:v('permit_no')||null,applicant:v('applicant')||null,architect:v('architect')||null,supervisor:v('supervisor')||null,contractor:v('contractor')||null,summary:v('summary')||null,track_date:v('track_date')||null};
-  return {name:v('name'),owner_key:(()=>{ const k=v('owner_key').replace(/＊/g,'*').trim().toUpperCase(); if(/^[A-Z][12]\d{8}$/.test(k)) return maskId(k); return k||null; })(),owner_hash:OWNER_HASH||CUR?.owner_hash||null,kind:v('kind')||null,group_name:v('group_name')||null,relation:v('relation')||null,company:v('company')||null,title:v('title')||null,phone:v('phone')||null,line_id:v('line_id')||null,background:v('background')||null,next_action:v('next_action')||null,next_date:v('next_date')||null};
+  if(TAB==='jc') return {name:v('name'),short_name:v('short_name')||null,client_kind:v('client_kind')||null,client_name:v('client_name')||null,categories:chipVals('categories'),permit_no:v('permit_no')||null,applicant:v('applicant')||null,architect:v('architect')||null,supervisor:v('supervisor')||null,contractor:v('contractor')||null,summary:v('summary')||null,track_date:vd('track_date')};
+  return {name:v('name'),owner_key:(()=>{ const k=v('owner_key').replace(/＊/g,'*').trim().toUpperCase(); if(/^[A-Z][12]\d{8}$/.test(k)) return maskId(k); return k||null; })(),owner_hash:OWNER_HASH||CUR?.owner_hash||null,kind:v('kind')||null,group_name:v('group_name')||null,relation:v('relation')||null,company:v('company')||null,title:v('title')||null,phone:v('phone')||null,line_id:v('line_id')||null,background:v('background')||null,next_action:v('next_action')||null,next_date:vd('next_date')};
 }
 function scheduleSave(){ clearTimeout(AUTOSAVE); const st=$('#st'); if(st){ st.className='st'; st.textContent='未儲存…'; } AUTOSAVE=setTimeout(()=>save(true),3000); }
 async function save(quiet=false){
