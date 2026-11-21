@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#0e1012">
-<title>ATLAS 案件中心 v3.21</title>
+<title>ATLAS 案件中心 v3.22</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Space+Mono:wght@400;700&display=swap');
 :root{--bg:#0e1012;--sb:#141618;--panel:#1a1d21;--card:#1f2328;--border:#2a2f36;--border2:#353b44;--gold:#d4a843;--gold2:#f0cc7a;--teal:#3aaa8c;--teal2:#4dc9a8;--red:#e06c6c;--indigo:#7b8cff;--amber:#e8b04a;--text:#dde2ee;--sub:#8a94a6;--muted:#4a5566}
@@ -255,7 +255,7 @@ const LAND_USE=['建','田','旱','林','道','水','雜','—'];
 const finderProj=jcId=>(DATA.finder?.projects||[]).find(p=>p.jcId===jcId)||null;
 const finderVers=jcId=>{ const p=finderProj(jcId); return p?(DATA.finder?.versions||[]).filter(v=>v.projectId===p.id):[]; };
 // ── 狀態 ──
-let UID=null, TAB='ur', CUR=null, SM_READY=false, SM_URL={}, DATA={ur:[],jc:[],ct:[],tasks:[],urc:[],jcc:[],pcl:[],po:[]};
+let SHOW_OWNERS=false; let UID=null, TAB='ur', CUR=null, SM_READY=false, SM_URL={}, PG_READY=false, PG_ITEMS=['電話聯繫','拜訪','會議','報價','送樣','打樣','出貨','請款','其他'], DATA={ur:[],jc:[],ct:[],tasks:[],urc:[],jcc:[],pcl:[],po:[]};
 let AUTOSAVE=null, EDIT_PCL=null, PASTE_PCL=null; const ADDOPEN=new Set();
 let PCLOPEN=new Set(); try{ PCLOPEN=new Set(JSON.parse(localStorage.getItem('atlas-pcl-open')||'[]')); }catch(e){}
 let SECCLOSED=new Set(); try{ SECCLOSED=new Set(JSON.parse(localStorage.getItem('atlas-sec-closed')||'[]')); }catch(e){}
@@ -279,7 +279,7 @@ function cloud(st,txt){ $('#cloudDot').className=st; $('#cloudTxt').textContent=
 // ── 載入 ──
 async function loadAll(){
   cloud('wait','載入中…');
-  const [a,b,c,d,e,f,g,h,z,fs,fp,cp,sm]=await Promise.all([
+  const [a,b,c,d,e,f,g,h,z,fs,fp,cp,sm,pg,pi]=await Promise.all([
     sb.from('ur_projects').select('*').order('updated_at',{ascending:false}),
     sb.from('jc_projects').select('*').order('updated_at',{ascending:false}),
     sb.from('contacts').select('*').order('name'),
@@ -293,10 +293,12 @@ async function loadAll(){
     sb.from('far_plans').select('id,ur_project_id,name,regime,result,updated_at').order('updated_at',{ascending:false}),
     sb.from('cost_plans').select('id,ur_project_id,name,mode,results,updated_at').is('deleted_at',null).order('updated_at',{ascending:false}),   // 成本分析（SQL 49；沒建表就空）
     sb.from('samples').select('*').order('sample_date',{ascending:false}).order('seq',{ascending:false}),   // 試燒／打樣記錄（SQL 50）
+    sb.from('progress').select('*').order('log_date',{ascending:false}).order('id',{ascending:false}),   // 專案進度（SQL 51）
+    sb.from('ui_state').select('data').eq('key','progress_items').maybeSingle(),
   ]);
   const err=[a,b,c,d,e,f].find(x=>x.error)?.error; if(err){ cloud('err','讀取失敗：'+err.message); return; }
   // parcels 兩表還沒建（supabase_11 未跑）時不擋整頁
-  DATA={ur:a.data,jc:b.data,ct:c.data,tasks:d.data,urc:e.data,jcc:f.data,pcl:g.error?[]:g.data,po:h.error?[]:h.data,zr:z.error?[]:z.data,finder:fs.data?.data||null,far:fp.error?[]:fp.data,cost:cp.error?[]:cp.data,samples:sm.error?[]:sm.data}; SM_READY=!sm.error;
+  DATA={ur:a.data,jc:b.data,ct:c.data,tasks:d.data,urc:e.data,jcc:f.data,pcl:g.error?[]:g.data,po:h.error?[]:h.data,zr:z.error?[]:z.data,finder:fs.data?.data||null,far:fp.error?[]:fp.data,cost:cp.error?[]:cp.data,samples:sm.error?[]:sm.data,progress:pg.error?[]:pg.data}; SM_READY=!sm.error; PG_READY=!pg.error; if(pi?.data?.data?.items) PG_ITEMS=pi.data.data.items;
   DATA.noParcels=!!g.error;
   cloud('ok','已同步');
 }
@@ -693,6 +695,25 @@ function smBind(){ const id=CUR?.id; if(!id||!SM_READY) return; smThumbs();
   document.querySelectorAll('#smSec .ph div[data-lb]').forEach(el=>el.addEventListener('click',async()=>{ const [u]=await smSigned([el.dataset.lb]); if(!u) return; $('#lbxImg').src=u; $('#lbxCap').textContent=el.dataset.cap||''; $('#lbx').classList.add('on'); }));
 }
 
+// ── 專案進度（progress，SQL 51）──
+function progressSection(id){ if(!PG_READY) return `<div class="sec"><h3>專案進度</h3><div style="font-size:12px;color:var(--muted)">還沒建表：請先跑 supabase_51_progress.sql</div></div>`;
+  const rows=(DATA.progress||[]).filter(x=>TAB==='ur'?x.ur_project_id===id:x.jc_project_id===id); const today=new Date().toISOString().slice(0,10);
+  const links=TAB==='ur'?DATA.urc.filter(x=>x.ur_project_id===id):DATA.jcc.filter(x=>x.jc_project_id===id); const cts=links.map(l=>DATA.ct.find(c=>c.id===l.contact_id)).filter(Boolean);
+  const cname=r=>r.contact_name||DATA.ct.find(c=>c.id===r.contact_id)?.name||'';
+  return `<div class="sec" id="pgSec"><h3>專案進度 <span class="spacer"></span><span class="mono" style="font-weight:400">${rows.length} 筆 · 待追蹤 ${rows.filter(r=>r.follow_date&&!r.done).length}</span><span class="x" id="pgItems" title="編輯項目選單" style="font-size:12px">⚙ 項目</span></h3>
+    ${rows.map(r=>`<div class="it${r.done?' done':''}${r.follow_date&&!r.done&&r.follow_date<today?' late':''}" data-pg="${r.id}"><span class="mono sub" style="flex:0 0 78px">${esc(fmtD(r.log_date))}</span><span class="pill k2" style="flex:0 0 auto">${esc(r.item||'')}</span><span class="t" style="flex:1;min-width:0">${esc(r.content||'')}${cname(r)?` <small style="color:var(--sub)">· ${esc(cname(r))}</small>`:''}</span><span class="sub" style="flex:0 0 auto">${r.follow_date?`追蹤 ${esc(fmtD(r.follow_date))}`:''}</span>${r.follow_date?`<span class="cb${r.done?' on':''}" data-pgdone="${r.id}" title="追蹤完成"></span>`:''}<span class="x" data-pgdel="${r.id}">刪</span></div>`).join('')||'<div class="sub" style="font-size:12px;color:var(--muted)">尚無進度記錄</div>'}
+    <div class="addrow" style="flex-wrap:wrap"><input id="pg-date" class="dmask" value="${today.replace(/-/g,'/')}" inputmode="numeric" maxlength="10" style="flex:0 0 100px" title="日期"><input id="pg-ct" list="dl-pgct" placeholder="聯絡人" style="flex:0 0 120px"><datalist id="dl-pgct">${(cts.length?cts:DATA.ct.filter(c=>TAB!=='jc'||!['地主','住戶'].includes(c.kind))).map(c=>`<option value="${esc(c.name)}">${esc(c.company||c.kind||'')}</option>`).join('')}</datalist><select id="pg-item" style="flex:0 0 110px">${PG_ITEMS.map(o=>`<option>${esc(o)}</option>`).join('')}</select><input id="pg-content" placeholder="內容…" style="flex:2 1 200px"><input id="pg-follow" class="dmask" placeholder="追蹤日 2026/12/01" inputmode="numeric" maxlength="10" style="flex:0 0 130px"><button class="btn sm" id="btnPg">加入</button></div></div>`; }
+function pgBind(){ const id=CUR?.id; if(!id||!PG_READY) return;
+  $('#btnPg')?.addEventListener('click',async()=>{ const content=$('#pg-content').value.trim(); if(!content){ alert('請填內容'); return; } const d=dmaskIso($('#pg-date').value), f=dmaskIso($('#pg-follow').value); if(!d){ alert('日期格式不對'); return; }
+    const nm=$('#pg-ct').value.trim(); const c=DATA.ct.find(x=>x.name===nm);
+    const row={log_date:d.slice(0,10),contact_id:c?.id||null,contact_name:c?null:(nm||null),item:$('#pg-item').value,content,follow_date:f?f.slice(0,10):null,[TAB==='ur'?'ur_project_id':'jc_project_id']:id};
+    const {data,error}=await sb.from('progress').insert(row).select().single(); if(error){ alert(error.message); return; } DATA.progress.unshift(data); showForm(); });
+  document.querySelectorAll('[data-pgdone]').forEach(x=>x.addEventListener('click',async()=>{ const r=DATA.progress.find(y=>y.id===+x.dataset.pgdone); const {error}=await sb.from('progress').update({done:!r.done,updated_at:new Date().toISOString()}).eq('id',r.id); if(error){ alert(error.message); return; } r.done=!r.done; showForm(); }));
+  document.querySelectorAll('[data-pgdel]').forEach(x=>x.addEventListener('click',async()=>{ const r=DATA.progress.find(y=>y.id===+x.dataset.pgdel); try{ await softDel([{table:'progress',ids:[r.id]}],`進度 ${fmtD(r.log_date)} ${r.item||''}`); }catch(e){ alert('刪除失敗：'+e.message); return; } DATA.progress=DATA.progress.filter(y=>y.id!==r.id); showForm(); }));
+  $('#pgItems')?.addEventListener('click',async()=>{ const v=prompt('項目選單（用、分隔，順序照這裡）',PG_ITEMS.join('、')); if(v==null) return; const items=v.split(/[、,，]/).map(x=>x.trim()).filter(Boolean); if(!items.length) return; const {error}=await sb.from('ui_state').upsert({user_id:UID,key:'progress_items',data:{items}},{onConflict:'user_id,key'}); if(error){ alert(error.message); return; } PG_ITEMS=items; showForm(); });
+  $('#showOwners')?.addEventListener('change',e=>{ SHOW_OWNERS=e.target.checked; showForm(); });
+}
+
 // ── 關聯區：聯絡人、待辦、所屬案件 ──
 function relSections(){
   const id=CUR.id; let h='';
@@ -714,11 +735,12 @@ function relSections(){
     const links=TAB==='ur'?DATA.urc.filter(x=>x.ur_project_id===id):DATA.jcc.filter(x=>x.jc_project_id===id);
     h+=`<div class="sec"><h3>相關聯絡人 <span class="spacer"></span><span class="mono" style="font-weight:400">${links.length}</span></h3>
       ${links.map(l=>{ const c=DATA.ct.find(x=>x.id===l.contact_id)||{name:'(已刪除)'}; return `<div class="it"><span>${esc(c.name)}</span><span class="sub">${esc([l.role,c.kind,c.company,c.phone].filter(Boolean).join(' · '))}</span><span class="x" data-unlink="${l.contact_id}" data-role="${esc(l.role||'')}">移除</span></div>`; }).join('')||'<div class="sub" style="font-size:12px;color:var(--muted)">尚無</div>'}
-      <div class="addrow"><select id="linkCt"><option value="">— 選聯絡人 —</option>${DATA.ct.map(c=>`<option value="${c.id}">${esc(c.name)}${c.company?' · '+esc(c.company):''}</option>`).join('')}</select>${TAB==='ur'?`<select id="linkRole">${UR_ROLE.map(o=>`<option>${o}</option>`).join('')}</select>`:''}<button class="btn sm" id="btnLink">加入</button><button class="btn sm" id="btnNewCt" title="先新增聯絡人再回來連結">＋ 新聯絡人</button></div></div>`;
+      <div class="addrow"><select id="linkCt"><option value="">— 選聯絡人 —</option>${DATA.ct.filter(c=>TAB!=='jc'||SHOW_OWNERS||!['地主','住戶'].includes(c.kind)).map(c=>`<option value="${c.id}">${esc(c.name)}${c.company?' · '+esc(c.company):''}</option>`).join('')}</select>${TAB==='jc'?`<label class="sub" style="display:flex;align-items:center;gap:4px;font-size:11px;white-space:nowrap;flex:0 0 auto"><input type="checkbox" id="showOwners"${SHOW_OWNERS?' checked':''}> 含地主／住戶</label>`:''}${TAB==='ur'?`<select id="linkRole">${UR_ROLE.map(o=>`<option>${o}</option>`).join('')}</select>`:''}<button class="btn sm" id="btnLink">加入</button><button class="btn sm" id="btnNewCt" title="先新增聯絡人再回來連結">＋ 新聯絡人</button></div></div>`;
     const ts=DATA.tasks.filter(t=>TAB==='ur'?t.ur_project_id===id:t.jc_project_id===id);
     h+=`<div class="sec"><h3>待辦 <span class="spacer"></span><span class="mono" style="font-weight:400">${ts.filter(t=>t.status!=='完成').length} 未完成</span></h3>
-      ${ts.map(t=>`<div class="it${t.status==='完成'?' done':''}${t.due_at&&t.status!=='完成'&&t.due_at.slice(0,10)<new Date().toISOString().slice(0,10)?' late':''}"><span class="cb" data-task="${t.id}"></span><span class="t">${esc(t.title)}</span><span class="sub">${esc([t.tag,fmtD(t.due_at)?'到期 '+fmtD(t.due_at):''].filter(Boolean).join(' · '))}</span><span class="x" data-deltask="${t.id}">刪</span></div>`).join('')||'<div style="font-size:12px;color:var(--muted)">尚無</div>'}
-      <div class="addrow"><input id="taskTitle" placeholder="新待辦…"><select id="taskTag">${TASK_TAG.map(o=>`<option>${o}</option>`).join('')}</select><input id="taskDue" class="dmask" placeholder="2026/11/04" inputmode="numeric" maxlength="10" style="flex:0 0 110px"><button class="btn sm" id="btnTask">加入</button></div></div>`;
+      ${ts.map(t=>`<div class="it${t.status==='完成'?' done':''}${t.due_at&&t.status!=='完成'&&t.due_at.slice(0,10)<new Date().toISOString().slice(0,10)?' late':''}"><span class="cb" data-task="${t.id}"></span><span class="t">${esc(t.title)}</span><span class="sub">${esc([t.tag,t.created_at?'建立 '+fmtD(t.created_at):'',fmtD(t.due_at)?'執行 '+fmtD(t.due_at):''].filter(Boolean).join(' · '))}</span><span class="x" data-deltask="${t.id}">刪</span></div>`).join('')||'<div style="font-size:12px;color:var(--muted)">尚無</div>'}
+      <div class="addrow"><input id="taskTitle" placeholder="新待辦…"><select id="taskTag">${TASK_TAG.map(o=>`<option>${o}</option>`).join('')}</select><input id="taskDue" class="dmask" placeholder="執行日 2026/11/04" inputmode="numeric" maxlength="10" style="flex:0 0 130px"><button class="btn sm" id="btnTask">加入</button></div></div>`;
+    h+=progressSection(id);
   }
   if(TAB==='ct'){
     const urs=DATA.urc.filter(x=>x.contact_id===id).map(l=>({r:DATA.ur.find(p=>p.id===l.ur_project_id),role:l.role})).filter(x=>x.r);
@@ -737,6 +759,7 @@ function bindRel(){
   const id=CUR?.id; if(!id) return;
   bindParcels(); bindHoldings();
   if(TAB==='jc') smBind();
+  if(TAB==='ur'||TAB==='jc') pgBind();
   $('#btnLink')?.addEventListener('click',async()=>{ const cid=+$('#linkCt').value; if(!cid) return;
     const row=TAB==='ur'?{ur_project_id:id,contact_id:cid,role:$('#linkRole').value}:{jc_project_id:id,contact_id:cid};
     const {error}=await sb.from(TAB==='ur'?'ur_project_contacts':'jc_project_contacts').insert(row);
