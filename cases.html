@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#0e1012">
-<title>ATLAS 案件中心 v3.23</title>
+<title>ATLAS 案件中心 v3.24</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Space+Mono:wght@400;700&display=swap');
 :root{--bg:#0e1012;--sb:#141618;--panel:#1a1d21;--card:#1f2328;--border:#2a2f36;--border2:#353b44;--gold:#d4a843;--gold2:#f0cc7a;--teal:#3aaa8c;--teal2:#4dc9a8;--red:#e06c6c;--indigo:#7b8cff;--amber:#e8b04a;--text:#dde2ee;--sub:#8a94a6;--muted:#4a5566}
@@ -629,10 +629,11 @@ window.addEventListener('beforeunload',()=>{ if(AUTOSAVE){ clearTimeout(AUTOSAVE
 // ── 刪除可復原：刪除＝蓋 deleted_at（SQL 38），復原＝清掉；最多記 20 次，重新整理後清空 ──
 const UNDO=[]; let TOAST_T=null;
 async function softDel(items,label){ // items: [{table,ids}]
-  for(const it of items){ const {error}=await sb.from(it.table).update({deleted_at:new Date().toISOString()}).in('id',it.ids); if(error) throw error; }
+  for(const it of items){ let {error}=await sb.rpc('soft_delete',{tbl:it.table,ids:it.ids}); if(error&&/function|not find/i.test(error.message)){ ({error}=await sb.from(it.table).update({deleted_at:new Date().toISOString()}).in('id',it.ids)); }   // 沒跑 52 就退回舊做法
+    if(error) throw error; }
   UNDO.push({items,label,at:Date.now()}); if(UNDO.length>20) UNDO.shift(); undoUi(); toast(`已刪除 ${label}`,true); }
 async function undoLast(){ const u=UNDO.pop(); undoUi(); if(!u) return;
-  for(const it of u.items){ const {error}=await sb.from(it.table).update({deleted_at:null}).in('id',it.ids); if(error){ alert('復原失敗：'+error.message+'（請確認已跑 supabase_38）'); return; } }
+  for(const it of u.items){ let {error}=await sb.rpc('soft_restore',{tbl:it.table,ids:it.ids}); if(error&&/function|not find/i.test(error.message)){ ({error}=await sb.from(it.table).update({deleted_at:null}).in('id',it.ids)); } if(error){ alert('復原失敗：'+error.message+'（請確認已跑 supabase_52）'); return; } }
   toast(`已復原 ${u.label}`); await loadAll(); renderList(); if(CUR){ CUR=DATA[TAB].find(x=>x.id===CUR.id)||null; } showForm(); }
 function undoUi(){ const b=$('#undoBtn'); b.disabled=!UNDO.length; b.textContent=UNDO.length?`↶ 復原（${UNDO.length}）`:'↶ 復原'; }
 function toast(msg,withUndo){ const t=$('#toast'); t.innerHTML=esc(msg)+(withUndo?` <button class="btn sm" onclick="undoLast()">↶ 復原</button>`:''); t.classList.add('on'); clearTimeout(TOAST_T); TOAST_T=setTimeout(()=>t.classList.remove('on'),withUndo?12000:3000); }
@@ -640,7 +641,7 @@ document.addEventListener('keydown',e=>{ if((e.metaKey||e.ctrlKey)&&!e.shiftKey&
 $('#undoBtn').addEventListener('click',undoLast);
 async function del(){
   if(!confirm(`確定刪除「${T[TAB].name(CUR)}」？（刪錯可按 ↶ 復原）`)) return;
-  try{ await softDel([{table:T[TAB].table,ids:[CUR.id]}],T[TAB].name(CUR)); }catch(e){ $('#st').className='st err'; $('#st').textContent='刪除失敗：'+e.message+'（請確認已跑 supabase_38）'; return; }
+  try{ await softDel([{table:T[TAB].table,ids:[CUR.id]}],T[TAB].name(CUR)); }catch(e){ $('#st').className='st err'; $('#st').textContent='刪除失敗：'+e.message+'（請確認已跑 supabase_52）'; return; }
   DATA[TAB]=DATA[TAB].filter(x=>x.id!==CUR.id); CUR=null; await loadAll(); renderList(); $('#detail').innerHTML='<div class="empty">已刪除，可按上方 ↶ 復原</div>';
 }
 
