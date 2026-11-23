@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>ATLAS 型錄 v1.13</title>
+<title>ATLAS 型錄 v1.14</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Space+Mono&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#0e1012;--sb:#141618;--panel:#1a1d21;--card:#1f2328;--border:#2a2f36;--border2:#353b44;--gold:#d4a843;--gold2:#f0cc7a;--teal:#3aaa8c;--teal2:#4dc9a8;--red:#e06c6c;--indigo:#7b8cff;--amber:#e8b04a;--text:#dde2ee;--sub:#8a94a6;--muted:#4a5566}
@@ -147,7 +147,7 @@ async function load(){
   all.forEach(r=>{ if(!r.vendor) r.vendor=(r.source==='bnf'?'新睦豐':r.source); });   // 舊列沒 vendor 的補上，才會被狀態篩選管到
   ROWS=all.filter(r=>!(r.vendor!=='新睦豐'&&r.status==='停產'));   // 國產停產品不顯示
   const [d,b,u]=await Promise.all([sb.from('product_docs').select('*').order('created_at',{ascending:false}), sb.from('catalog_brands').select('*'), sb.from('ui_state').select('data').eq('user_id',UID).eq('key','catalog').maybeSingle()]);
-  DOCS=d.data||[]; (b.data||[]).forEach(x=>BR[x.vendor+'|'+x.brand]=x); try{ const fp=await sb.from('factory_products').select('*').order('name').order('size'); FP=fp.data||[]; }catch(e){ FP=[]; }   // 原廠型錄（SQL 47）；還沒建表就當沒有 HID=new Set(u.data?.data?.hiddenPdfs||[]);
+  DOCS=d.data||[]; (b.data||[]).forEach(x=>BR[x.vendor+'|'+x.brand]=x); try{ FP=[]; for(let i=0;i<20;i++){ const fp=await sb.from('factory_products').select('*').order('name').order('size').order('key').range(i*1000,i*1000+999); if(fp.error||!fp.data) break; FP.push(...fp.data); if(fp.data.length<1000) break; } }catch(e){ FP=[]; }   // 一次最多 1000 列，分頁讀完   // 原廠型錄（SQL 47）；還沒建表就當沒有 HID=new Set(u.data?.data?.hiddenPdfs||[]);
   const vendors=[ALL,...new Set(ROWS.map(r=>r.vendor||r.source))]; V=vendors[1]||ALL; fillSel('#selVendor',vendors,V); DEF(); onVendor();
   $('#fCat').innerHTML='<option value="">全部</option>'+[...new Set(ROWS.map(r=>r.category).filter(Boolean))].map(c=>`<option>${esc(c)}</option>`).join('');
   $('#meta').textContent=`${new Set(ROWS.map(r=>[r.vendor,r.brand,r.series,r.factory_code||r.model].join('|'))).size} 品名 · ${ROWS.length} 型號 · 最近抓取 ${(ROWS.map(r=>r.last_seen).sort().pop()||'')}`; }
@@ -169,26 +169,34 @@ function groups(){ const q=$('#q').value.trim().toLowerCase(); const base=q?ROWS
   if(q){ f.st=''; f.tier=''; }   // 有打搜尋字＝跨全部找，狀態／等級篩選不套用（期貨、限量、零星自己搜）
   return Object.values(g).sort((a,b)=>ord(a)-ord(b)||a.brand.localeCompare(b.brand)||serSort(a.series,b.series)).map(x=>{ if(!f.st||!bnfG(x)) return x; const rows=x.rows.filter(r=>rst(r)===f.st||(f.ltd&&f.st==='入庫'&&rst(r)==='限量')); return rows.length?{...x,rows,ltd:f.st==='限量'&&x.ltd}:null; }).filter(Boolean).filter(x=>{ const rs=x.rows; if(f.fin&&!rs.some(r=>r.finish===f.fin)) return false; if(f.th&&!rs.some(r=>th(r.thickness)===f.th)) return false; if(f.sz&&!rs.some(r=>sizesOf(r).includes(f.sz))) return false; if(f.cat&&!rs.some(r=>r.category===f.cat)) return false; if(f.tier&&tier(x.vendor,x.brand)!==f.tier) return false; return true; }); }
 // 原廠完整規格（factory_products）：同品牌＋原廠款名對上；每列標 入庫（我們有進）／停產（原廠 *）／未進
-const FIN_ZH={natural:'自然面',polished:'亮面','natural-plus':'自然面+',cashmere:'絲絨面',silky:'絲滑面',antislip:'止滑面','top-lapped':'半拋面',glint:'微光面',feel:'觸感面',iridia:'虹彩面',active:'Active'};
+const FIN_ZH={natural:'自然面',polished:'亮面','natural-plus':'自然面+','levigato-polished':'亮面（拋光）',flamed:'燒面',structured:'結構面','semi-polished':'半拋面',honed:'霧面',bushhammered:'荔枝面',cashmere:'絲絨面',silky:'絲滑面',antislip:'止滑面','top-lapped':'半拋面',glint:'微光面',feel:'觸感面',iridia:'虹彩面',active:'Active'};
 const szNorm=z=>{ const k=szKey(z); return k[0]===9e9?String(z):[...k].sort((a,b)=>b-a).join('x'); };
 // 新睦豐型號尾碼 → 原廠面感：S＝natural（自然面）、L＝polished（亮面）；其他尾碼靠面感中文對
 const SFX_FIN={S:'natural',L:'polished',N:'natural',P:'polished'};
 const finOf=p=>{ const m=String(p.model||'').match(/([A-Z]{1,2})$/); return (m&&SFX_FIN[m[1]])||null; };
-const fpOf=g=>FP.filter(x=>x.brand===g.brand&&String(x.name||'').toUpperCase()===String(g.en||'').toUpperCase());
-const fpMatch=(p,rows)=>rows.find(r=>(p.factory_item&&p.factory_item.toUpperCase()===String(r.code).toUpperCase())||(sizesOf(p).some(z=>szNorm(z)===szNorm(r.size))&&(finOf(p)?finOf(p)===r.finish:(FIN_ZH[r.finish]||r.finish)===p.finish)&&(!th(p.thickness)||!th(r.thickness)||th(p.thickness)===th(r.thickness))));
-function factoryBox(g){ const fp=fpOf(g); if(!fp.length) return '<div class="hint" style="margin-top:8px">原廠其他規格：尚無原廠資料（'+(g.brand==='Graniti Fiandre'?'跑 <code>py atlas_crawler.py fiandre --series marmi-maximum --upload</code>':'此品牌轉接器尚未做')+'）</div>';
+// 對應鍵＝品牌＋系列＋款名（去掉空白符號）；款名用原廠名或爬蟲對好的 bnf_name（SEMINATO BRUNO↔Bruno、250F FROST↔250°F Frost）
+const NK=x=>String(x||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
+let FPI=null; function fpIdx(){ if(FPI&&FPI._n===FP.length) return FPI; FPI={_n:FP.length}; FP.forEach(x=>{ [...new Set([NK(x.name),NK(x.bnf_name)].filter(Boolean))].forEach(n=>{ (FPI[x.brand+'|'+NK(x.series)+'|'+n]??=[]).push(x); }); }); return FPI; }
+const fpFor=(brand,series,name)=>{ const I=fpIdx(); const a=I[brand+'|'+NK(series)+'|'+NK(name)]||[]; const bn=a.filter(x=>NK(x.bnf_name)===NK(name)); return bn.length?bn:a; };   // 爬蟲指名對到的優先
+const fpOf=g=>fpFor(g.brand,g.series,g.en);
+const finFam=f=>/polish|levig|lucid|gloss/i.test(f||'')?'polished':/natur|matt/i.test(f||'')?'natural':(f||'');
+const fpMatch=(p,rows)=>{ const c=p.factory_item&&rows.find(r=>p.factory_item.toUpperCase()===String(r.code).toUpperCase()); if(c) return c;
+  const base=rows.filter(r=>sizesOf(p).some(z=>szNorm(z)===szNorm(r.size))&&(!th(p.thickness)||!th(r.thickness)||th(p.thickness)===th(r.thickness))); const f=finOf(p);
+  const ex=base.filter(r=>f?f===r.finish:(FIN_ZH[r.finish]||r.finish)===p.finish); if(ex.length) return ex[0];
+  const fam=f?base.filter(r=>finFam(r.finish)===f&&!r.article_type):[]; return fam.length===1?fam[0]:undefined; };   // 面感同一家（natural-plus、levigato-polished）且只有一個候選才自動對
+function factoryBox(g){ const fp=fpOf(g); if(!fp.length) return '<div class="hint" style="margin-top:8px">原廠其他規格：尚無原廠資料（'+(g.brand==='Graniti Fiandre'?'原廠官網沒有這一款，或還沒跑 <code>py atlas_crawler.py fiandre --upload</code>':'此品牌轉接器尚未做')+'）</div>';
   const have=r=>g.rows.some(p=>fpMatch(p,[r]));
   const rows=[...fp].sort((a,b)=>szSort(b.size,a.size)||String(a.finish).localeCompare(String(b.finish)));
   const n={have:rows.filter(have).length,disc:rows.filter(r=>r.discontinued).length};
   return `<div style="margin-top:12px"><h3>原廠完整規格<span class="c">${rows.length} 個料號 · 入庫 ${n.have}${n.disc?' · 原廠停產 '+n.disc:''}${rows[0].v_grade?' · 色差 '+esc(rows[0].v_grade):''} · <a href="${esc(rows[0].source_url||'#')}" target="_blank">原廠頁 ↗</a></span></h3>
   <table class="vt"><tr><th>尺寸 cm</th><th>厚/mm</th><th>面感</th><th>原廠料號</th><th>變體</th><th>類型</th><th>狀態</th></tr>${rows.map(r=>{ const h=have(r); return `<tr style="${h?'':'opacity:.6'}"><td>${esc(r.size||'')}</td><td>${esc(r.thickness||'')}</td><td>${esc(FIN_ZH[r.finish]||r.finish||'')}<small style="color:var(--muted)"> ${esc(r.finish||'')}</small></td><td class="mono">${esc(r.code)}</td><td>${esc(r.variant||'')}</td><td>${esc(r.article_type||'')}</td><td>${r.discontinued?'<span class="tag ltd">原廠停產</span>':h?'<span class="tag imp">入庫</span>':'<span class="tag">未進</span>'}</td></tr>`; }).join('')}</table>
   <div class="thumbs" style="margin-top:6px">${(rows[0].textures||[]).map((u,i)=>`<div class="t" style="background-image:url('${esc(u)}');position:relative" data-lb="${esc(u)}" data-cap="原廠紋理 ${i+1}"><i>紋理 ${i+1}</i><span class="x" data-fdel="${esc(u)}" title="移除這張（抓錯）" style="position:absolute;top:2px;right:4px;background:rgba(0,0,0,.55);border-radius:4px;padding:0 5px">✕</span></div>`).join('')}<div class="t" data-fadd="1" title="貼原廠圖片網址" style="display:flex;align-items:center;justify-content:center;border:1px dashed var(--border2);color:var(--sub);cursor:pointer">＋ 加圖</div></div></div>`; }
-async function fpSetTextures(g,arr){ const fp=fpOf(g); if(!fp.length) return; const {error}=await sb.from('factory_products').update({textures:arr,image_url:arr[0]||null,note:'tex-edited'}).eq('brand',g.brand).ilike('name',g.en); if(error){ alert('存檔失敗：'+error.message); return; } fp.forEach(r=>{ r.textures=arr; r.image_url=arr[0]||null; r.note='tex-edited'; }); renderSide(); }
+async function fpSetTextures(g,arr){ const fp=fpOf(g); if(!fp.length) return; const {error}=await sb.from('factory_products').update({textures:arr,image_url:arr[0]||null,note:'tex-edited'}).in('key',fp.map(r=>r.key)); if(error){ alert('存檔失敗：'+error.message); return; } fp.forEach(r=>{ r.textures=arr; r.image_url=arr[0]||null; r.note='tex-edited'; }); renderSide(); }
 const rst=r=>(r.status==='限量'||r.status==='停產')?r.status:(isLtdName(r.import_name)?'限量':r.status);   // 名稱帶「(限量)」也算限量
 const gstatus=g=>{ const ss=g.rows.map(rst); if(ss.length&&ss.every(s=>s==='停產')) return '停產'; if(ss.includes('限量')) return '限量'; return ss.includes('入庫')?'入庫':'期貨'; };
 // 未對應：bnf 入庫型號、該品牌＋原廠名在 factory_products 有資料、沒填 factory_item、自動也對不到
-function unmatched(){ if(!FP.length) return []; const out=[]; const byG={}; FP.forEach(x=>(byG[x.brand+'|'+String(x.name).toUpperCase()]??=[]).push(x));
-  ROWS.filter(r=>bnfRow(r)&&!r.hidden&&r.status!=='停產').forEach(r=>{ const fp=byG[r.brand+'|'+String(r.factory_code||'').toUpperCase()]; if(!fp||r.factory_item) return; if(!fpMatch(r,fp)) out.push({r,fp}); }); return out; }
+function unmatched(){ if(!FP.length) return []; const out=[];
+  ROWS.filter(r=>bnfRow(r)&&!r.hidden&&r.status!=='停產').forEach(r=>{ const fp=fpFor(r.brand,r.series,nm(r.factory_code||'')); if(!fp.length||r.factory_item) return; if(!fpMatch(r,fp)) out.push({r,fp}); }); return out; }
 function renderUnm(){ const u=unmatched(); $('#unmBtn').style.display=FP.length?'':'none'; $('#unmN').textContent=u.length; $('#unmSub').textContent=`${u.length} 個型號`;
   $('#unmTbl').innerHTML='<tr><th>品牌</th><th>系列</th><th>原廠名</th><th>中文</th><th>型號</th><th>尺寸</th><th>厚</th><th>面感</th><th>原廠有的規格</th></tr>'+u.map(({r,fp})=>`<tr><td>${esc(r.brand)}</td><td>${esc(r.series)}</td><td>${esc(r.factory_code||'')}</td><td>${esc(nm(r.import_name||''))}</td><td class="m">${esc(r.model)}</td><td class="mono">${esc(r.size||'')}</td><td class="mono">${esc(th(r.thickness))}</td><td>${esc(r.finish||'')}<small style="color:var(--muted)"> ${finOf(r)||''}</small></td><td style="font-size:11px;color:var(--sub)">${esc([...new Set(fp.map(x=>`${x.size} ${x.finish} ${x.thickness}mm`))].join('、'))}</td></tr>`).join(''); }
 $('#unmBtn').addEventListener('click',()=>{ renderUnm(); $('#unm').classList.add('on'); }); $('#unmX').addEventListener('click',()=>$('#unm').classList.remove('on'));
