@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>ATLAS 型錄 v1.14</title>
+<title>ATLAS 型錄 v1.16</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Space+Mono&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#0e1012;--sb:#141618;--panel:#1a1d21;--card:#1f2328;--border:#2a2f36;--border2:#353b44;--gold:#d4a843;--gold2:#f0cc7a;--teal:#3aaa8c;--teal2:#4dc9a8;--red:#e06c6c;--indigo:#7b8cff;--amber:#e8b04a;--text:#dde2ee;--sub:#8a94a6;--muted:#4a5566}
@@ -169,21 +169,25 @@ function groups(){ const q=$('#q').value.trim().toLowerCase(); const base=q?ROWS
   if(q){ f.st=''; f.tier=''; }   // 有打搜尋字＝跨全部找，狀態／等級篩選不套用（期貨、限量、零星自己搜）
   return Object.values(g).sort((a,b)=>ord(a)-ord(b)||a.brand.localeCompare(b.brand)||serSort(a.series,b.series)).map(x=>{ if(!f.st||!bnfG(x)) return x; const rows=x.rows.filter(r=>rst(r)===f.st||(f.ltd&&f.st==='入庫'&&rst(r)==='限量')); return rows.length?{...x,rows,ltd:f.st==='限量'&&x.ltd}:null; }).filter(Boolean).filter(x=>{ const rs=x.rows; if(f.fin&&!rs.some(r=>r.finish===f.fin)) return false; if(f.th&&!rs.some(r=>th(r.thickness)===f.th)) return false; if(f.sz&&!rs.some(r=>sizesOf(r).includes(f.sz))) return false; if(f.cat&&!rs.some(r=>r.category===f.cat)) return false; if(f.tier&&tier(x.vendor,x.brand)!==f.tier) return false; return true; }); }
 // 原廠完整規格（factory_products）：同品牌＋原廠款名對上；每列標 入庫（我們有進）／停產（原廠 *）／未進
-const FIN_ZH={natural:'自然面',polished:'亮面','natural-plus':'自然面+','levigato-polished':'亮面（拋光）',flamed:'燒面',structured:'結構面','semi-polished':'半拋面',honed:'霧面',bushhammered:'荔枝面',cashmere:'絲絨面',silky:'絲滑面',antislip:'止滑面','top-lapped':'半拋面',glint:'微光面',feel:'觸感面',iridia:'虹彩面',active:'Active'};
+const FIN_ZH={natural:'自然面',polished:'亮面','natural-plus':'自然面+','levigato-polished':'亮面（拋光）',flamed:'燒面',structured:'結構面',jewel:'晶鑽亮面','semi-polished':'半拋面',honed:'霧面',bushhammered:'荔枝面',cashmere:'絲絨面',silky:'絲滑面',antislip:'止滑面','top-lapped':'半拋面',glint:'微光面',feel:'觸感面',iridia:'虹彩面',active:'Active'};
 const szNorm=z=>{ const k=szKey(z); return k[0]===9e9?String(z):[...k].sort((a,b)=>b-a).join('x'); };
 // 新睦豐型號尾碼 → 原廠面感：S＝natural（自然面）、L＝polished（亮面）；其他尾碼靠面感中文對
 const SFX_FIN={S:'natural',L:'polished',N:'natural',P:'polished'};
 const finOf=p=>{ const m=String(p.model||'').match(/([A-Z]{1,2})$/); return (m&&SFX_FIN[m[1]])||null; };
 // 對應鍵＝品牌＋系列＋款名（去掉空白符號）；款名用原廠名或爬蟲對好的 bnf_name（SEMINATO BRUNO↔Bruno、250F FROST↔250°F Frost）
 const NK=x=>String(x||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
-let FPI=null; function fpIdx(){ if(FPI&&FPI._n===FP.length) return FPI; FPI={_n:FP.length}; FP.forEach(x=>{ [...new Set([NK(x.name),NK(x.bnf_name)].filter(Boolean))].forEach(n=>{ (FPI[x.brand+'|'+NK(x.series)+'|'+n]??=[]).push(x); }); }); return FPI; }
-const fpFor=(brand,series,name)=>{ const I=fpIdx(); const a=I[brand+'|'+NK(series)+'|'+NK(name)]||[]; const bn=a.filter(x=>NK(x.bnf_name)===NK(name)); return bn.length?bn:a; };   // 爬蟲指名對到的優先
+let FPI=null; function fpIdx(){ if(FPI&&FPI._n===FP.length) return FPI; FPI={_n:FP.length}; const seen={}; FP.forEach(x=>{ [...new Set([NK(x.name),NK(x.bnf_name)].filter(Boolean))].forEach(n=>{ (FPI[x.brand+'|'+NK(x.series)+'|'+n]??=[]).push(x); }); const k=x.brand+'||'+NK(x.name), c=k+'|'+NK(x.code); if(!seen[c]){ seen[c]=1; (FPI[k]??=[]).push(x); } }); return FPI; }
+const fpFor=(brand,series,name)=>{ const I=fpIdx(); const a=I[brand+'|'+NK(series)+'|'+NK(name)]||[]; const bn=a.filter(x=>NK(x.bnf_name)===NK(name)); if(bn.length) return bn; if(a.length) return a;
+  return I[brand+'||'+NK(name)]||[]; };   // 爬蟲指名對到的優先；這個系列還沒有原廠資料時，先借同品牌同名的款（別的系列頁通常列同一張規格表）
 const fpOf=g=>fpFor(g.brand,g.series,g.en);
 const finFam=f=>/polish|levig|lucid|gloss/i.test(f||'')?'polished':/natur|matt/i.test(f||'')?'natural':(f||'');
 const fpMatch=(p,rows)=>{ const c=p.factory_item&&rows.find(r=>p.factory_item.toUpperCase()===String(r.code).toUpperCase()); if(c) return c;
   const base=rows.filter(r=>sizesOf(p).some(z=>szNorm(z)===szNorm(r.size))&&(!th(p.thickness)||!th(r.thickness)||th(p.thickness)===th(r.thickness))); const f=finOf(p);
   const ex=base.filter(r=>f?f===r.finish:(FIN_ZH[r.finish]||r.finish)===p.finish); if(ex.length) return ex[0];
-  const fam=f?base.filter(r=>finFam(r.finish)===f&&!r.article_type):[]; return fam.length===1?fam[0]:undefined; };   // 面感同一家（natural-plus、levigato-polished）且只有一個候選才自動對
+  const pool=base.filter(r=>!r.article_type);   // 踢腳、階梯等配件不算
+  const fam=f?pool.filter(r=>finFam(r.finish)===f):pool.filter(r=>(ZH_FAM[p.finish]||[]).includes(r.finish)); return fam.length===1?fam[0]:undefined; };   // 面感同一家且只有一個候選才自動對
+// 沒有 S／L 尾碼時，用新睦豐的中文面感對原廠面感的「一家」
+const ZH_FAM={'自然面':['natural','natural-plus'],'亮面':['polished','levigato-polished','jewel'],'鑿面':['flamed','structured','antislip'],'柔拋':['silky','top-lapped','cashmere'],'閃晶面':['glint']};
 function factoryBox(g){ const fp=fpOf(g); if(!fp.length) return '<div class="hint" style="margin-top:8px">原廠其他規格：尚無原廠資料（'+(g.brand==='Graniti Fiandre'?'原廠官網沒有這一款，或還沒跑 <code>py atlas_crawler.py fiandre --upload</code>':'此品牌轉接器尚未做')+'）</div>';
   const have=r=>g.rows.some(p=>fpMatch(p,[r]));
   const rows=[...fp].sort((a,b)=>szSort(b.size,a.size)||String(a.finish).localeCompare(String(b.finish)));
