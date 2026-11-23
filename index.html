@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#0d0f14">
-<title>ATLAS 帷幄 v6.11 — 指揮中心</title>
+<title>ATLAS 帷幄 v6.12 — 指揮中心</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Noto+Serif+TC:wght@600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
 :root[data-theme="dark"]{--bg:#0d0f14;--bg-2:#12151c;--panel:#161a22;--card:#1c2028;--card-2:#22262f;--border:#252c38;--border-2:#2e3648;--ink:#e4e8f2;--ink-2:#b2bacb;--muted:#6a7490;--dim:#434b60;--gold:#d4a843;--gold-2:#f0cc7a;--teal:#3aaa8c;--teal-2:#5dd4b0;--indigo:#5b7ec4;--red:#e07060;--amber:#e8b04a;--grid:rgba(255,255,255,.04)}
@@ -124,6 +124,8 @@ h2.sec small{font-family:'Space Mono',monospace;font-size:10px;color:var(--muted
 .task.grp:hover,.task.par:hover{background:none}
 .task.grp .cb,.task.par .cb{border-style:dashed}
 .task .cnt{font-family:'Space Mono',monospace;font-size:10px;color:var(--muted);margin-left:6px;text-decoration:none;display:inline-block}
+.task .ulink{font-family:'Space Mono',monospace;font-size:10px;color:var(--teal-2);text-decoration:none;margin-left:6px;display:inline-block}
+.task .ulink:hover{text-decoration:underline}
 .subtree{margin:0 0 4px 13px;padding-left:12px;border-left:1px solid var(--border-2)}
 .task .tg{display:inline-block;font-family:'Space Mono',monospace;font-size:9px;padding:0 5px;border:1px solid var(--border-2);border-radius:4px;color:var(--muted);margin-right:4px}
 
@@ -185,7 +187,7 @@ h2.sec small{font-family:'Space Mono',monospace;font-size:10px;color:var(--muted
 </div>
 
 <div class="top"><div class="in">
-  <div class="brand" onclick="go('home')"><span class="mk">▲ ATLAS</span><b>帷幄</b><span class="v">v6.11</span></div>
+  <div class="brand" onclick="go('home')"><span class="mk">▲ ATLAS</span><b>帷幄</b><span class="v">v6.12</span></div>
   <nav class="tabs">
     <button class="tab on" data-v="home"><span class="n">01</span>首頁</button>
     <button class="tab" data-v="sched"><span class="n">02</span>工作時程</button>
@@ -226,7 +228,7 @@ h2.sec small{font-family:'Space Mono',monospace;font-size:10px;color:var(--muted
     <a class="card link" href="law.html"><div class="ic">📜</div><h3>法規條文庫</h3><div class="d">領域 → 面向 → 法規 三層樹、全文搜尋、實務註記、PDF 原檔。</div><div class="meta" id="m-law">–</div><span class="arrow">→</span></a>
     <a class="card link" href="finder.html"><div class="ic">🎨</div><h3>選色表</h3><div class="d">建商／專案／版本、產品搜尋、圖片裁剪、PDF 輸出；📋 從清單建立（貼 區域／型號／尺寸 → 自動建專案）。資料自動同步雲端。</div><div class="meta">v7.4 · Supabase 同步 · 區域字典 SQL 48 · 原廠型號欄</div><span class="arrow">→</span></a>
     <a class="card link" href="far.html"><div class="ic">📐</div><h3>容積獎勵</h3><div class="d">都更／危老獎勵項目一條一卡、上限即時顯示、允建容積吃案件地號、方案存雲端。成本分析模組第一段。</div><div class="meta">v1.0 · 38 項獎勵 · 新北／台北地方表</div><span class="arrow">→</span></a>
-    <a class="card link" href="catalog.html"><div class="ic">📚</div><h3>型錄</h3><div class="d">廠商 ▸ 品牌 ▸ 系列 ▸ 品名。新睦豐 20 家原廠 135 系列已入庫；狀態兩層、原廠通知 PDF、原廠完整規格與紋理圖；國產五家＋昌達與其他原廠陸續接入。</div><div class="meta">v1.13 · 爬蟲 v2.19 · 每月 1 號更新 · 原廠規格 Fiandre Marmi Maximum 測試中</div><span class="arrow">→</span></a>
+    <a class="card link" href="catalog.html"><div class="ic">📚</div><h3>型錄</h3><div class="d">廠商 ▸ 品牌 ▸ 系列 ▸ 品名。新睦豐 20 家原廠 135 系列已入庫；狀態兩層、原廠通知 PDF、原廠完整規格與紋理圖；國外原廠 7 牌抓完再接國產六家（含昌達）。</div><div class="meta">v1.13 · 爬蟲 v2.19 · 每月 1 號更新 · 原廠規格 Fiandre Marmi Maximum 測試中</div><span class="arrow">→</span></a>
     <a class="card link" href="cost.html"><div class="ic">🧮</div><h3>成本分析</h3><div class="d">理事長概算模組網頁版：「1.概算方式」41 項主線、合建／委建／自建切換、敏感度；參數表（造價、費率、稅率）集中維護。內部工具，不給業主看。</div><div class="meta">v0.1 測試 · SQL 49 · cost-map.html 關聯圖</div><span class="arrow">→</span></a>
     <a class="card link" href="https://supabase.com/dashboard/project/riiflvhbxrnmzriwngjs/editor" target="_blank" rel="noopener"><div class="ic">🗄</div><h3>資料表</h3><div class="d">幕後資料庫：跑 SQL、拖 PDF、查資料。日常輸入請用案件中心。</div><div class="meta">Supabase · 22 張表</div><span class="arrow">↗</span></a>
   </div>
@@ -335,7 +337,7 @@ PDF 原檔   law.html 上「⬇」的法規＝還沒有 PDF</pre></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.106.2/dist/umd/supabase.min.js"></script>
 <script>
-const APP_VER='v6.11 · 2026-11-23'; // 首頁版本：每次改 index.html 就改這行，「交接版本」自動跟著
+const APP_VER='v6.12 · 2026-11-23'; // 首頁版本：每次改 index.html 就改這行，「交接版本」自動跟著
 const SCH_SLOT = {sat:'週六', sun:'週日', hol:'連假', any:'零碎'};
 const SCH = [
   { id:'A', t:'階段 A · 法規庫上線', d:'9月中 → 10月中',
@@ -414,18 +416,30 @@ const SCH = [
     tasks:[
       {n:'建材爬蟲 atlas_crawler.py 改寫 → Supabase products', s:'sun', h:4, done:true,
        w:'✅ 2026-11 中，爬蟲 v2.19，SQL 41–46。鍵含尺寸／面感；狀態、原廠料號、紋理等人工改的欄位爬蟲不覆蓋；同名跳過、不刪東西'},
-      {n:'跑 6 家廠商型錄，驗證 finder 產品搜尋', s:'sat', h:3,
-       w:'一家一家勾；選色表 v7.4 已讀新欄位。昌達另列在本段後面',
+      {n:'跑各家廠商型錄（新睦豐＋國外原廠 7 牌＋國產 6 家），驗證 finder 產品搜尋', s:'sat', h:3,
+       w:'順序：國外原廠全部抓好 → 再抓國產。一家一家勾；選色表 v7.4 已讀新欄位',
        sub:[
          {k:'bnf', n:'新睦豐（自家進口）', sub:[
            {k:'bnf-site', n:'新睦豐官網 bnf.com.tw', done:true, w:'✅ 20 家原廠 135 系列已入庫，每月 1 號更新'},
-           {k:'bnf-factory', n:'非零星入庫的國外原廠官網（完整規格、紋理圖）', w:'Fiandre Marmi Maximum 已測通；其餘品牌、系列見本段後面'},
+           {k:'bnf-fac', n:'非零星入庫的國外原廠官網（完整規格、紋理圖）', w:'只抓公司有入庫（非零星）的系列。先不抓：Inax、Sannini、Sant\'Agostino', sub:[
+             {k:'fac-fiandre', n:'Graniti Fiandre', u:'https://www.fiandre.com/', w:'Marmi Maximum 已測通，其餘入庫系列待抓'},
+             {k:'fac-florim', n:'Florim（含 CEDIT，併入 Florim 品牌）', u:'https://www.florim.com/en', w:'CEDIT：florim.com/en/company/brand/cedit'},
+             {k:'fac-cottodeste', n:'Cotto d\'Este', u:'https://www.cottodeste.it/'},
+             {k:'fac-fioranese', n:'Fioranese', u:'https://www.fioranese.it/en/'},
+             {k:'fac-fondovalle', n:'Fondovalle', u:'https://fondovalle.it/en/'},
+             {k:'fac-italgraniti', n:'Italgraniti', u:'https://www.italgranitigroup.com/en/homepage'},
+             {k:'fac-mirage', n:'Mirage', u:'https://mirage.it/en'},
+           ]},
          ]},
-         {k:'champion', n:'冠軍／馬可貝里 champion.com.tw'},
-         {k:'stg', n:'三洋／聖瑪莉諾 stg.com.tw'},
-         {k:'whitehorse', n:'白馬／帝凡諾 whitehorse.com.tw'},
-         {k:'shengyuan', n:'昇元（昇鈨／新元石／金元石／皮爾卡登）'},
-         {k:'gwoshin', n:'國信（GWOSHIN／堅持／金字塔／真善美）'},
+         {k:'champion', n:'冠軍／馬可貝里', u:'https://www.champion.com.tw'},
+         {k:'stg', n:'三洋／聖瑪莉諾', u:'https://stg.com.tw'},
+         {k:'whitehorse', n:'白馬／帝凡諾', u:'https://www.whitehorse.com.tw/overview/tw'},
+         {k:'shengyuan', n:'昇元（昇鈨／新元石／金元石／皮爾卡登）', u:'https://www.shengyuan-ceramics.com.tw'},
+         {k:'gwoshin', n:'國信（GWOSHIN／堅持／金字塔／真善美）', u:'https://www.gwo-shin.com'},
+         {k:'changda', n:'昌達', sub:[
+           {k:'hiland', n:'黃山石', u:'https://www.hiland.com.tw/'},
+           {k:'placido', n:'柏拉圖', u:'https://placido.com.tw/zh-tw/Story'},
+         ]},
        ]},
       {n:'地方法規核心 19 部（臺北 11／新北 8）登記主檔＋PDF', s:'sat', h:3, done:true,
        w:'✅ 2026-10-27。atlas_local_laws.py 登記；國土署擋爬蟲，PDF 手動下載後上傳'},
@@ -467,9 +481,9 @@ const SCH = [
        w:'型錄右上「未對應」清單可複製；停產的型號不用對'},
       {n:'公司 PC 工作排程器掛 run_crawler.bat（每月 1 號）', s:'any', h:0.5,
        w:'mini 到貨前先掛公司 PC；--rename 只在改檔名規則時手動跑'},
-      {n:'Fiandre 全系列（Marmi Maximum 確認沒問題後）＋其他國外品牌：只入庫指定系列', s:'sun', h:4,
+      {n:'Fiandre 全系列（Marmi Maximum 確認沒問題後）＋其他國外品牌：只入庫指定系列', s:'sun', h:4, hide:true,
        w:'Sannini 先不做；每個品牌只挑會賣的幾個系列'},
-      {n:'昌達（黃山石、柏拉圖）接進爬蟲與型錄', s:'sun', h:2,
+      {n:'昌達（黃山石、柏拉圖）接進爬蟲與型錄', s:'sun', h:2, hide:true,
        w:'國產五家在上面「跑 6 家廠商型錄」底下一家一家勾；品牌對照見 Project「廠商品牌對照表」v2'},
       {n:'型錄：顏色篩選、以圖找相似', s:'sun', h:4,
        w:'有原廠紋理圖之後才有料可比'},
@@ -668,7 +682,8 @@ function seedDone(){ let n=0; ST.schedule=ST.schedule||{}; const force=(ST.sched
   SCH.forEach(S=>S.tasks.forEach((t,i)=>{ const k=S.id+i; if(t.sub){ leaves(t).forEach(l=>{ const lk=k+'.'+l.k; if(l.done&&!(lk in ST.schedule)){ ST.schedule[lk]=true; n++; } }); return; }
     if(t.done&&(force?!ST.schedule[k]:!(k in ST.schedule))){ ST.schedule[k]=true; n++; } }));
   if(force){ ST.schedule._seed=SCH_SEED; n++; } syncParents(); return n; }
-function stageStats(S){ const done=S.tasks.filter((_,i)=>ST.schedule[S.id+i]).length; return {done,total:S.tasks.length,pct:Math.round(done/S.tasks.length*100)}; }
+// hide:true＝已併到別處的舊任務：不顯示、不計數（不能直接刪，會讓後面的勾選鍵位移）
+function stageStats(S){ const live=S.tasks.map((t,i)=>[t,i]).filter(([t])=>!t.hide); const done=live.filter(([,i])=>ST.schedule[S.id+i]).length; return {done,total:live.length,pct:Math.round(done/live.length*100)}; }
 function currentStageId(){ for(const S of SCH){ if(stageStats(S).pct<100) return S.id; } return SCH[SCH.length-1].id; }
 function renderRings(){
   const cur=currentStageId();
@@ -680,8 +695,8 @@ function renderRings(){
       <div class="l">${S.id} · ${esc(S.t.split('·')[1]||S.t).trim()}</div></div>`; }).join('');
 }
 function subHtml(pk,arr){ return `<div class="subtree">${arr.map(x=>{
-    if(x.sub){ const ls=leaves(x), c=ls.filter(l=>ST.schedule[pk+'.'+l.k]).length; return `<div class="task sub grp${c===ls.length?' on':''}"><div class="cb"></div><div><div class="n">${esc(x.n)}</div></div><span class="cnt">${c}/${ls.length}</span></div>${subHtml(pk,x.sub)}`; }
-    const k=pk+'.'+x.k; return `<div class="task sub${ST.schedule[k]?' on':''}" data-k="${k}"><div class="cb"></div><div><div class="n">${esc(x.n)}</div>${x.w?`<div class="w">${esc(x.w)}</div>`:''}</div></div>`; }).join('')}</div>`; }
+    if(x.sub){ const ls=leaves(x), c=ls.filter(l=>ST.schedule[pk+'.'+l.k]).length; return `<div class="task sub grp${c===ls.length?' on':''}"><div class="cb"></div><div><div class="n">${esc(x.n)}<span class="cnt">${c}/${ls.length}</span></div>${x.w?`<div class="w">${esc(x.w)}</div>`:''}</div></div>${subHtml(pk,x.sub)}`; }
+    const k=pk+'.'+x.k; return `<div class="task sub${ST.schedule[k]?' on':''}" data-k="${k}"><div class="cb"></div><div><div class="n">${esc(x.n)}${x.u?` <a class="ulink" href="${esc(x.u)}" target="_blank" rel="noopener">${esc(x.u.replace(/^https?:\/\/(www\.)?/,'').replace(/\/.*$/,''))} ↗</a>`:''}</div>${x.w?`<div class="w">${esc(x.w)}</div>`:''}</div></div>`; }).join('')}</div>`; }
 function renderStages(){
   const cur=currentStageId(); let td=0,tt=0; const had=document.querySelector('#stages .stage'); const open=new Set([...document.querySelectorAll('#stages .stage[open]')].map(d=>d.id.slice(6)));
   const isOpen=id=>had?open.has(id):id===cur;   // 重畫時保留你自己開／關的階段
@@ -689,18 +704,18 @@ function renderStages(){
     const cls=s.pct===100?'done':S.id===cur?'cur':'';
     return `<details class="stage ${cls}" id="stage-${S.id}"${isOpen(S.id)?' open':''}>
       <summary><h3>${esc(S.t)}</h3><span class="d">${esc(S.d)}</span><span class="pct">${s.pct}% · ${s.done}/${s.total}</span></summary>
-      <div class="body"><div class="goal">${S.goal}</div>${S.tasks.map((t,i)=>{ const k=S.id+i,on=!!ST.schedule[k];
+      <div class="body"><div class="goal">${S.goal}</div>${S.tasks.map((t,i)=>{ if(t.hide) return ''; const k=S.id+i,on=!!ST.schedule[k];
         if(t.sub){ const ls=leaves(t), c=ls.filter(l=>ST.schedule[k+'.'+l.k]).length; return `<div class="task par${on?' on':''}"><div class="cb"></div><div><div class="n">${esc(t.n)}<span class="cnt">${c}/${ls.length}</span></div><div class="w"><span class="tg">${SCH_SLOT[t.s]}</span><span class="tg">${t.h?t.h+'hr':'持續'}</span>${esc(t.w||'')}</div></div></div>${subHtml(k,t.sub)}`; }
         return `<div class="task${on?' on':''}" data-k="${k}"><div class="cb"></div><div><div class="n">${esc(t.n)}</div><div class="w"><span class="tg">${SCH_SLOT[t.s]}</span><span class="tg">${t.h?t.h+'hr':'持續'}</span>${esc(t.w||'')}</div></div></div>`; }).join('')}</div></details>`; }).join('');
   $('#schSum').textContent=` 總計 ${td}/${tt} 項（${Math.round(td/tt*100)}%）`;
 }
 function openStage(id){ document.querySelectorAll('.stage').forEach(d=>d.open=d.id==='stage-'+id); $('#stage-'+id)?.scrollIntoView({behavior:'smooth',block:'start'}); }
-$('#stages').addEventListener('click',e=>{ const t=e.target.closest('.task'); if(!t||!t.dataset.k) return; const k=t.dataset.k; ST.schedule[k]=!ST.schedule[k]; syncParents(); saveState('schedule'); renderAll(); });
+$('#stages').addEventListener('click',e=>{ if(e.target.closest('a')) return; const t=e.target.closest('.task'); if(!t||!t.dataset.k) return; const k=t.dataset.k; ST.schedule[k]=!ST.schedule[k]; syncParents(); saveState('schedule'); renderAll(); });
 
 // ═══════════════════ 首頁：三件事、決策、營運 ═══════════════════
 function renderNext(){
-  const out=[]; for(const S of SCH) S.tasks.forEach((t,i)=>{ if(t.now&&out.length<3&&!ST.schedule[S.id+i]) out.push({S,t,i}); });   // now:true＝眼前該做的，優先
-  for(const S of SCH){ S.tasks.forEach((t,i)=>{ if(out.length<3&&!t.now&&!ST.schedule[S.id+i]) out.push({S,t,i}); }); if(out.length>=3) break; }
+  const out=[]; for(const S of SCH) S.tasks.forEach((t,i)=>{ if(t.now&&!t.hide&&out.length<3&&!ST.schedule[S.id+i]) out.push({S,t,i}); });   // now:true＝眼前該做的，優先
+  for(const S of SCH){ S.tasks.forEach((t,i)=>{ if(out.length<3&&!t.now&&!t.hide&&!ST.schedule[S.id+i]) out.push({S,t,i}); }); if(out.length>=3) break; }
   $('#next3').innerHTML=out.map(({S,t,i},n)=>`<div class="card"><div class="mono" style="font-size:10px;color:var(--gold);letter-spacing:.2em">STEP ${n+1}</div><h3 style="margin-top:4px">${esc(t.n)}</h3><div class="d" style="margin-top:4px">${esc(t.w||'')}</div><div style="margin-top:8px"><span class="tag">${esc(S.id)} 段</span><span class="tag">${SCH_SLOT[t.s]}</span><span class="tag">${t.h?t.h+' hr':'持續'}</span></div><span class="go" onclick="go('sched');openStage('${S.id}')">到時程表 →</span></div>`).join('')
     ||'<div class="card"><h3>全部完成 🎉</h3><div class="d">去開下一輪時程。</div></div>';
 }
