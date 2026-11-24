@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>ATLAS 型錄 v1.24</title>
+<title>ATLAS 型錄 v1.25</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Space+Mono&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#0e1012;--sb:#141618;--panel:#1a1d21;--card:#1f2328;--border:#2a2f36;--border2:#353b44;--gold:#d4a843;--gold2:#f0cc7a;--teal:#3aaa8c;--teal2:#4dc9a8;--red:#e06c6c;--indigo:#7b8cff;--amber:#e8b04a;--text:#dde2ee;--sub:#8a94a6;--muted:#4a5566}
@@ -174,7 +174,8 @@ function onBrand(){ const rs=ROWS.filter(r=>(V===ALL||(r.vendor||r.source)===V)&
   fillSel('#selSeries',ser,S,x=>{ if(x===ALL) return x; const rows=rs.filter(r=>r.series===x); const tags=[]; const t=serTag(rows); if(t) tags.push(t); if(B===ALL){ const tz=tier(V,rows[0]?.brand); if(tz!=='常態') tags.push(tz); } return x+(tags.length?'（'+tags.join('・')+'）':''); }); onSeries(); }
 function onSeries(){ const rs=cur(); const opt=(id,vals,lab)=>{ const c=$(id).value; $(id).innerHTML='<option value="">全部</option>'+vals.map(v=>`<option${v===c?' selected':''}>${esc(v)}</option>`).join(''); };
   opt('#fSz',[...new Set(rs.filter(r=>!noSize(r)).flatMap(sizesOf))].sort(szSort)); opt('#fFin',[...new Set(rs.map(r=>r.finish).filter(Boolean))]); opt('#fTh',[...new Set(rs.filter(r=>!/陶磚/.test(r.category||'')&&r.brand!=='Sannini').flatMap(r=>th(r.thickness).split('／')).filter(Boolean))].sort((a,b)=>parseFloat(a)-parseFloat(b))); SEL=null; render(); }
-$('#selVendor').addEventListener('change',e=>{ V=e.target.value; B=ALL; onVendor(); }); $('#selBrand').addEventListener('change',e=>{ B=e.target.value; S=ALL; onBrand(); });   // 換廠牌先看全部系列，再點縮圖下方的系列方塊進去 $('#selSeries').addEventListener('change',e=>{ S=e.target.value; onSeries(); });
+$('#selVendor').addEventListener('change',e=>{ V=e.target.value; B=ALL; onVendor(); }); $('#selBrand').addEventListener('change',e=>{ B=e.target.value; S=ALL; onBrand(); });   // 換廠牌先看全部系列，再點縮圖下方的系列方塊進去
+$('#selSeries').addEventListener('change',e=>{ S=e.target.value; onSeries(); });
 const cur=()=>ROWS.filter(r=>(V===ALL||(r.vendor||r.source)===V)&&(B===ALL||r.brand===B)&&(S===ALL||r.series===S));
 function groups(){ const q=$('#q').value.trim().toLowerCase(); const base=q?ROWS.filter(r=>[r.import_name,r.factory_code,r.model,r.series,r.brand].join(' ').toLowerCase().includes(q)):cur();
   const g={}; for(const r of base){ const k=[r.vendor,r.brand,r.series,r.factory_code||r.model].join('|'); (g[k]??={k,vendor:r.vendor||r.source,brand:r.brand,series:r.series,en:nm(r.factory_code||r.model),ch:nm(r.import_name),ltd:isLtdName(r.import_name),isNew:/new/i.test((r.import_name||'')+(r.factory_code||'')),rows:[]}).rows.push(r); }
