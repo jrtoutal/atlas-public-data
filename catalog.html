@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>ATLAS 型錄 v1.21</title>
+<title>ATLAS 型錄 v1.22</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Space+Mono&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#0e1012;--sb:#141618;--panel:#1a1d21;--card:#1f2328;--border:#2a2f36;--border2:#353b44;--gold:#d4a843;--gold2:#f0cc7a;--teal:#3aaa8c;--teal2:#4dc9a8;--red:#e06c6c;--indigo:#7b8cff;--amber:#e8b04a;--text:#dde2ee;--sub:#8a94a6;--muted:#4a5566}
@@ -68,6 +68,7 @@ table.mx{width:100%;border-collapse:collapse;font-size:12px}.mx th{font-weight:5
 .filt .fh{display:flex;align-items:center;gap:8px;padding:6px 0;cursor:pointer;font-size:12px;color:var(--sub);user-select:none}.filt .fh b{color:var(--gold);font-weight:600;letter-spacing:.1em;font-size:11px}
 .filt .fb{display:none;padding:4px 0 12px;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:8px 18px}.filt.closed .fb{display:none}
 .filt .fg label{display:block;font-size:11px;color:var(--teal2);margin-bottom:3px}.filt .fg select,.filt .fg input{width:100%;padding:5px 8px;background:var(--bg);border:1px solid var(--border2);border-radius:7px;color:var(--text);font-size:12.5px}
+.filt .fg input[type=checkbox]{width:auto;padding:0;flex:none;margin:0}.filt .fg label.ck{display:flex;gap:6px;align-items:center;margin:5px 0 0;font-size:12px;color:var(--text);cursor:pointer;white-space:nowrap}
 .filt .chips{margin-top:4px}
 .tier{font-size:10px;padding:0 5px;border-radius:4px;border:1px solid var(--border2);color:var(--sub);margin-left:4px}.tier.z{color:var(--amber);border-color:var(--amber)}
 .hd2{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap;margin-top:4px;font-size:12px;color:var(--sub)}.hd2 b{color:var(--text);font-weight:400}
@@ -112,7 +113,7 @@ table.mx{width:100%;border-collapse:collapse;font-size:12px}.mx th{font-weight:5
     <div class="fg"><label>面感</label><select id="fFin"><option value="">全部</option></select></div>
     <div class="fg"><label>厚度 /mm</label><select id="fTh"><option value="">全部</option></select></div>
     <div class="fg"><label>材質／分類</label><select id="fCat"><option value="">全部</option></select></div>
-    <div class="fg" id="fgSt"><label>狀態（新睦豐）</label><select id="fSt"><option value="">全部</option><option>入庫</option><option>期貨</option><option>限量</option><option>停產</option></select><label style="display:flex;gap:4px;align-items:center;margin-top:4px;font-size:12px;color:var(--text);cursor:pointer"><input type="checkbox" id="fLtd"> ＋含限量（出完不補）</label><label style="display:flex;gap:4px;align-items:center;margin-top:4px;font-size:12px;color:var(--text);cursor:pointer"><input type="checkbox" id="fFut" checked> ＋原廠期貨（原廠有、我們沒進）</label></div>
+    <div class="fg" id="fgSt"><label>狀態（新睦豐）</label><select id="fSt"><option value="">全部</option><option>入庫</option><option>期貨</option><option>限量</option><option>停產</option></select><label class="ck"><input type="checkbox" id="fLtd"> ＋含限量（出完不補）</label><label class="ck"><input type="checkbox" id="fFut" checked> ＋原廠期貨（原廠有、我們沒進）</label></div>
     <div class="fg"><label>品牌等級</label><select id="fTier"><option value="">全部</option><option>常態</option><option>零星</option></select></div>
     <div class="fg"><label>&nbsp;</label><button class="btn sm" id="fDef">回預設（常態入庫）</button> <button class="btn sm" id="fClear">全部顯示</button></div>
   </div></div>
