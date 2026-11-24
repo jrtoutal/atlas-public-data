@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>ATLAS 型錄 v1.20</title>
+<title>ATLAS 型錄 v1.21</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Space+Mono&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#0e1012;--sb:#141618;--panel:#1a1d21;--card:#1f2328;--border:#2a2f36;--border2:#353b44;--gold:#d4a843;--gold2:#f0cc7a;--teal:#3aaa8c;--teal2:#4dc9a8;--red:#e06c6c;--indigo:#7b8cff;--amber:#e8b04a;--text:#dde2ee;--sub:#8a94a6;--muted:#4a5566}
@@ -45,7 +45,7 @@
 table.mx{width:100%;border-collapse:collapse;font-size:12px}.mx th{font-weight:500;color:var(--sub);font-size:11px;padding:4px 6px;border-bottom:1px solid var(--border2);text-align:center}.mx th:first-child{text-align:left}.mx td{padding:5px 6px;border-bottom:1px solid var(--border);text-align:center;font-family:'Space Mono',monospace;font-size:11px}.mx td:first-child{text-align:left;font-family:'Noto Sans TC',sans-serif;font-size:12px}
 .mx td.have{color:var(--teal2);background:rgba(58,170,140,.1)}.mx td.have::before{content:'✓ '}.mx td.no{color:var(--muted)}.mx td.none{color:var(--border2)}
 .fin{display:inline-block;font-size:10px;padding:0 6px;border-radius:5px;border:1px solid var(--border2);color:var(--sub);margin:1px}.fin.have{color:var(--teal2);border-color:var(--teal)}
-.field{margin:6px 0}.field label{display:block;font-size:11px;color:var(--teal2);margin-bottom:3px}.field select,.field input,.field textarea{width:100%;padding:6px 9px;background:var(--bg);border:1px solid var(--border2);border-radius:7px;color:var(--text)}
+.field{margin:6px 0}.field label{display:block;font-size:11px;color:var(--teal2);margin-bottom:3px}.field select,.field input,.field textarea{width:100%;padding:6px 9px;background:var(--bg);border:1px solid var(--border2);border-radius:7px;color:var(--text)}.field input[type=checkbox],.field input[type=radio]{width:auto;padding:0;flex:none;margin:0}
 .file{border:1px dashed var(--border2);border-radius:8px;padding:10px;font-size:12px;color:var(--sub);text-align:center}
 .legend{display:flex;gap:14px;font-size:11px;color:var(--sub);flex-wrap:wrap;margin-bottom:10px}.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
 .note{font-size:11px;color:var(--amber);margin-top:6px}.hint{font-size:12px;color:var(--sub)}
@@ -274,7 +274,7 @@ function renderSide(){ const g=curGroup(); const s=$('#side'); if(!g){ s.innerHT
     <div class="hint" style="margin-top:6px">${(ex.photos||[]).length?`示意圖 ${ex.photos.length} 張：${ex.photos.map(p=>esc(p.split(/[\\/]/).pop())).join('、')}`:'沒有示意圖'}</div></div>
   ${bnf&&!fpOnly?`<div class="box full"><h3>狀態與原廠通知<span class="c">勾選要改的型號（預設全部）</span></h3>
     ${(()=>{ const fp=fpOf(g); const hit=g.rows.filter(r=>!r.hidden&&rst(r)==='入庫'&&(m=>m&&m.discontinued)(fpMatch(r,fp))); return hit.length?`<div class="hint" style="color:var(--amber);border:1px solid var(--amber);border-radius:8px;padding:6px 10px;margin-bottom:8px">原廠已標停產（料號帶 *）但我們還是入庫：${hit.map(r=>esc(nm(r.model))).join('、')} <button class="btn sm" id="stAutoLtd" data-keys="${hit.map(r=>r.key).join(',')}" style="margin-left:8px">一鍵改限量</button></div>`:''; })()}
-    <div class="field" style="margin-bottom:6px"><label>套用到</label><div style="display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12.5px">${g.rows.filter(r=>!r.hidden).map(r=>`<label style="display:flex;gap:4px;align-items:center;cursor:pointer"><input type="checkbox" class="stRow" value="${r.key}" checked> ${esc(nm(r.model))} <span class="tag ${ST_CLS[rst(r)]||''}" style="font-size:10px">${esc(rst(r))}</span></label>`).join('')}</div></div>
+    <div class="field" style="margin-bottom:6px"><label>套用到</label><div style="display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12.5px">${g.rows.filter(r=>!r.hidden).map(r=>`<label style="display:inline-flex;gap:5px;align-items:center;cursor:pointer;white-space:nowrap;color:var(--text);font-size:12.5px;margin:0"><input type="checkbox" class="stRow" value="${r.key}" checked> ${esc(nm(r.model))} <span class="tag ${ST_CLS[rst(r)]||''}" style="font-size:10px">${esc(rst(r))}</span></label>`).join('')}</div></div>
     <div class="field"><label>狀態</label><select id="stSel">${['入庫','期貨','限量','停產'].map(x=>`<option${st===x?' selected':''}>${x}</option>`).join('')}</select></div>
     <div class="sub2${st==='限量'||st==='停產'?' on':''}" id="sub2"><div class="field"><label>原因</label><select id="stReason">${REASONS.map(x=>`<option${r0.status_reason===x?' selected':''}>${x}</option>`).join('')}</select></div><div class="field"><label>日期</label><input id="stOn" type="date" value="${esc(r0.status_on||'')}"></div><div class="field"><label>備註（庫存量、何時出完…）</label><input id="stNote" value="${esc(r0.status_note||'')}"></div></div>
     <div class="actions" style="margin-top:8px"><button class="btn pri sm" id="stSave">儲存狀態</button> <span class="st" id="stMsg"></span></div>
