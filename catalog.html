@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>ATLAS 型錄 v1.22</title>
+<title>ATLAS 型錄 v1.23</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Space+Mono&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#0e1012;--sb:#141618;--panel:#1a1d21;--card:#1f2328;--border:#2a2f36;--border2:#353b44;--gold:#d4a843;--gold2:#f0cc7a;--teal:#3aaa8c;--teal2:#4dc9a8;--red:#e06c6c;--indigo:#7b8cff;--amber:#e8b04a;--text:#dde2ee;--sub:#8a94a6;--muted:#4a5566}
@@ -192,11 +192,13 @@ const SFX_FIN={S:'natural',L:'polished',N:'natural',P:'polished'};
 const finOf=p=>{ const m=String(p.model||'').match(/([A-Z]{1,2})$/); return (m&&SFX_FIN[m[1]])||null; };
 // 對應鍵＝品牌＋系列＋款名（去掉空白符號）；款名用原廠名或爬蟲對好的 bnf_name（SEMINATO BRUNO↔Bruno、250F FROST↔250°F Frost）
 const NK=x=>String(x||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
-let FPI=null; function fpIdx(){ if(FPI&&FPI._n===FP.length) return FPI; FPI={_n:FP.length}; const seen={}; FP.forEach(x=>{ [...new Set([NK(x.name),NK(x.bnf_name)].filter(Boolean))].forEach(n=>{ (FPI[x.brand+'|'+NK(x.series)+'|'+n]??=[]).push(x); }); const k=x.brand+'||'+NK(x.name), c=k+'|'+NK(x.code); if(!seen[c]){ seen[c]=1; (FPI[k]??=[]).push(x); } }); return FPI; }
+let FPI=null; function fpIdx(){ if(FPI&&FPI._n===FP.length) return FPI; FPI={_n:FP.length}; const seen={}; FP.forEach(x=>{ [...new Set([NK(x.name),NK(x.bnf_name)].filter(Boolean))].forEach(n=>{ (FPI[x.brand+'|'+NK(x.series)+'|'+n]??=[]).push(x); }); [...new Set([NK(x.name),NK(x.bnf_name)].filter(Boolean))].forEach(n=>{ const k=x.brand+'||'+n, c=k+'|'+NK(x.code); if(!seen[c]){ seen[c]=1; (FPI[k]??=[]).push(x); } }); }); return FPI; }
 const fpFor=(brand,series,name)=>{ const I=fpIdx(); const a=I[brand+'|'+NK(series)+'|'+NK(name)]||[]; const bn=a.filter(x=>NK(x.bnf_name)===NK(name)); if(bn.length) return bn; if(a.length) return a;
   return I[brand+'||'+NK(name)]||[]; };   // 爬蟲指名對到的優先；這個系列還沒有原廠資料時，先借同品牌同名的款（別的系列頁通常列同一張規格表）
 const fpOf=g=>fpFor(g.brand,g.series,g.en);
-const finFam=f=>/polish|levig|lucid|gloss/i.test(f||'')?'polished':/natur|matt/i.test(f||'')?'natural':(f||'');
+// 面感歸類：rough 鑿面／止滑、polished 亮面、soft 柔拋、natural 自然面（Fiandre 的 natural-plus／feel、Florim 的 Matte - R9／Glossy／Grip - R11 都歸得進來）
+const finFam=f=>{ f=String(f||'').toLowerCase(); return /grip|structur|bocciard|bush|hammer|r11|in&out|cannet|flamed|antislip/.test(f)?'rough':/gloss|lucid|polish|levig|lux|jewel/.test(f)?'polished':/soft|satin|silk|lapp|honed|leather|cashmere|silky/.test(f)?'soft':/glint/.test(f)?'glint':/matt|natur|comfort|feel/.test(f)?'natural':f; };
+const ZH_FAMK={'自然面':'natural','亮面':'polished','鑿面':'rough','柔拋':'soft','閃晶面':'glint'};
 // 原廠料號（factory_item）可以一個尺寸一個：「MMS2661515 | MMS2662712」照尺寸欄的順序
 const fiList=p=>String(p.factory_item||'').split('|').map(x=>x.trim().toUpperCase()).filter(Boolean);
 const fiOf=(p,z)=>{ const a=fiList(p), zs=sizesOf(p); if(!a.length) return ''; if(z&&a.length===zs.length&&zs.length>1) return a[zs.indexOf(z)]||''; return a.length===1?a[0]:(z?'':a.join(' | ')); };
@@ -204,21 +206,27 @@ const ACC=/step|skirting|bullnose|mosaic/i, isAcc=r=>ACC.test(r.article_type||''
 let FX_OPEN=false;   // 原廠完整規格：沒進的規格預設收起來
 const fpMatch=(p,rows,z)=>{ const want=z?[fiOf(p,z)].filter(Boolean):fiList(p); const c=want.length&&rows.find(r=>want.includes(String(r.code).toUpperCase())); if(c) return c;
   if(want.length) return undefined;   // 人工填了料號、原廠表裡沒有（原廠已下架）→ 不再自動猜別的
-  const zs=z?[z]:sizesOf(p); const base=rows.filter(r=>zs.some(q=>szNorm(q)===szNorm(r.size))&&(!th(p.thickness)||!th(r.thickness)||th(p.thickness)===th(r.thickness))); const f=finOf(p);
+  const zs=z?[z]:sizesOf(p); const bySize=rows.filter(r=>zs.some(q=>szNorm(q)===szNorm(r.size))); const pt=parseFloat(th(p.thickness)), f=finOf(p);
+  let base=bySize.filter(r=>!th(p.thickness)||!th(r.thickness)||th(p.thickness)===th(r.thickness));
   const ex=base.filter(r=>f?f===r.finish:(FIN_ZH[r.finish]||r.finish)===p.finish); if(ex.length) return ex[0];
-  const pool=base.filter(r=>!r.article_type);   // 踢腳、階梯等配件不算
-  const fam=f?pool.filter(r=>finFam(r.finish)===f):pool.filter(r=>(ZH_FAM[p.finish]||[]).includes(r.finish)); return fam.length===1?fam[0]:undefined; };   // 面感同一家且只有一個候選才自動對
+  if(!base.length&&isFinite(pt)) base=bySize.filter(r=>Math.abs(parseFloat(th(r.thickness))-pt)<=1);   // 新睦豐寫 9、原廠 8 這種：差 1mm 內算同一片
+  const pool=base.filter(r=>!r.article_type), wants=[...new Set([f,ZH_FAMK[p.finish]].filter(Boolean))];   // 踢腳、階梯、對花板不自動帶；尾碼（S／L）和中文面感兩個都參考
+  const famOk=(rf,w)=>finFam(rf)===w||(/matt\w*\s+soft/i.test(rf||'')&&(w==='natural'||w==='soft'));   // Florim 的 Matte Soft：新睦豐有時叫自然面、有時叫柔拋
+  const fam=pool.filter(r=>wants.some(w=>famOk(r.finish,w))); return fam.length===1?fam[0]:undefined; };   // 面感同一家且只有一個候選才自動對
 // 沒有 S／L 尾碼時，用新睦豐的中文面感對原廠面感的「一家」
-const ZH_FAM={'自然面':['natural','natural-plus','feel'],'亮面':['polished','levigato-polished','jewel'],'鑿面':['flamed','structured','antislip'],'柔拋':['silky','top-lapped','cashmere'],'閃晶面':['glint']};
+const ZH_FAM_OLD={'自然面':['natural','natural-plus','feel'],'亮面':['polished','levigato-polished','jewel'],'鑿面':['flamed','structured','antislip'],'柔拋':['silky','top-lapped','cashmere'],'閃晶面':['glint']};
+// 紋理圖：Fiandre 整款共用一組；Florim 每個料號各有一組 → 入庫料號的優先，沒有就拿第一組有圖的
+const texOf=(rows,have)=>{ const hv=rows.filter(r=>have(r)&&(r.textures||[]).length); const src=hv.length?hv:rows.filter(r=>(r.textures||[]).length).slice(0,1); return [...new Set(src.flatMap(r=>r.textures))]; };
+function fpTex(g){ const fpo=g.rows.every(x=>x._fp); return texOf(fpOf(g).filter(r=>!isAcc(r)),r=>!fpo&&g.rows.some(p=>fpMatch(p,[r]))); }
 function factoryBox(g){ const fp=fpOf(g); if(!fp.length) return '<div class="hint" style="margin-top:8px">原廠其他規格：尚無原廠資料（'+(g.brand==='Graniti Fiandre'?'原廠官網沒有這一款，或還沒跑 <code>py atlas_crawler.py fiandre --upload</code>':'此品牌轉接器尚未做')+'）</div>';
   const fpo=g.rows.every(x=>x._fp); const have=r=>!fpo&&g.rows.some(p=>fpMatch(p,[r]));
   const rows=fp.filter(r=>!isAcc(r)).sort((a,b)=>szSort(b.size,a.size)||String(a.finish).localeCompare(String(b.finish))); if(!rows.length) return '';   // 踢腳、階梯等配件不列
   const n={have:rows.filter(have).length,disc:rows.filter(r=>r.discontinued).length}; const rest=rows.length-n.have;
-  const tr=r=>{ const h=have(r); return `<tr class="${h?'':'fxr'}" style="${h?'':'opacity:.7'}"><td>${esc(r.size||'')}</td><td>${esc(r.thickness||'')}</td><td>${esc(FIN_ZH[r.finish]||r.finish||'')}<small style="color:var(--muted)"> ${esc(r.finish||'')}${r.article_type?' · '+esc(r.article_type):''}</small></td><td class="mono">${esc(r.code)}</td><td>${esc(r.variant||'')}</td><td>${r.discontinued?'<span class="tag ltd">原廠停產</span>':h?'<span class="tag imp">入庫</span>':(fpo?'<span class="tag fut">可訂</span>':'<span class="tag">未進</span>')}</td></tr>`; };
+  const tr=r=>{ const h=have(r); return `<tr class="${h?'':'fxr'}" style="${h?'':'opacity:.7'}"><td>${esc(r.size||'')}</td><td>${esc(r.thickness||'')}</td><td>${esc(FIN_ZH[r.finish]||r.finish||'')}<small style="color:var(--muted)"> ${FIN_ZH[r.finish]?esc(r.finish):''}${r.article_type?' · '+esc(r.article_type):''}</small></td><td class="mono">${esc(r.code)}</td><td>${esc(r.variant||'')}</td><td>${r.discontinued?'<span class="tag ltd">原廠停產</span>':h?'<span class="tag imp">入庫</span>':(fpo?'<span class="tag fut">可訂</span>':'<span class="tag">未進</span>')}</td></tr>`; };
   return `<div style="margin-top:12px"><h3>原廠完整規格<span class="c">${rows.length} 個料號 · 入庫 ${n.have}${n.disc?' · 原廠停產 '+n.disc:''}${rows[0].v_grade?' · 色差 '+esc(rows[0].v_grade):''} · <a href="${esc(rows[0].source_url||'#')}" target="_blank">原廠頁 ↗</a></span></h3>
   <table class="vt${FX_OPEN?' fxopen':''}"><tr><th>尺寸 cm</th><th>厚/mm</th><th>面感</th><th>原廠料號</th><th>系列</th><th>狀態</th></tr>${rows.filter(have).map(tr).join('')}${rows.filter(r=>!have(r)).map(tr).join('')}</table>
   ${rest?`<a href="#" id="fxTgl" class="hint" style="display:block;margin:6px 0 0;color:var(--teal2)">${FX_OPEN?'▴ 收起':'▾ 展開'}${fpo?'原廠可訂的':'我們沒進的'} ${rest} 個規格</a>`:''}
-  <div class="thumbs" style="margin-top:6px">${(rows[0].textures||[]).map((u,i)=>`<div class="t" style="background-image:url('${esc(u)}');position:relative" data-lb="${esc(u)}" data-cap="原廠紋理 ${i+1}"><i>紋理 ${i+1}</i><span class="x" data-fdel="${esc(u)}" title="移除這張（抓錯）" style="position:absolute;top:2px;right:4px;background:rgba(0,0,0,.55);border-radius:4px;padding:0 5px">✕</span></div>`).join('')}<div class="t" data-fadd="1" title="貼原廠圖片網址" style="display:flex;align-items:center;justify-content:center;border:1px dashed var(--border2);color:var(--sub);cursor:pointer">＋ 加圖</div></div></div>`; }
+  <div class="thumbs" style="margin-top:6px">${texOf(rows,have).map((u,i)=>`<div class="t" style="background-image:url('${esc(u)}');position:relative" data-lb="${esc(u)}" data-cap="原廠紋理 ${i+1}"><i>紋理 ${i+1}</i><span class="x" data-fdel="${esc(u)}" title="移除這張（抓錯）" style="position:absolute;top:2px;right:4px;background:rgba(0,0,0,.55);border-radius:4px;padding:0 5px">✕</span></div>`).join('')}<div class="t" data-fadd="1" title="貼原廠圖片網址" style="display:flex;align-items:center;justify-content:center;border:1px dashed var(--border2);color:var(--sub);cursor:pointer">＋ 加圖</div></div></div>`; }
 async function fpSetTextures(g,arr){ const fp=fpOf(g); if(!fp.length) return; const {error}=await sb.from('factory_products').update({textures:arr,image_url:arr[0]||null,note:'tex-edited'}).in('key',fp.map(r=>r.key)); if(error){ alert('存檔失敗：'+error.message); return; } fp.forEach(r=>{ r.textures=arr; r.image_url=arr[0]||null; r.note='tex-edited'; }); renderSide(); }
 const rst=r=>(r.status==='限量'||r.status==='停產')?r.status:(isLtdName(r.import_name)?'限量':r.status);   // 名稱帶「(限量)」也算限量
 const gstatus=g=>{ const ss=g.rows.map(rst); if(ss.length&&ss.every(s=>s==='停產')) return '停產'; if(ss.includes('限量')) return '限量'; return ss.includes('入庫')?'入庫':'期貨'; };
@@ -298,11 +306,11 @@ function bindSide(g,st){
     const {error}=await sb.from('products').update(upd).eq('key',r.key); if(error){ $('#eMsg').className='st err'; $('#eMsg').textContent=error.message; return; } Object.assign(r,upd); EDIT=null; render(); });
   document.querySelectorAll('[data-lb]').forEach(el=>el.addEventListener('click',e=>{ e.preventDefault(); const box=el.closest('.thumbs,.hero')||el.parentElement; const els=[...box.querySelectorAll('[data-lb]')]; LB=els.map(x=>({u:x.dataset.lb,c:x.dataset.cap||''})); lbShow(Math.max(0,els.indexOf(el))); }));
   document.querySelectorAll('[data-copy]').forEach(x=>x.addEventListener('click',async()=>{ try{ await navigator.clipboard.writeText(x.dataset.copy); x.textContent='已複製'; setTimeout(()=>x.textContent='複製路徑',1500); }catch(e){ prompt('複製這段：',x.dataset.copy); } }));
-  document.querySelectorAll('[data-fdel]').forEach(x=>x.addEventListener('click',e=>{ e.stopPropagation(); const g=curGroup(); if(!g) return; const arr=(fpOf(g)[0]?.textures||[]).filter(u=>u!==x.dataset.fdel); fpSetTextures(g,arr); }));
+  document.querySelectorAll('[data-fdel]').forEach(x=>x.addEventListener('click',e=>{ e.stopPropagation(); const g=curGroup(); if(!g) return; const arr=fpTex(g).filter(u=>u!==x.dataset.fdel); fpSetTextures(g,arr); }));
   caiBind();
   $('#sideX')?.addEventListener('click',()=>{ const k=SEL; SEL=null; EDIT=null; render(); document.querySelectorAll('.tile').forEach(t=>{ if(t.dataset.k===k) t.scrollIntoView({block:'center'}); }); });
   $('#fxTgl')?.addEventListener('click',e=>{ e.preventDefault(); FX_OPEN=!FX_OPEN; renderSide(); });
-  document.querySelectorAll('[data-fadd]').forEach(x=>x.addEventListener('click',()=>{ const g=curGroup(); if(!g) return; const u=prompt('原廠圖片網址（在原廠頁對圖片按右鍵 → 複製圖片位址）'); if(!u||!/^https?:\/\//.test(u)) return; fpSetTextures(g,[...(fpOf(g)[0]?.textures||[]),u.trim()]); }));
+  document.querySelectorAll('[data-fadd]').forEach(x=>x.addEventListener('click',()=>{ const g=curGroup(); if(!g) return; const u=prompt('原廠圖片網址（在原廠頁對圖片按右鍵 → 複製圖片位址）'); if(!u||!/^https?:\/\//.test(u)) return; fpSetTextures(g,[...(fpTex(g)),u.trim()]); }));
   document.querySelectorAll('[data-hidepdf]').forEach(x=>x.addEventListener('click',async()=>{ HID.add(x.dataset.hidepdf); await sb.from('ui_state').upsert({user_id:UID,key:'catalog',data:{hiddenPdfs:[...HID]}},{onConflict:'user_id,key'}); renderSide(); }));
   $('#docFile')?.addEventListener('change',async e=>{ const f=e.target.files[0]; if(!f) return; const wholeSeries=$('#docSeries').checked; const path=`${g.brand}/${g.series}/${wholeSeries?'_series':g.en}/${Date.now()}_${f.name}`.replace(/[^\w\u4e00-\u9fff./ -]/g,'_');
     const up=await sb.storage.from('catalog-docs').upload(path,f,{upsert:true}); if(up.error){ alert('上傳失敗：'+up.error.message+'（請先跑 supabase_44）'); return; }
