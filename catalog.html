@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>ATLAS 型錄 v1.19</title>
+<title>ATLAS 型錄 v1.20</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Space+Mono&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#0e1012;--sb:#141618;--panel:#1a1d21;--card:#1f2328;--border:#2a2f36;--border2:#353b44;--gold:#d4a843;--gold2:#f0cc7a;--teal:#3aaa8c;--teal2:#4dc9a8;--red:#e06c6c;--indigo:#7b8cff;--amber:#e8b04a;--text:#dde2ee;--sub:#8a94a6;--muted:#4a5566}
@@ -73,6 +73,7 @@ table.mx{width:100%;border-collapse:collapse;font-size:12px}.mx th{font-weight:5
 .hd2{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap;margin-top:4px;font-size:12px;color:var(--sub)}.hd2 b{color:var(--text);font-weight:400}
 .vt td.act{white-space:nowrap}.vt .x{cursor:pointer;color:var(--sub);font-size:11px;margin-left:6px}.vt .x:hover{color:var(--gold2)}
 .edit{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px;padding:8px;border:1px dashed var(--gold);border-radius:8px}.edit .field{margin:0}.edit .full{grid-column:1/-1}
+.navs{display:flex;gap:5px;flex-wrap:wrap;margin-top:6px}.nav{font-size:11px;padding:3px 8px;border-radius:6px;border:1px solid var(--border2);background:var(--bg);color:var(--text);cursor:pointer;white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}.nav:hover{border-color:var(--gold);color:var(--gold2)}.nav.ser{border-color:var(--teal);color:var(--teal2)}.nav.ser:hover{background:var(--teal);color:#06231b}
 .caig{display:grid;grid-template-columns:auto minmax(0,1fr) auto minmax(0,1fr);gap:5px 6px;align-items:center;font-size:12px}.caig input,.caig select{min-width:0;width:100%;padding:4px 6px}
 .backbar{display:none}
 .fxr{display:none}.fxopen .fxr{display:table-row}
@@ -172,7 +173,7 @@ function onBrand(){ const rs=ROWS.filter(r=>(V===ALL||(r.vendor||r.source)===V)&
   fillSel('#selSeries',ser,S,x=>{ if(x===ALL) return x; const rows=rs.filter(r=>r.series===x); const tags=[]; const t=serTag(rows); if(t) tags.push(t); if(B===ALL){ const tz=tier(V,rows[0]?.brand); if(tz!=='常態') tags.push(tz); } return x+(tags.length?'（'+tags.join('・')+'）':''); }); onSeries(); }
 function onSeries(){ const rs=cur(); const opt=(id,vals,lab)=>{ const c=$(id).value; $(id).innerHTML='<option value="">全部</option>'+vals.map(v=>`<option${v===c?' selected':''}>${esc(v)}</option>`).join(''); };
   opt('#fSz',[...new Set(rs.filter(r=>!noSize(r)).flatMap(sizesOf))].sort(szSort)); opt('#fFin',[...new Set(rs.map(r=>r.finish).filter(Boolean))]); opt('#fTh',[...new Set(rs.filter(r=>!/陶磚/.test(r.category||'')&&r.brand!=='Sannini').flatMap(r=>th(r.thickness).split('／')).filter(Boolean))].sort((a,b)=>parseFloat(a)-parseFloat(b))); SEL=null; render(); }
-$('#selVendor').addEventListener('change',e=>{ V=e.target.value; B=ALL; onVendor(); }); $('#selBrand').addEventListener('change',e=>{ B=e.target.value; onBrand(); }); $('#selSeries').addEventListener('change',e=>{ S=e.target.value; onSeries(); });
+$('#selVendor').addEventListener('change',e=>{ V=e.target.value; B=ALL; onVendor(); }); $('#selBrand').addEventListener('change',e=>{ B=e.target.value; S=ALL; onBrand(); });   // 換廠牌先看全部系列，再點縮圖下方的系列方塊進去 $('#selSeries').addEventListener('change',e=>{ S=e.target.value; onSeries(); });
 const cur=()=>ROWS.filter(r=>(V===ALL||(r.vendor||r.source)===V)&&(B===ALL||r.brand===B)&&(S===ALL||r.series===S));
 function groups(){ const q=$('#q').value.trim().toLowerCase(); const base=q?ROWS.filter(r=>[r.import_name,r.factory_code,r.model,r.series,r.brand].join(' ').toLowerCase().includes(q)):cur();
   const g={}; for(const r of base){ const k=[r.vendor,r.brand,r.series,r.factory_code||r.model].join('|'); (g[k]??={k,vendor:r.vendor||r.source,brand:r.brand,series:r.series,en:nm(r.factory_code||r.model),ch:nm(r.import_name),ltd:isLtdName(r.import_name),isNew:/new/i.test((r.import_name||'')+(r.factory_code||'')),rows:[]}).rows.push(r); }
@@ -227,18 +228,23 @@ function renderUnm(){ const u=unmatched(); $('#unmBtn').style.display=FP.length?
   $('#unmTbl').innerHTML='<tr><th>品牌</th><th>系列</th><th>原廠名</th><th>中文</th><th>型號</th><th>尺寸</th><th>厚</th><th>面感</th><th>原廠有的規格</th></tr>'+u.map(({r,fp})=>`<tr><td>${esc(r.brand)}</td><td>${esc(r.series)}</td><td>${esc(r.factory_code||'')}</td><td>${esc(nm(r.import_name||''))}</td><td class="m">${esc(r.model)}</td><td class="mono">${esc(r.size||'')}</td><td class="mono">${esc(th(r.thickness))}</td><td>${esc(r.finish||'')}<small style="color:var(--muted)"> ${finOf(r)||''}</small></td><td style="font-size:11px;color:var(--sub)">${esc([...new Set(fp.map(x=>`${x.size} ${x.finish} ${x.thickness}mm`))].join('、'))}</td></tr>`).join(''); }
 $('#unmBtn').addEventListener('click',()=>{ renderUnm(); $('#unm').classList.add('on'); }); $('#unmX').addEventListener('click',()=>$('#unm').classList.remove('on'));
 $('#unmCopy').addEventListener('click',()=>{ const u=unmatched(); const t=['品牌\t系列\t原廠名\t中文\t型號\t尺寸\t厚\t面感\t原廠料號（填這欄）',...u.map(({r})=>[r.brand,r.series,r.factory_code||'',nm(r.import_name||''),r.model,r.size||'',th(r.thickness),r.finish||'',''].join('\t'))].join('\n'); navigator.clipboard.writeText(t).then(()=>{ $('#unmCopy').textContent='已複製'; setTimeout(()=>$('#unmCopy').textContent='複製清單',1500); }); });
-function render(){ const gs=groups(); $('#cnt').textContent=`${gs.length} 品名 · ${gs.reduce((n,g)=>n+g.rows.filter(r=>!r.hidden).length,0)} 型號`; renderUnm(); const q=$('#q').value.trim(); const showCtx=q||B===ALL||S===ALL;
+function render(){ const gs=groups(); $('#cnt').textContent=`${gs.length} 品名 · ${gs.reduce((n,g)=>n+g.rows.filter(r=>!r.hidden).length,0)} 型號`; renderUnm(); const q=$('#q').value.trim(); const showB=q||B===ALL, showS=q||B===ALL||S===ALL;
   $('#grid').innerHTML=gs.map(g=>{ const st=gstatus(g); const img=g.rows.find(r=>r.image_url)?.image_url; const sizes=noSize(g.rows[0])?[]:[...new Set(g.rows.flatMap(sizesOf))].sort(szSort); const tz=tier(g.vendor,g.brand);
     return `<div class="tile ${g.vendor==='新睦豐'?ST_CLS[st]:''}${SEL===g.k?' on':''}" data-k="${esc(g.k)}"><div class="sw${img?'':' none'}">${img?`<img src="${img}" loading="lazy">`:'無圖'}</div><div class="b"><div class="en">${esc(g.en.toUpperCase())}</div><div class="ch${g.ch?'':' none'}">${esc(g.ch||'（期貨，未取中文名）')}${g.ltd?' <span class="tag ltd">限量</span>':''}${g.isNew?' <span class="tag" style="color:var(--gold2);border-color:var(--gold)">NEW</span>':''}</div>
-      <div class="sizes">${sizes.map(z=>`<span class="sz have">${esc(z)}</span>`).join('')||(noSize(g.rows[0])?'':'<span class="sz unk">尺寸未抓到</span>')}</div><div class="st">${g.vendor==='新睦豐'?`<span class="tag ${ST_CLS[st]}">${st}</span>`:''}${tz!=='常態'?`<span class="tier z">${tz}</span>`:''}${showCtx?`<span class="tag">${esc(g.brand)} · ${esc(g.series)}</span>`:''}</div></div></div>`; }).join('')||'<div class="empty">沒有符合的款</div>';
+      <div class="sizes">${sizes.map(z=>`<span class="sz have">${esc(z)}</span>`).join('')||(noSize(g.rows[0])?'':'<span class="sz unk">尺寸未抓到</span>')}</div><div class="st">${g.vendor==='新睦豐'?`<span class="tag ${ST_CLS[st]}">${st}</span>`:''}${tz!=='常態'?`<span class="tier z">${tz}</span>`:''}</div>${showB||showS?`<div class="navs">${showB?`<span class="nav" data-nv="${esc(g.vendor)}" data-nb="${esc(g.brand)}" title="看這個廠牌的全部系列">${esc(g.brand)}</span>`:''}${showS?`<span class="nav ser" data-nv="${esc(g.vendor)}" data-nb="${esc(g.brand)}" data-ns="${esc(g.series)}" title="看這個系列的全部產品">${esc(g.series)} ›</span>`:''}</div>`:''}</div></div>`; }).join('')||'<div class="empty">沒有符合的款</div>';
+  document.querySelectorAll('.tile .nav').forEach(n=>n.addEventListener('click',e=>{ e.stopPropagation(); goto(n.dataset.nv,n.dataset.nb,n.dataset.ns); }));
   document.querySelectorAll('.tile').forEach(t=>t.addEventListener('click',()=>{ SEL=t.dataset.k; EDIT=null; render(); if(window.innerWidth<=1000) $('#side').scrollIntoView({behavior:'smooth',block:'start'}); })); renderSide(); }
 const curGroup=()=>groups().find(x=>x.k===SEL);
+// 點縮圖下方的廠牌／系列方塊：直接切到那個廠牌（全部系列）或那個系列，不用回上面選
+function goto(v,b,ser){ $('#q').value=''; SEL=null; EDIT=null; if(V!==ALL&&V!==v){ V=v; $('#selVendor').value=V; } B=b; S=ser||ALL; onVendor(); window.scrollTo({top:0}); }
 // 材積換算：磁磚算「片」，客人用石材的「才」比價。1 才＝1 台尺見方＝30.3×30.3 cm；1 坪＝36 才
 const CAI_CM2=30.3*30.3, PING_M2=3.305785;
 const caiOf=z=>{ const [a,b]=szKey(z); return a>1e9?null:{m2:a*b/1e4,cai:a*b/CAI_CM2,ping:a*b/1e4/PING_M2}; };
-function caiBox(g){ const zs=[...new Set(g.rows.filter(r=>!r.hidden).flatMap(sizesOf))].filter(z=>caiOf(z)).sort(szSort); if(!zs.length) return '';
+function caiBox(g){ const is6=t=>parseFloat(th(t))===6;   // 只給 6 mm 薄板：這種才會被拿來跟石材比「才」
+  const raw=g.rows.every(r=>r._fp)?fpOf(g).filter(x=>!isAcc(x)&&is6(x.thickness)).map(x=>{ const [a,b]=szKey(x.size); return a>1e9?'':Math.min(a,b)+'x'+Math.max(a,b); }):g.rows.filter(r=>!r.hidden&&is6(r.thickness)).flatMap(sizesOf);
+  const zs=[...new Set(raw)].filter(z=>z&&caiOf(z)).sort(szSort); if(!zs.length) return '';
   const f=(x,d=2)=>x.toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});
-  return `<div class="box" id="caiBox"><h3>材積換算<span class="c">1 才＝30.3×30.3 cm</span></h3>
+  return `<div class="box" id="caiBox"><h3>材積換算<span class="c">6 mm · 1 才＝30.3×30.3 cm</span></h3>
     <table class="vt"><tr><th>尺寸 cm</th><th>m²／片</th><th>才／片</th><th>片／坪</th></tr>${zs.map(z=>{ const c=caiOf(z); return `<tr><td class="mono">${esc(z)}</td><td class="mono">${f(c.m2)}</td><td class="mono"><b>${f(c.cai)}</b></td><td class="mono">${f(1/c.ping)}</td></tr>`; }).join('')}</table>
     <div class="field" style="margin-top:8px"><label>單價換算（不存檔，隨手算）</label><div class="caig">
       <span>尺寸</span><select id="caiSz" style="grid-column:2/-1">${zs.map(z=>`<option>${esc(z)}</option>`).join('')}</select>
