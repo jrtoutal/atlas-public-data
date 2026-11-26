@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>ATLAS 型錄 v1.28</title>
+<title>ATLAS 型錄 v1.29</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Space+Mono&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#0e1012;--sb:#141618;--panel:#1a1d21;--card:#1f2328;--border:#2a2f36;--border2:#353b44;--gold:#d4a843;--gold2:#f0cc7a;--teal:#3aaa8c;--teal2:#4dc9a8;--red:#e06c6c;--indigo:#7b8cff;--amber:#e8b04a;--text:#dde2ee;--sub:#8a94a6;--muted:#4a5566}
@@ -161,7 +161,7 @@ async function load(){
   const real=ROWS.filter(r=>!r._fp), nfp=ROWS.length-real.length; $('#meta').textContent=`${new Set(real.map(r=>[r.vendor,r.brand,r.series,r.factory_code||r.model].join('|'))).size} 品名 · ${real.length} 型號${nfp?' · 原廠期貨 '+nfp+' 款':''} · 最近抓取 ${(real.map(r=>r.last_seen).sort().pop()||'')}`; }
 const tier=(v,b)=>BR[v+'|'+b]?.tier||'常態';
 // CEDIT 是 Florim 旗下品牌：廠牌下拉併進 Florim，系列後面標 CEDIT；資料庫與 NAS 資料夾不動（brand0 留原名）
-const BMERGE={Cedit:'Florim',CEDIT:'Florim'}; const bfix=r=>{ if(BMERGE[r.brand]){ r.brand0=r.brand; r.brand=BMERGE[r.brand]; } return r; }; const subB=x=>x&&x.brand0?x.brand0.toUpperCase():'';
+const BMERGE={Cedit:'Florim',CEDIT:'Florim',Impronta:'Italgraniti'}; const bfix=r=>{ if(BMERGE[r.brand]){ r.brand0=r.brand; r.brand=BMERGE[r.brand]; } return r; }; const subB=x=>x&&x.brand0?x.brand0.toUpperCase():'';
 // 原廠官網有、新睦豐沒進的款：從 factory_products 補一格「期貨」（_fp:true，不存 products，不能編輯狀態）
 function addFpRows(){ ROWS=ROWS.filter(r=>!r._fp); const NKx=x=>String(x||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
   const have=new Set(ROWS.filter(bnfRow).map(r=>r.brand+'|'+NKx(r.series)+'|'+NKx(nm(r.factory_code||r.model)))); const by={};
@@ -196,9 +196,11 @@ const SFX_FIN={S:'natural',L:'polished',N:'natural',P:'polished'};
 const finOf=p=>{ const m=String(p.model||'').match(/([A-Z]{1,2})$/); return (m&&SFX_FIN[m[1]])||null; };
 // 對應鍵＝品牌＋系列＋款名（去掉空白符號）；款名用原廠名或爬蟲對好的 bnf_name（SEMINATO BRUNO↔Bruno、250F FROST↔250°F Frost）
 const NK=x=>String(x||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
+const XFALL=new Set(['Graniti Fiandre','Florim']);   // 只有這兩家可以跨系列借同名款（款名是石種名、不會撞）；Italgraniti 的 White／Beige 每個系列都有，不能借
 let FPI=null; function fpIdx(){ if(FPI&&FPI._n===FP.length) return FPI; FPI={_n:FP.length}; const seen={}; FP.forEach(x=>{ [...new Set([NK(x.name),NK(x.bnf_name)].filter(Boolean))].forEach(n=>{ (FPI[x.brand+'|'+NK(x.series)+'|'+n]??=[]).push(x); }); [...new Set([NK(x.name),NK(x.bnf_name)].filter(Boolean))].forEach(n=>{ const k=x.brand+'||'+n, c=k+'|'+(NK(x.code)||x.key); if(!seen[c]){ seen[c]=1; (FPI[k]??=[]).push(x); } }); }); return FPI; }
 const fpFor=(brand,series,name)=>{ const I=fpIdx(); const a=I[brand+'|'+NK(series)+'|'+NK(name)]||[]; const bn=a.filter(x=>NK(x.bnf_name)===NK(name)); if(bn.length) return bn; if(a.length) return a;
-  return I[brand+'||'+NK(name)]||[]; };   // 爬蟲指名對到的優先；這個系列還沒有原廠資料時，先借同品牌同名的款（別的系列頁通常列同一張規格表）
+  const sb_=String(series||'').replace(/\/(mega|magnum|manum)$/i,''); if(sb_!==series){ const b2=I[brand+'|'+NK(sb_)+'|'+NK(name)]||[]; if(b2.length) return b2; }   // 「Natural/Mega」是「Natural」的 6mm 大板：先看本系列
+  return XFALL.has(brand)?(I[brand+'||'+NK(name)]||[]):[]; };   // 爬蟲指名對到的優先；這個系列還沒有原廠資料時，先借同品牌同名的款（別的系列頁通常列同一張規格表）
 const fpOf=g=>fpFor(g.brand,g.series,g.en);
 // 面感歸類：rough 鑿面／止滑、polished 亮面、soft 柔拋、natural 自然面（Fiandre 的 natural-plus／feel、Florim 的 Matte - R9／Glossy／Grip - R11 都歸得進來）
 const finFam=f=>{ f=String(f||'').toLowerCase(); return /grip|structur|bocciard|bush|hammer|r1[12]|in&out|cannet|flamed|fiammat|sabbiat|chisel|blazed|rolled|tough|slaty|antislip/.test(f)?'rough':/gloss|lucid|polish|levig|lux|jewel/.test(f)?'polished':/soft|satin|silk|lapp|honed|leather|cashmere|silky/.test(f)?'soft':/glint/.test(f)?'glint':/matt|natur|comfort|feel/.test(f)?'natural':f; };
@@ -237,7 +239,7 @@ const rst=r=>(r.status==='限量'||r.status==='停產')?r.status:(isLtdName(r.im
 const gstatus=g=>{ const ss=g.rows.map(rst); if(ss.length&&ss.every(s=>s==='停產')) return '停產'; if(ss.includes('限量')) return '限量'; return ss.includes('入庫')?'入庫':'期貨'; };
 // 未對應：bnf 入庫型號、該品牌＋原廠名在 factory_products 有資料、沒填 factory_item、自動也對不到
 function unmatched(){ if(!FP.length) return []; const out=[];
-  ROWS.filter(r=>bnfRow(r)&&!r._fp&&!r.hidden&&r.status!=='停產').forEach(r=>{ const fp=fpFor(r.brand,r.series,nm(r.factory_code||'')); if(!fp.length||r.factory_item) return; if(!fpMatch(r,fp)) out.push({r,fp}); }); return out; }
+  ROWS.filter(r=>bnfRow(r)&&!r._fp&&!r.hidden&&r.status!=='停產').forEach(r=>{ const fp=fpFor(r.brand,r.series,nm(r.factory_code||'')); if(!fp.length||r.factory_item||!fp.some(x=>x.code)) return; if(!fpMatch(r,fp)) out.push({r,fp}); /* 原廠官網本來就沒料號的品牌不列 */ }); return out; }
 function renderUnm(){ const u=unmatched(); $('#unmBtn').style.display=FP.length?'':'none'; $('#unmN').textContent=u.length; $('#unmSub').textContent=`${u.length} 個型號`;
   $('#unmTbl').innerHTML='<tr><th>品牌</th><th>系列</th><th>原廠名</th><th>中文</th><th>型號</th><th>尺寸</th><th>厚</th><th>面感</th><th>原廠有的規格</th></tr>'+u.map(({r,fp})=>`<tr><td>${esc(r.brand)}</td><td>${esc(r.series)}</td><td>${esc(r.factory_code||'')}</td><td>${esc(nm(r.import_name||''))}</td><td class="m">${esc(r.model)}</td><td class="mono">${esc(r.size||'')}</td><td class="mono">${esc(th(r.thickness))}</td><td>${esc(r.finish||'')}<small style="color:var(--muted)"> ${finOf(r)||''}</small></td><td style="font-size:11px;color:var(--sub)">${esc([...new Set(fp.map(x=>`${x.size} ${x.finish} ${x.thickness}mm`))].join('、'))}</td></tr>`).join(''); }
 $('#unmBtn').addEventListener('click',()=>{ renderUnm(); $('#unm').classList.add('on'); }); $('#unmX').addEventListener('click',()=>$('#unm').classList.remove('on'));
