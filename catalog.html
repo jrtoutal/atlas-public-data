@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>ATLAS 型錄 v1.38</title>
+<title>ATLAS 型錄 v1.39</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Space+Mono&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#0e1012;--sb:#141618;--panel:#1a1d21;--card:#1f2328;--border:#2a2f36;--border2:#353b44;--gold:#d4a843;--gold2:#f0cc7a;--teal:#3aaa8c;--teal2:#4dc9a8;--red:#e06c6c;--indigo:#7b8cff;--amber:#e8b04a;--text:#dde2ee;--sub:#8a94a6;--muted:#4a5566}
@@ -153,8 +153,9 @@ const stopWhy=r=>{ if(r._fp||r.hidden) return ''; const st=rst(r); if(st==='停�
 async function eolApply(){ const due=ROWS.filter(r=>!r._fp&&eolDue(r)&&r.status!=='停產'); if(!due.length) return; const by={}; due.forEach(r=>(by[r.eol_ym]??=[]).push(r));
   for(const [ym,rs] of Object.entries(by)){ const upd={status:'停產',status_reason:'原廠停產通知',status_on:ym+'-01',status_note:'預告停產到期，自動轉停產'}; const {error}=await sb.from('products').update(upd).in('key',rs.map(r=>r.key)); if(error){ console.warn('預告停產到期',error.message); continue; } rs.forEach(r=>Object.assign(r,upd)); }
   note(`預告停產到期，${due.length} 個型號已自動改成停產：${due.slice(0,8).map(r=>nm(r.model)).join('、')}${due.length>8?'…':''}`); render(); }
-async function syncStopTasks(){ try{ const need=[]; for(const r of ROWS){ const us=openUse(r).filter(u=>u.jc!=null); if(!us.length) continue; const why=stopWhy(r); if(!why) continue; for(const u of us){ const k=u.jc+'|'+UK(nm(r.model)); if(!STOPT[k]&&!need.some(x=>x.k===k)) need.push({k,u,r,why}); } }
-    if(!need.length) return; const {data:old,error}=await sb.from('tasks').select('id,title,jc_project_id').eq('kind','案件'); if(error) return; const made=[];
+async function syncStopTasks(){ try{ let need=[]; for(const r of ROWS){ const us=openUse(r).filter(u=>u.jc!=null); if(!us.length) continue; const why=stopWhy(r); if(!why) continue; for(const u of us){ const k=u.jc+'|'+UK(nm(r.model)); if(!STOPT[k]&&!need.some(x=>x.k===k)) need.push({k,u,r,why}); } }
+    if(!need.length) return; const uq=await sb.from('ui_state').select('data').eq('user_id',UID).eq('key','catalog').maybeSingle(); if(!uq.error&&uq.data?.data?.stopTasks){ STOPT={...uq.data.data.stopTasks,...STOPT}; need=need.filter(x=>!STOPT[x.k]); if(!need.length) return; }   /* 案件中心也會建同一種待辦：先讀最新記錄再做，避免蓋掉對方記的 */
+    const {data:old,error}=await sb.from('tasks').select('id,title,jc_project_id').eq('kind','案件'); if(error) return; const made=[];
     for(const x of need.slice(0,20)){ const head=`確認 ${nm(x.r.model)} 停產訂單`; if(!(old||[]).some(t=>t.jc_project_id===x.u.jc&&String(t.title||'').startsWith(head))){ const {error:e}=await sb.from('tasks').insert({kind:'案件',title:head+(t=>t?'（'+t+'）':'')([x.why==='停產'?'':x.why,x.u.use?'本案用料 '+x.u.use:''].filter(Boolean).join('，')),tag:'其他',jc_project_id:x.u.jc}); if(e) continue; made.push(x.u.name+'：'+nm(x.r.model)); } STOPT[x.k]=new Date(Date.now()+288e5).toISOString().slice(0,10); }
     await saveUi(); if(made.length) note(`已在案件中心新增 ${made.length} 筆待辦「確認…停產訂單」：${made.join('、')}`+(need.length>20?`（還有 ${need.length-20} 筆，下次開啟時建立）`:'')); }catch(e){ console.warn('停產待辦',e); } }
 function note(msg){ let n=$('#note'); if(!n){ n=document.createElement('div'); n.id='note'; n.style.cssText='position:fixed;left:50%;bottom:22px;transform:translateX(-50%);max-width:min(720px,92vw);background:var(--card);border:1px solid var(--gold);color:var(--text);padding:10px 14px;border-radius:10px;font-size:13px;z-index:60;box-shadow:0 6px 24px rgba(0,0,0,.4);cursor:pointer'; n.title='點一下關閉'; n.addEventListener('click',()=>n.remove()); document.body.appendChild(n); n.textContent=''; } const ln=document.createElement('div'); ln.textContent=msg; if(n.childNodes.length) ln.style.marginTop='6px'; n.appendChild(ln);   /* 兩則訊息（到期自動停產、新增待辦）疊著顯示 */
