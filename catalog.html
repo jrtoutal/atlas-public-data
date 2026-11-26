@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>ATLAS 型錄 v1.40</title>
+<title>ATLAS 型錄 v1.41</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Space+Mono&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#0e1012;--sb:#141618;--panel:#1a1d21;--card:#1f2328;--border:#2a2f36;--border2:#353b44;--gold:#d4a843;--gold2:#f0cc7a;--teal:#3aaa8c;--teal2:#4dc9a8;--red:#e06c6c;--indigo:#7b8cff;--amber:#e8b04a;--text:#dde2ee;--sub:#8a94a6;--muted:#4a5566}
@@ -115,7 +115,7 @@ table.mx{width:100%;border-collapse:collapse;font-size:12px}.mx th{font-weight:5
     <div class="fg"><label>面感</label><select id="fFin"><option value="">全部</option></select></div>
     <div class="fg"><label>厚度 /mm</label><select id="fTh"><option value="">全部</option></select></div>
     <div class="fg"><label>材質／分類</label><select id="fCat"><option value="">全部</option></select></div>
-    <div class="fg" id="fgSt"><label>狀態</label><div class="strow"><select id="fSt"></select><span id="fStCk"><label class="ck"><input type="checkbox" id="fLtd"> ＋含限量（出完不補）</label><label class="ck"><input type="checkbox" id="fFut" checked> ＋原廠期貨（原廠有、我們沒進）</label></span></div></div>
+    <div class="fg" id="fgSt"><label>狀態</label><div class="strow"><select id="fSt"></select><span id="fStCk"><label class="ck"><input type="checkbox" id="fLtd"> ＋含限量（出完不補）</label><label class="ck"><input type="checkbox" id="fFut"> ＋原廠期貨（原廠有、我們沒進）</label></span></div></div>
     <div class="fg" id="fgGreen"><label>綠建材</label><select id="fGreen"><option value="">全部</option><option value="any">有綠建材標章</option><option value="再生">再生綠建材</option><option value="高性能">高性能綠建材</option></select></div>
     <div class="fg"><label id="fSlipLab">防滑性</label><select id="fSlip"></select></div>
     <div class="fg"><label>&nbsp;</label><button class="btn sm" id="fDef">回預設</button> <button class="btn sm" id="fClear">全部顯示</button></div>
@@ -406,7 +406,7 @@ function bindSide(g,st){
   document.querySelectorAll('[data-doc]').forEach(a=>a.addEventListener('click',async e=>{ e.preventDefault(); const {data,error}=await sb.storage.from('catalog-docs').createSignedUrl(a.dataset.doc,600); if(error){ alert(error.message); return; } window.open(data.signedUrl,'_blank'); }));
   document.querySelectorAll('[data-deldoc]').forEach(x=>x.addEventListener('click',async()=>{ if(!confirm('移除這份文件？')) return; const id=+x.dataset.deldoc; const d=DOCS.find(k=>k.id===id); await sb.storage.from('catalog-docs').remove([d.path]); await sb.from('product_docs').delete().eq('id',id); DOCS=DOCS.filter(k=>k.id!==id); renderSide(); })); }
 ['q','fSt','fFin','fTh','fSz','fCat','fLtd','fFut','fGreen','fSlip'].forEach(id=>$('#'+id).addEventListener('input',()=>{ SEL=null; render(); }));
-const DEF=()=>{ ['fFin','fTh','fSz','fCat','fGreen','fSlip'].forEach(id=>$('#'+id).value=''); $('#fSt').value='常態'; $('#fLtd').checked=false; $('#fFut').checked=true; };   // 預設只看「常態品牌 × 入庫」
+const DEF=()=>{ ['fFin','fTh','fSz','fCat','fGreen','fSlip'].forEach(id=>$('#'+id).value=''); $('#fSt').value='常態'; $('#fLtd').checked=false; $('#fFut').checked=false; };   // 預設只看「常態品牌 × 入庫」
 $('#fClear').addEventListener('click',()=>{ ['fSt','fFin','fTh','fSz','fCat','fGreen','fSlip'].forEach(id=>$('#'+id).value=''); if(![...$('#fSt').options].some(o=>o.value==='')) $('#fSt').value='常態';   /* 國產只有常態／停產兩項 */
   $('#fLtd').checked=false; $('#fFut').checked=true; render(); });
 $('#fDef').addEventListener('click',()=>{ DEF(); render(); });
