@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>ATLAS 型錄 v1.30</title>
+<title>ATLAS 型錄 v1.31</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Space+Mono&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#0e1012;--sb:#141618;--panel:#1a1d21;--card:#1f2328;--border:#2a2f36;--border2:#353b44;--gold:#d4a843;--gold2:#f0cc7a;--teal:#3aaa8c;--teal2:#4dc9a8;--red:#e06c6c;--indigo:#7b8cff;--amber:#e8b04a;--text:#dde2ee;--sub:#8a94a6;--muted:#4a5566}
@@ -136,7 +136,7 @@ const NAS='E:\\SynologyDrive\\BNF\\5.材料\\1.磁磚\\BNF\\圖檔\\';
 const isBNF=()=>V==='新睦豐'||V===ALL; const bnfRow=r=>r.source==='bnf'||r.vendor==='新睦豐';
 // 國產（冠軍）：官網每個型號有多張全模面，網址記在 extra.faces；縮圖走官網自己的縮圖服務
 const facesOf=g=>g.rows.filter(r=>!r.hidden).flatMap(r=>((r.extra||{}).faces||[]).map((u,i)=>({u,m:r.model,i:i+1})));
-const faceThumb=u=>{ try{ const m=String(u).match(/^(https?:\/\/[^\/]*champion\.com\.tw)\/resources\//); return m?m[1]+'/thumb/w-300/'+btoa(u):u; }catch(e){ return u; } }; const bnfG=g=>g.vendor==='新睦豐'||g.rows.some(bnfRow);
+const faceThumb=u=>{ try{ const m=String(u).match(/^(https?:\/\/[^\/]*(?:champion|marcobelli)\.com\.tw)\/resources\//); return m?m[1]+'/thumb/w-300/'+btoa(u):u; }catch(e){ return u; } }; const bnfG=g=>g.vendor==='新睦豐'||g.rows.some(bnfRow);
 // 系列排序：英文（含數字）A→Z 在前，中文在後；不分大小寫、忽略前後空白
 const serKey=x=>String(x||'').trim(); const isCJK=x=>/^[\u4e00-\u9fff]/.test(serKey(x));
 const serSort=(a,b)=>(isCJK(a)?1:0)-(isCJK(b)?1:0)||(isCJK(a)?serKey(a).localeCompare(serKey(b),'zh-Hant-TW'):serKey(a).localeCompare(serKey(b),'en',{sensitivity:'base',numeric:true}));
@@ -276,7 +276,7 @@ function caiBind(){ const sz=$('#caiSz'); if(!sz) return; const ids={caiPc:c=>1,
   Object.keys(ids).forEach(k=>$('#'+k).addEventListener('input',()=>{ last=k; calc(k); })); sz.addEventListener('change',()=>calc(last==='caiPc'?'caiPc':last)); }
 function renderSide(){ const g=curGroup(); const s=$('#side'); if(!g){ s.innerHTML=''; return; }
   const r0=g.rows[0]; const st=gstatus(g); const fpOnly=g.rows.every(r=>r._fp); const bnf=g.vendor==='新睦豐'; const docs=DOCS.filter(d=>d.brand===g.brand&&(d.factory_code===g.en||(!d.factory_code&&d.series===g.series))); const ex=r0.extra||{};
-  const VDIR={'冠軍建材':'D07冠軍'}; const nasDir=g.dom?('E:\\SynologyDrive\\BNF\\5.材料\\1.磁磚\\'+(VDIR[g.vendor]||g.vendor)+'\\圖檔\\'+[r0.category||'',g.series].filter(Boolean).map(x=>x.replace(/[\\/:*?"<>|]+/g,'_')).join('\\')+'\\'):NAS+[g.b0,g.series,(g.en+' '+g.ch).trim()].map(x=>x.replace(/[\\/:*?"<>|]+/g,'_')).join('\\')+'\\';
+  const VDIR={'冠軍建材':'D07冠軍'}; const nasDir=g.dom?('E:\\SynologyDrive\\BNF\\5.材料\\1.磁磚\\'+(VDIR[g.vendor]||g.vendor)+'\\圖檔\\'+[g.brand==='馬可貝里'?'馬可貝里':'',r0.category||'',g.series].filter(Boolean).map(x=>x.replace(/[\\/:*?"<>|]+/g,'_')).join('\\')+'\\'):NAS+[g.b0,g.series,(g.en+' '+g.ch).trim()].map(x=>x.replace(/[\\/:*?"<>|]+/g,'_')).join('\\')+'\\';
   const pdfs=(ex.pdfs||[]).filter(u=>!HID.has(u));
   s.innerHTML=`<div class="backbar box full" id="sideX">← 回產品列表（${esc(g.series)}）</div><div class="box full"><div class="hd">${esc(g.en.toUpperCase())}${fpOnly?'':`<label class="btn sm" style="float:right;font-weight:400">換縮圖<input type="file" id="gImg" accept="image/*" hidden></label>`}<small>${esc(g.ch||(g.dom?g.series+(ex.en?' '+ex.en:''):(fpOnly?'原廠期貨・我們沒進這一款':'尚未取中文名')))}${r0.origin?' · '+esc(r0.origin):''}</small></div>
     <div class="hd2"><span>公司 <b>${esc(g.vendor)}</b></span><span>廠牌 <b>${esc(g.brand)}${g.sub?'／'+esc(g.sub):''}</b>${tier(g.vendor,g.brand)!=='常態'?`<span class="tier z">${tier(g.vendor,g.brand)}</span>`:''}</span><span>系列 <b>${esc(g.series)}</b>${ex.series_tag?' · '+esc(ex.series_tag):''}</span></div>
