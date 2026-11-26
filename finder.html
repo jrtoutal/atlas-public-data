@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="ATLAS 選色表">
 <meta name="theme-color" content="#141618">
-<title>ATLAS 選色表 v7.4</title>
+<title>ATLAS 選色表 v7.5</title>
 <style>
 /* 大螢幕自動放大（外接螢幕）：1600px 以上 110%、2200px 以上 125% */
 @media (min-width:1600px){html{zoom:1.1}}
@@ -361,7 +361,16 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--text
 .mobile-bar{ display:none; }
 .mobile-drawer{ display:none; }
 
+@media screen{
+  #stop-banner{width:794px;max-width:100%;box-sizing:border-box;margin:0 0 10px;padding:9px 14px;border:1.5px solid #c0392b;border-radius:8px;background:#fdecea;color:#7b1f17;font-size:12.5px;line-height:1.6}
+  #stop-banner b{color:#c0392b}
+  .mat-card.stop{outline:2.5px solid #c0392b;outline-offset:-1px}
+  .pro-tbl tr.stop>td{box-shadow:inset 0 2px 0 #c0392b,inset 0 -2px 0 #c0392b}
+  .item-row.stop{box-shadow:inset 3px 0 0 #e74c3c}
+  .item-row.stop .item-name::after{content:' ⚠ 停產';color:#e74c3c;font-size:10px}
+}
 @media print{
+  #stop-banner{display:none!important;}
   @page{margin:8mm 8mm 10mm;size:A4 portrait;}
   *{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
   /* 強制全白底,消除深色主題殘留(黑色區塊主因) */
@@ -760,7 +769,7 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--text
 
 </div><!-- /rp -->
 
-<div class="preview"><div class="a4"><div class="a4-in" id="a4-in"></div></div></div>
+<div class="preview"><div id="stop-banner" style="display:none"></div><div class="a4"><div class="a4-in" id="a4-in"></div></div></div>
 </div><!-- /workspace -->
 
 <!-- 手機版底部工具列 -->
@@ -2019,6 +2028,17 @@ function mapProduct(p){
     '用途':Array.isArray(p.usages)?p.usages.join('、'):(p.usages||''), '紋理':p.texture||'', '面感':p.finish||'', '狀態':p.status||''
   };
 }
+// 停產提醒：型錄裡停產、限量、預告停產、官網已下架的型號。選色表用到就在上方橫幅提醒、卡片加紅框（只在螢幕上，列印與 PDF 不會出現）
+let STOPMAP={}; const stopKey=x=>String(x||'').replace(/\s*[（(]\s*限量\s*[）)]\s*/g,' ').replace(/\s*[（(]\s*new\s*[）)]\s*/ig,' ').replace(/\bNEW\b/g,'').toUpperCase().replace(/[\s\-_.／\/()（）]/g,'');
+const stopOf=it=>{ const k=stopKey(it&&it.code); return k.length>=2?(STOPMAP[k]||''):''; };
+async function loadStops(){ if(!SB_UID) return; try{
+    let r=await sb.from('products').select('model,import_name,status,gone_on,eol_ym').eq('hidden',false).or('status.in.(限量,停產,疑似停產),gone_on.not.is.null,eol_ym.not.is.null,import_name.ilike.*限量*').range(0,1999);
+    if(r.error) r=await sb.from('products').select('model,import_name,status').eq('hidden',false).in('status',['限量','停產']).range(0,1999);   // 還沒跑 supabase_61／62：只看狀態
+    if(r.error) return; const ym=new Date(Date.now()+288e5).toISOString().slice(0,7), m={};
+    (r.data||[]).forEach(p=>{ const why=(p.status==='停產'||(p.eol_ym&&p.eol_ym<=ym))?'停產':p.eol_ym?`預告 ${p.eol_ym} 停產`:(p.status==='限量'||/限量/.test(p.import_name||''))?'限量，出完不補':(p.gone_on||p.status==='疑似停產')?'原廠官網已下架':''; const k=stopKey(p.model); if(why&&k.length>=2&&!(m[k]==='停產')) m[k]=why; });
+    STOPMAP=m; renderItemList(); render(); }catch(e){ console.warn('停產提醒讀取失敗',e); } }
+function stopBanner(){ const el=document.getElementById('stop-banner'); if(!el) return; const hit=items.map(it=>[it,stopOf(it)]).filter(x=>x[1]); if(!hit.length){ el.style.display='none'; return; }
+  el.style.display=''; el.innerHTML=`<b>⚠ 本案有 ${hit.length} 項建材停產或即將停產</b>，請確認訂單或更換材料（這個提醒與紅框不會印出來）：<br>`+hit.map(([it,why])=>`${esc(it.num?it.num+' ':'')}<b>${esc(it.code||'')}</b>（${esc(why)}）`).join('、'); }
 async function loadNocoFilters(silent){
   if(!SB_UID){ if(!silent) alert('請先登入'); return; }
   const res=document.getElementById('srch-result');
@@ -2031,7 +2051,7 @@ async function loadNocoFilters(silent){
       if(error) throw error;
       all.push(...data); if(data.length<1000) break; from+=1000;
     }
-    nocoAllRows=all.map(mapProduct);
+    nocoAllRows=all.map(mapProduct); loadStops();
     if(!silent){ res.innerHTML=all.length?'':'<div class="srch-status">產品庫目前是空的（等爬蟲入庫）</div>'; }
     updateFdOptions();
     if(!silent) renderImgWall(nocoAllRows);
@@ -2235,7 +2255,7 @@ function renderItemList(){
   const root=a=>(a||'').split(/[–—\-／/·‧,，、\s]/)[0].trim()||'（未分區）'; // 「浴廁–牆」「浴廁–地」→ 浴廁
   const groups=[]; items.forEach((it,i)=>{ const a=root(it.area); let g=groups.find(x=>x.area===a); if(!g){ g={area:a,rows:[]}; groups.push(g); } g.rows.push(i); });
   const row=(it,i)=>{ const bg=it.imgUrl?'':(it.pal===null?'transparent':`linear-gradient(135deg,${(it.pal||['#ccc']).join(',')})`);
-    return`<div class="item-row" draggable="true"
+    return`<div class="item-row${stopOf(it)?' stop':''}" draggable="true"
       ondragstart="dragItemIdx=${i};event.dataTransfer.effectAllowed='move'"
       ondragover="event.preventDefault();document.querySelectorAll('.item-row').forEach(r=>r.classList.remove('drag-over'));this.classList.add('drag-over')"
       ondragleave="this.classList.remove('drag-over')"
@@ -2810,7 +2830,7 @@ function buildCards(){
     }
     const num=it.num||'TL-'+(i+1).toString().padStart(2,'0');
     const infoRows=visCols.map(c=>`<tr><td class="mat-key">${esc(c.lbl)}</td><td class="mat-val-td" contenteditable="true" spellcheck="false" data-ph="${esc(c.lbl)}..." onkeydown="if(event.key==='Enter'){event.preventDefault();document.execCommand('insertLineBreak');}" oninput="items[${i}]['${c.key}']=this.innerText;saveActiveProject()">${esc(String(it[c.key]||''))}</td></tr>`).join('');
-    return`<div class="mat-card"><div class="mat-num-row"><input class="mat-num-input" value="${esc(num)}" oninput="items[${i}].num=this.value;saveActiveProject()" onclick="this.select()"><span style="font-size:10px;opacity:.3;cursor:pointer" onclick="openItemModal(${i})">✏️</span></div><div class="mat-img">${imgBlock}</div><table class="mat-info-table"><tbody>${infoRows}</tbody></table></div>`;
+    return`<div class="mat-card${stopOf(it)?' stop':''}"${stopOf(it)?` title="${esc(stopOf(it))}"`:''}><div class="mat-num-row"><input class="mat-num-input" value="${esc(num)}" oninput="items[${i}].num=this.value;saveActiveProject()" onclick="this.select()"><span style="font-size:10px;opacity:.3;cursor:pointer" onclick="openItemModal(${i})">✏️</span></div><div class="mat-img">${imgBlock}</div><table class="mat-info-table"><tbody>${infoRows}</tbody></table></div>`;
   }).join('')}</div>`;
 }
 function buildPro(){
@@ -2826,7 +2846,7 @@ function buildPro(){
     const sw=`<div class="pro-thumb" style="height:${TH}px;width:${TH}px;cursor:${it.imgUrl?'zoom-in':'default'}" title="點擊選擇表格顯示區域" onclick="openTblCrop(${i})">${tblThumb(it,TH-8)}</div>`;
     const num=it.num||'TL-'+(i+1).toString().padStart(2,'0');
     const tds=visCols.map(c=>`<td><div class="pro-edit" contenteditable="true" spellcheck="false" data-ph="${esc(c.lbl)}" oninput="items[${i}]['${c.key}']=this.innerText;saveActiveProject()">${esc(String(it[c.key]||''))}</div></td>`).join('');
-    html+=`<tr style="height:${TH}px"><td style="padding:0 5px">${sw}</td><td><div class="pro-edit" contenteditable="true" spellcheck="false" data-ph="編號" oninput="items[${i}].num=this.innerText;saveActiveProject()">${esc(num)}</div></td>${tds}</tr>`;
+    html+=`<tr${stopOf(it)?` class="stop" title="${esc(stopOf(it))}"`:''} style="height:${TH}px"><td style="padding:0 5px">${sw}</td><td><div class="pro-edit" contenteditable="true" spellcheck="false" data-ph="編號" oninput="items[${i}].num=this.innerText;saveActiveProject()">${esc(num)}</div></td>${tds}</tr>`;
   });
   closeGrp();
   return`<table class="pro-tbl"><thead><tr>${hdrs.map(h=>`<th>${esc(h)}</th>`).join('')}</tr></thead><tbody>${html}</tbody></table>`;
@@ -2865,7 +2885,7 @@ function render(){ const ol=document.getElementById('owner-lbl'); if(ol) ol.text
       <tbody><tr><td>${body}</td></tr></tbody>
       <tfoot><tr><td>${foot}</td></tr></tfoot>
     </table>`;
-  fitVals();
+  fitVals(); stopBanner();
 }
 // 卡片資料欄：先試一行（逐步縮到 7px），還是放不下才允許換行
 function fitVals(){
