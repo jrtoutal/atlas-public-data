@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#0e1012">
-<title>ATLAS 案件中心 v3.26</title>
+<title>ATLAS 案件中心 v3.28</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Space+Mono:wght@400;700&display=swap');
 :root{--bg:#0e1012;--sb:#141618;--panel:#1a1d21;--card:#1f2328;--border:#2a2f36;--border2:#353b44;--gold:#d4a843;--gold2:#f0cc7a;--teal:#3aaa8c;--teal2:#4dc9a8;--red:#e06c6c;--indigo:#7b8cff;--amber:#e8b04a;--text:#dde2ee;--sub:#8a94a6;--muted:#4a5566}
@@ -274,8 +274,40 @@ $('#loginForm').addEventListener('submit',async e=>{ e.preventDefault(); $('#log
   if(error){ $('#loginErr').textContent='登入失敗：'+(error.message.includes('Invalid')?'帳號或密碼錯誤':error.message); return; } boot(); });
 $('#logoutBtn').addEventListener('click',async()=>{ await sb.auth.signOut(); location.reload(); });
 async function boot(){ const {data:{session}}=await sb.auth.getSession(); if(!session){ $('#login').style.display='flex'; $('#app').style.display='none'; return; }
-  UID=session.user.id; $('#login').style.display='none'; $('#app').style.display='flex'; await loadAll(); await ctOrdLoad(); setTab(new URLSearchParams(location.search).get('t')||'ur'); }
+  UID=session.user.id; $('#login').style.display='none'; $('#app').style.display='flex'; await loadAll(); await ctOrdLoad(); const QS=new URLSearchParams(location.search), oid=+(QS.get('id')||0); setTab(QS.get('t')||'ur'); if(oid){ const r=DATA[TAB].find(x=>x.id===oid); if(r){ CUR=r; renderList(); showForm(); document.querySelector('#rows .row.active')?.scrollIntoView({block:'center'}); } }   /* 從選色表「↩ 案件中心」回來：?t=jc&id=6 直接開那個專案 */
+  syncStopTasks(); }
 function cloud(st,txt){ $('#cloudDot').className=st; $('#cloudTxt').textContent=txt; }
+
+// ── 停產待辦（跟型錄頁同一套規則；這裡也檢查，才不用先開過型錄）──
+// 停產／限量／預告停產／官網已下架／有停產通知的型號，只要進行中建材專案（類別沒有「結案」）的選色表有用到，就在該專案建一筆「確認 XXX 停產訂單」。
+// 每個專案×型號只建一次：已有同名待辦（含已完成）或 ui_state.catalog.stopTasks 記過的都跳過。「原廠系列整個下架」那一種要比對原廠型錄，只有型錄頁會查。
+const SK_nm=x=>String(x||'').replace(/\s*[（(]\s*限量\s*[）)]\s*/g,' ').replace(/\s*[（(]\s*new\s*[）)]\s*/ig,' ').replace(/\bNEW\b/g,'').replace(/\s+/g,' ').trim();
+const SK_uk=x=>String(x||'').toUpperCase().replace(/[\s\-_.／\/()（）]/g,'');
+async function syncStopTasks(){ try{
+    const FD=DATA.finder||{}; if(!(FD.versions||[]).length&&!(FD.projects||[]).some(p=>(p.items||[]).length)) return;
+    const rows=[]; for(let i=0;i<10;i++){ let r=await sb.from('products').select('key,source,vendor,brand,series,model,name,import_name,factory_code,status,gone_on,eol_ym').eq('hidden',false).order('key').range(i*1000,i*1000+999);
+      if(r.error) r=await sb.from('products').select('key,source,vendor,brand,series,model,name,import_name,factory_code,status').eq('hidden',false).order('key').range(i*1000,i*1000+999);   // 還沒跑 supabase_61／62
+      if(r.error||!r.data) return; rows.push(...r.data); if(r.data.length<1000) break; }
+    const dq=await sb.from('product_docs').select('brand,series,factory_code,kind').eq('kind','停產通知'); const docs=dq.error?[]:(dq.data||[]);
+    const ym=new Date(Date.now()+288e5).toISOString().slice(0,7), isB=r=>r.source==='bnf'||r.vendor==='新睦豐';
+    const why=r=>{ if(r.status==='停產'||(r.eol_ym&&r.eol_ym<=ym)) return '停產'; if(r.eol_ym) return `預告 ${r.eol_ym} 停產`; if(r.status==='限量'||/限量/.test(r.import_name||'')) return '限量，出完不補'; if(r.gone_on||r.status==='疑似停產') return '官網已下架';
+      return docs.some(d=>d.brand===r.brand&&(d.factory_code?(isB(r)?d.factory_code===SK_nm(r.factory_code||r.model):String(d.factory_code).split(' / ').includes(SK_nm(r.model))):d.series===r.series))?'原廠停產通知':''; };
+    const J={}; DATA.jc.forEach(x=>J[x.id]=x); const PJ={}; (FD.projects||[]).forEach(p=>PJ[p.id]=p); const USE={}, USEN={};
+    const MODELS=new Set(rows.map(r=>SK_uk(SK_nm(r.model)))), NAMES=new Set(rows.map(r=>SK_uk(SK_nm(r.import_name||r.name||''))).filter(k=>k.length>=2));
+    [...(FD.versions||[]).map(v=>[PJ[v.projectId],v.items]),...(FD.projects||[]).map(p=>[p,p.items])].forEach(([p,its])=>{ if(!p||!Array.isArray(its)||p.jcId==null) return; const j=J[p.jcId]; if(!j||(j.categories||[]).includes('結案')) return;
+      const u={name:j.short_name||j.name,jc:j.id,use:j.use_ym||''}; const put=(M,k)=>{ const a=(M[k]??=[]); if(!a.some(x=>x.jc===u.jc)) a.push(u); };
+      its.forEach(it=>{ const kc=SK_uk(SK_nm(it&&it.code)), kn=SK_uk(SK_nm(it&&it.name)); if(kc.length>=2&&MODELS.has(kc)) put(USE,kc); else if(kc.length>=2&&NAMES.has(kc)) put(USEN,kc); else if(kn.length>=2&&MODELS.has(kn)) put(USE,kn); else if(kn.length>=2&&NAMES.has(kn)) put(USEN,kn); }); });
+    const need=[]; for(const r of rows){ const a=USE[SK_uk(SK_nm(r.model))]||[], b=USEN[SK_uk(SK_nm(r.import_name||r.name||''))]||[]; const us=[...a,...b.filter(x=>!a.some(y=>y.jc===x.jc))]; if(!us.length) continue; const w=why(r); if(!w) continue; for(const u of us){ const k=u.jc+'|'+SK_uk(SK_nm(r.model)); if(!need.some(x=>x.k===k)) need.push({k,u,r,w}); } }
+    if(!need.length) return;
+    const uq=await sb.from('ui_state').select('data').eq('user_id',UID).eq('key','catalog').maybeSingle(); if(uq.error) return; const ui=uq.data?.data||{}; const ST=ui.stopTasks||{};
+    const todo=need.filter(x=>!ST[x.k]); if(!todo.length) return;
+    const tq=await sb.from('tasks').select('id,title,jc_project_id').eq('kind','案件'); if(tq.error) return; const made=[];
+    for(const x of todo.slice(0,20)){ const head=`確認 ${SK_nm(x.r.model)} 停產訂單`; if(!(tq.data||[]).some(t=>t.jc_project_id===x.u.jc&&String(t.title||'').startsWith(head))){
+        const {data,error}=await sb.from('tasks').insert({kind:'案件',title:head+(t=>t?'（'+t+'）':'')([x.w==='停產'?'':x.w,x.u.use?'本案用料 '+x.u.use:''].filter(Boolean).join('，')),tag:'其他',jc_project_id:x.u.jc}).select().single(); if(error) continue; DATA.tasks.push(data); made.push(x.u.name+'：'+SK_nm(x.r.model)); }
+      ST[x.k]=new Date(Date.now()+288e5).toISOString().slice(0,10); }
+    await sb.from('ui_state').upsert({user_id:UID,key:'catalog',data:{...ui,stopTasks:ST}},{onConflict:'user_id,key'});   /* 跟型錄頁共用同一份記錄，其他設定（隱藏的 PDF）原樣保留 */
+    if(made.length){ renderList(); if($('#toast')) toast(`新增 ${made.length} 筆停產待辦：${made.join('、')}`); }
+  }catch(e){ console.warn('停產待辦',e); } }
 
 // ── 載入 ──
 async function loadAll(){

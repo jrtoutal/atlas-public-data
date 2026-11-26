@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="ATLAS 選色表">
 <meta name="theme-color" content="#141618">
-<title>ATLAS 選色表 v7.6</title>
+<title>ATLAS 選色表 v7.7</title>
 <style>
 /* 大螢幕自動放大（外接螢幕）：1600px 以上 110%、2200px 以上 125% */
 @media (min-width:1600px){html{zoom:1.1}}
@@ -541,6 +541,7 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--text
   <span class="tb-title">ATLAS</span></a>
   <a class="t-btn" href="index.html" title="回帷幄首頁" style="text-decoration:none">⌂</a>
   <span class="tb-project" id="tb-project">選色表</span>
+  <a class="t-btn" id="tb-case" href="cases.html?t=jc" title="回案件中心的這個建材專案" style="text-decoration:none;white-space:nowrap">↩ 案件中心</a>
   <div class="mode-row">
     <button class="mode-btn on" id="mb-card" onclick="setMode('card',this)">📋 卡片</button>
     <button class="mode-btn" id="mb-pro" onclick="setMode('pro',this)">📊 表格</button>
@@ -2046,6 +2047,8 @@ async function loadStops(){ if(!SB_UID) return; STOP_AT=Date.now(); try{
 // 在型錄頁改完狀態再切回這一頁：自動重讀一次（不用重新整理）
 document.addEventListener('visibilitychange',()=>{ if(!document.hidden&&SB_UID&&Date.now()-STOP_AT>5000) loadStops(); });
 window.addEventListener('focus',()=>{ if(SB_UID&&Date.now()-STOP_AT>5000) loadStops(); });
+// 上方「↩ 案件中心」：直接回到這個選色表對應的建材專案（還沒對應到就回建材專案清單）
+function caseLink(){ const a=document.getElementById('tb-case'); if(!a) return; const ap=db.projects.find(p=>p.id===activeProjectId); a.href='cases.html?t=jc'+(ap&&ap.jcId!=null?'&id='+ap.jcId:''); }
 function stopBanner(){ const el=document.getElementById('stop-banner'); if(!el) return; const hit=items.map(it=>[it,stopOf(it)]).filter(x=>x[1]); if(!hit.length){ el.style.display='none'; return; }
   el.style.display=''; el.innerHTML=`<b>⚠ 本案有 ${hit.length} 項建材停產或即將停產</b>，請確認訂單或更換材料（這個提醒與紅框不會印出來）：<br>`+hit.map(([it,why])=>`${esc(it.num?it.num+' ':'')}<b>${esc(it.code||it.name||'')}</b>（${esc(why)}）`).join('、'); }
 async function loadNocoFilters(silent){
@@ -2894,7 +2897,7 @@ function render(){ const ol=document.getElementById('owner-lbl'); if(ol) ol.text
       <tbody><tr><td>${body}</td></tr></tbody>
       <tfoot><tr><td>${foot}</td></tr></tfoot>
     </table>`;
-  fitVals(); stopBanner();
+  fitVals(); stopBanner(); caseLink();
 }
 // 卡片資料欄：先試一行（逐步縮到 7px），還是放不下才允許換行
 function fitVals(){
