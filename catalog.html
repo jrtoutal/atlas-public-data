@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>ATLAS 型錄 v1.31</title>
+<title>ATLAS 型錄 v1.32</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Space+Mono&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#0e1012;--sb:#141618;--panel:#1a1d21;--card:#1f2328;--border:#2a2f36;--border2:#353b44;--gold:#d4a843;--gold2:#f0cc7a;--teal:#3aaa8c;--teal2:#4dc9a8;--red:#e06c6c;--indigo:#7b8cff;--amber:#e8b04a;--text:#dde2ee;--sub:#8a94a6;--muted:#4a5566}
@@ -229,7 +229,8 @@ const ZH_FAM_OLD={'自然面':['natural','natural-plus','feel'],'亮面':['polis
 // 紋理圖：Fiandre 整款共用一組；Florim 每個料號各有一組 → 入庫料號的優先，沒有就拿第一組有圖的
 const texOf=(rows,have)=>{ const hv=rows.filter(r=>have(r)&&(r.textures||[]).length); const src=hv.length?hv:rows.filter(r=>(r.textures||[]).length).slice(0,1); return [...new Set(src.flatMap(r=>r.textures))]; };
 function fpTex(g){ const fpo=g.rows.every(x=>x._fp); return texOf(fpOf(g).filter(r=>!isAcc(r)),r=>!fpo&&g.rows.some(p=>fpMatch(p,[r]))); }
-function factoryBox(g){ if(g.dom) return ''; const fp=fpOf(g); if(!fp.length) return '<div class="hint" style="margin-top:8px">原廠其他規格：尚無原廠資料（'+(g.brand==='Graniti Fiandre'?'原廠官網沒有這一款，或還沒跑 <code>py atlas_crawler.py fiandre --upload</code>':'此品牌轉接器尚未做')+'）</div>';
+function factoryBox(g){ if(g.dom){ const ms=g.rows.filter(r=>!r.hidden&&((r.extra||{}).faces||[]).length); if(!ms.length) return '';   // 國產：全模面比照 BNF 的原廠紋理，放在入庫型號表格下面橫排
+    return ms.map(r=>`${ms.length>1?`<div class="hint" style="margin:8px 0 0">${esc(nm(r.model))} ${esc(r.size||'')} · ${r.extra.faces.length} 張</div>`:''}<div class="thumbs" style="margin-top:6px">${r.extra.faces.map((u,i)=>`<div class="t" style="background-image:url('${esc(faceThumb(u))}')" data-lb="${esc(u)}" data-cap="${esc(nm(r.model))} 紋理 ${i+1}"><i>紋理 ${i+1}</i></div>`).join('')}</div>`).join(''); } const fp=fpOf(g); if(!fp.length) return '<div class="hint" style="margin-top:8px">原廠其他規格：尚無原廠資料（'+(g.brand==='Graniti Fiandre'?'原廠官網沒有這一款，或還沒跑 <code>py atlas_crawler.py fiandre --upload</code>':'此品牌轉接器尚未做')+'）</div>';
   const fpo=g.rows.every(x=>x._fp); const have=r=>!fpo&&g.rows.some(p=>fpMatch(p,[r]));
   const rows=fp.filter(r=>!isAcc(r)).sort((a,b)=>szSort(b.size,a.size)||String(a.finish).localeCompare(String(b.finish))); if(!rows.length) return '';   // 踢腳、階梯等配件不列
   const n={have:rows.filter(have).length,disc:rows.filter(r=>r.discontinued).length}; const rest=rows.length-n.have;
@@ -289,8 +290,7 @@ function renderSide(){ const g=curGroup(); const s=$('#side'); if(!g){ s.innerHT
     ${(()=>{ const seen=new Set(); const dd=fpOf(g).flatMap(x=>Array.isArray(x.docs)?x.docs:[]).filter(d=>d&&d.u&&!seen.has(d.u)&&seen.add(d.u)); return dd.length?`<div class="pdfs" style="margin-top:8px"><label style="font-size:11px;color:var(--teal2)">原廠目錄（官網下載）</label>${dd.map(d=>`<div class="d"><a href="${esc(d.u)}" target="_blank">${esc(d.t||'文件')}<small style="color:var(--muted)"> ${esc(decodeURIComponent(d.u.split('/').pop()))}</small></a></div>`).join('')}</div>`:''; })()}</div>
   ${caiBox(g)}
   <div class="box full"><h3>原磚圖檔<span class="c">${g.rows.filter(r=>r.image_url).length} 張</span></h3><div class="hero" style="grid-template-columns:repeat(auto-fill,minmax(150px,1fr))">${g.rows.filter(r=>r.image_url).map(r=>`<a class="im" href="#" data-lb="${esc((r.extra||{}).img_src||r.image_url)}" data-cap="${esc(nm(r.model))} ${esc(r.size||'')}" style="background-image:url('${r.image_url}')"><span>${esc(nm(r.model))} ${esc(r.size||'')}${(r.extra||{}).img_src?'':' · 600px'}</span></a>`).join('')||'<div class="hint">無</div>'}
-    ${((g.rows[0].extra||{}).photo_src||[]).length?`<div class="thumbs">${g.rows[0].extra.photo_src.map((u,i)=>`<div class="t" style="background-image:url('${u}')" data-lb="${esc(u)}" data-cap="示意圖 ${i+1}"><i>示意 ${i+1}</i></div>`).join('')}</div>`:''}
-    ${facesOf(g).length?`<div class="hint" style="margin-top:10px">全模面 ${facesOf(g).length} 張（同花色的不同紋理變化；NAS 每個型號存前 8 張）</div><div class="thumbs">${facesOf(g).map((x,i)=>`<div class="t" style="background-image:url('${esc(faceThumb(x.u))}')" data-lb="${esc(x.u)}" data-cap="${esc(x.m)} 全模面 ${x.i}"><i>${esc(x.m)} F${x.i}</i></div>`).join('')}</div>`:''}</div></div>
+    ${((g.rows[0].extra||{}).photo_src||[]).length?`<div class="thumbs">${g.rows[0].extra.photo_src.map((u,i)=>`<div class="t" style="background-image:url('${u}')" data-lb="${esc(u)}" data-cap="示意圖 ${i+1}"><i>示意 ${i+1}</i></div>`).join('')}</div>`:''}</div></div>
   <div class="box"><h3>原圖在哪<span class="c">NAS 原檔</span></h3><div class="hint">縮圖只有 600px；原圖與示意圖在公司 PC／NAS：</div><div class="path2">${esc(nasDir)}<span class="copy" data-copy="${esc(nasDir)}">複製路徑</span></div>
     <div class="hint" style="margin-top:6px">${(ex.photos||[]).length?`示意圖 ${ex.photos.length} 張：${ex.photos.map(p=>esc(p.split(/[\\/]/).pop())).join('、')}`:'沒有示意圖'}</div></div>
   ${bnf&&!fpOnly?`<div class="box full"><h3>狀態與原廠通知<span class="c">勾選要改的型號（預設全部）</span></h3>
