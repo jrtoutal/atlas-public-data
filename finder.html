@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="ATLAS 選色表">
 <meta name="theme-color" content="#141618">
-<title>ATLAS 選色表 v7.5</title>
+<title>ATLAS 選色表 v7.6</title>
 <style>
 /* 大螢幕自動放大（外接螢幕）：1600px 以上 110%、2200px 以上 125% */
 @media (min-width:1600px){html{zoom:1.1}}
@@ -2029,16 +2029,25 @@ function mapProduct(p){
   };
 }
 // 停產提醒：型錄裡停產、限量、預告停產、官網已下架的型號。選色表用到就在上方橫幅提醒、卡片加紅框（只在螢幕上，列印與 PDF 不會出現）
-let STOPMAP={}; const stopKey=x=>String(x||'').replace(/\s*[（(]\s*限量\s*[）)]\s*/g,' ').replace(/\s*[（(]\s*new\s*[）)]\s*/ig,' ').replace(/\bNEW\b/g,'').toUpperCase().replace(/[\s\-_.／\/()（）]/g,'');
-const stopOf=it=>{ const k=stopKey(it&&it.code); return k.length>=2?(STOPMAP[k]||''):''; };
-async function loadStops(){ if(!SB_UID) return; try{
+let STOPMAP={}, STOPNAME={}, STOP_AT=0; const stopKey=x=>String(x||'').replace(/\s*[（(]\s*限量\s*[）)]\s*/g,' ').replace(/\s*[（(]\s*new\s*[）)]\s*/ig,' ').replace(/\bNEW\b/g,'').toUpperCase().replace(/[\s\-_.／\/()（）]/g,'');
+// 先用型號對；卡片上的型號被改過、對不到產品庫任何型號時，才退一步用中文品名對（那個品名底下的型號全部停產才算）
+const stopOf=it=>{ if(!it) return ''; const kc=stopKey(it.code), kn=stopKey(it.name); if(kc.length>=2&&STOPMAP[kc]) return STOPMAP[kc]; if(kc.length>=2&&LIVEMODEL.has(kc)) return ''; return (kc.length>=2&&STOPNAME[kc])||(kn.length>=2&&(STOPMAP[kn]||STOPNAME[kn]))||''; };
+let LIVEMODEL=new Set();
+async function loadStops(){ if(!SB_UID) return; STOP_AT=Date.now(); try{
     let r=await sb.from('products').select('model,import_name,status,gone_on,eol_ym').eq('hidden',false).or('status.in.(限量,停產,疑似停產),gone_on.not.is.null,eol_ym.not.is.null,import_name.ilike.*限量*').range(0,1999);
     if(r.error) r=await sb.from('products').select('model,import_name,status').eq('hidden',false).in('status',['限量','停產']).range(0,1999);   // 還沒跑 supabase_61／62：只看狀態
-    if(r.error) return; const ym=new Date(Date.now()+288e5).toISOString().slice(0,7), m={};
-    (r.data||[]).forEach(p=>{ const why=(p.status==='停產'||(p.eol_ym&&p.eol_ym<=ym))?'停產':p.eol_ym?`預告 ${p.eol_ym} 停產`:(p.status==='限量'||/限量/.test(p.import_name||''))?'限量，出完不補':(p.gone_on||p.status==='疑似停產')?'原廠官網已下架':''; const k=stopKey(p.model); if(why&&k.length>=2&&!(m[k]==='停產')) m[k]=why; });
-    STOPMAP=m; renderItemList(); render(); }catch(e){ console.warn('停產提醒讀取失敗',e); } }
+    if(r.error) return; const ym=new Date(Date.now()+288e5).toISOString().slice(0,7), m={}, nmStop={}, rank=w=>w==='停產'?3:/^預告/.test(w)?2:1;
+    (r.data||[]).forEach(p=>{ const why=(p.status==='停產'||(p.eol_ym&&p.eol_ym<=ym))?'停產':p.eol_ym?`預告 ${p.eol_ym} 停產`:(p.status==='限量'||/限量/.test(p.import_name||''))?'限量，出完不補':(p.gone_on||p.status==='疑似停產')?'原廠官網已下架':''; const k=stopKey(p.model); if(!why||k.length<2) return; if(!m[k]||rank(why)>rank(m[k])) m[k]=why; const kn=stopKey(p.import_name); if(kn.length>=2) (nmStop[kn]??=[]).push([k,why]); });
+    // 還在賣的型號（產品庫：入庫／現行）扣掉上面有狀況的 → 同一個品名只要還有一個型號沒事，就不用品名去標
+    const live=new Set(), liveName={}; (nocoAllRows||[]).forEach(x=>{ const p=x._row||{}; const k=stopKey(p.model); if(k.length<2||m[k]) return; live.add(k); const kn=stopKey(p.import_name); if(kn.length>=2) liveName[kn]=1; });
+    const byName={}; Object.entries(nmStop).forEach(([kn,a])=>{ if(liveName[kn]) return; byName[kn]=a.map(x=>x[1]).sort((x,y)=>rank(x)-rank(y))[0]; });   /* 同名幾個型號狀況不同時，取最輕的那個說法 */
+    const sig=JSON.stringify([m,byName]), chg=sig!==loadStops.sig; loadStops.sig=sig; STOPMAP=m; STOPNAME=byName; LIVEMODEL=live; if(chg){ renderItemList(); render(); } else stopBanner();   /* 沒變就不重畫，免得正在打字的格子跳掉 */
+  }catch(e){ console.warn('停產提醒讀取失敗',e); } }
+// 在型錄頁改完狀態再切回這一頁：自動重讀一次（不用重新整理）
+document.addEventListener('visibilitychange',()=>{ if(!document.hidden&&SB_UID&&Date.now()-STOP_AT>5000) loadStops(); });
+window.addEventListener('focus',()=>{ if(SB_UID&&Date.now()-STOP_AT>5000) loadStops(); });
 function stopBanner(){ const el=document.getElementById('stop-banner'); if(!el) return; const hit=items.map(it=>[it,stopOf(it)]).filter(x=>x[1]); if(!hit.length){ el.style.display='none'; return; }
-  el.style.display=''; el.innerHTML=`<b>⚠ 本案有 ${hit.length} 項建材停產或即將停產</b>，請確認訂單或更換材料（這個提醒與紅框不會印出來）：<br>`+hit.map(([it,why])=>`${esc(it.num?it.num+' ':'')}<b>${esc(it.code||'')}</b>（${esc(why)}）`).join('、'); }
+  el.style.display=''; el.innerHTML=`<b>⚠ 本案有 ${hit.length} 項建材停產或即將停產</b>，請確認訂單或更換材料（這個提醒與紅框不會印出來）：<br>`+hit.map(([it,why])=>`${esc(it.num?it.num+' ':'')}<b>${esc(it.code||it.name||'')}</b>（${esc(why)}）`).join('、'); }
 async function loadNocoFilters(silent){
   if(!SB_UID){ if(!silent) alert('請先登入'); return; }
   const res=document.getElementById('srch-result');
