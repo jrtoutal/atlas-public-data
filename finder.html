@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="ATLAS 選色表">
 <meta name="theme-color" content="#141618">
-<title>ATLAS 選色表 v7.7</title>
+<title>ATLAS 選色表 v7.8</title>
 <style>
 /* 大螢幕自動放大（外接螢幕）：1600px 以上 110%、2200px 以上 125% */
 @media (min-width:1600px){html{zoom:1.1}}
@@ -2021,11 +2021,14 @@ const PROD_IMG=`${SB_URL}/storage/v1/object/public/products/`;
 const facOf=row=>[row['原廠名'],row['原廠料號']].filter(Boolean).join(' ');
 // 廠商欄：「品牌／系列」一起顯示（系列不再塞進註釋）
 const prodOf=row=>{ const b=row['品牌']||row['工廠']||'', se=row['系列']||''; return se&&se!==b?`${b}／${se}`:b; };
+const VSHORT={'冠軍建材':'冠軍','國信陶瓷':'國信','白馬窯業':'白馬','昇元窯業':'昇元','三洋窯業':'三洋','昌達陶瓷':'昌達'};   // 廠商一律用簡稱
+const cnSeries=(v,s)=>{ if(v!=='國信') return s||''; const s0=String(s||''), cn=(s0.match(/^[^A-Za-z]*/)||[''])[0].replace(/[\s\/(（\-]+$/,'').trim(); return cn||s0; };   // 國信的系列只留中文（雲境 YUN JING → 雲境）
 function mapProduct(p){
+  p.vendor=VSHORT[p.vendor]||p.vendor;
   return {
     _id:p.key||p.id, _img:p.image_url||(p.image_path?PROD_IMG+p.image_path:null), _row:p,
     '型號':p.model||'', '產品名稱':p.import_name||p.name||'', '品牌':p.brand||'', '工廠':p.factory||p.vendor||'', '原廠名':p.factory_code||'', '原廠料號':p.factory_item||'',
-    '大類別':p.category||'', '系列':p.series||'', '尺寸':p.size||'', '顏色':p.color||'',
+    '大類別':p.category||'', '系列':cnSeries(p.vendor,p.series), '尺寸':p.size||'', '顏色':p.color||'',
     '用途':Array.isArray(p.usages)?p.usages.join('、'):(p.usages||''), '紋理':p.texture||'', '面感':p.finish||'', '狀態':p.status||''
   };
 }
