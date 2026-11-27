@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>ATLAS 型錄 v1.49</title>
+<title>ATLAS 型錄 v1.50</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Space+Mono&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#0e1012;--sb:#141618;--panel:#1a1d21;--card:#1f2328;--border:#2a2f36;--border2:#353b44;--gold:#d4a843;--gold2:#f0cc7a;--teal:#3aaa8c;--teal2:#4dc9a8;--red:#e06c6c;--indigo:#7b8cff;--amber:#e8b04a;--text:#dde2ee;--sub:#8a94a6;--muted:#4a5566}
@@ -246,12 +246,14 @@ const gKeyOf=r=>[r.vendor,r.brand,r.series,(r.name||r.model)].join('|');
 function domAll(){ sibAll(); const idx={}; ROWS.forEach(r=>{ if(!r._fp&&!bnfRow(r)){ if(r.fin0===undefined) r.fin0=r.finish||''; (idx[csKey(r)]??=[]).push(r); } }); SG={}; for(const k in idx) SG[k]=styGuess(idx[k]); ROWS.forEach(domNorm); }
 const catHit=(r,v)=>v==='?'?(!r._fp&&!bnfRow(r)&&!r.styOk):v==='-'?(!r._fp&&!bnfRow(r)&&!(r.sty||[]).length):(r.sty||[]).includes(v);
 // 篩選選項（尺寸、厚度、面感、風格、系列）只列「目前狀態範圍」裡有的：沒勾＋含限量／＋原廠期貨，就不會冒出那些款的特殊尺寸
-const fScope=()=>{ const sv=$('#fSt').value, isT=sv==='常態'||sv==='零星'; return {st:isT?'入庫':sv,tier:isT?sv:'',ltd:$('#fLtd').checked,fq:$('#fFq').checked,fut:$('#fFut').checked}; };
+const stMap=sv=>sv==='in'?{st:'入庫',tier:'常態',only:'bnf'}:sv==='dom'?{st:'入庫',tier:'',only:'dom'}:(sv==='常態'||sv==='零星')?{st:'入庫',tier:sv,only:sv==='零星'?'bnf':''}:{st:sv,tier:'',only:(sv==='限量')?'bnf':''};   /* 入庫＝新睦豐倉庫有貨；常態＝國內工廠正常生產 */
+const onlyOk=(r,f)=>!f.only||(f.only==='dom')===(!r._fp&&!bnfRow(r));
+const fScope=()=>({...stMap($('#fSt').value),ltd:$('#fLtd').checked,fq:$('#fFq').checked,fut:$('#fFut').checked});
 const rowOk=(r,f,dom)=>{ if(r._fp) return f.fut&&(!f.st||f.st==='入庫'); const z=rst(r);
   if(z==='期貨') return f.fq&&(!f.st||f.st==='入庫');      /* 期貨（我們有、要等貨）、原廠期貨：沒勾就不出現，連「全部」也一樣 */
   if(!f.st) return true; if(dom) return f.st==='停產'?z==='停產':z!=='停產';
   return z===f.st||(f.ltd&&f.st==='入庫'&&z==='限量')||(f.st==='入庫'&&(z==='限量'||z==='停產')&&openUse(r).length>0); };
-const rowIn=(r,f)=>{ if(f.tier&&tier(r.vendor||r.source,r.brand)!==f.tier) return false; return rowOk(r,f,!r._fp&&!bnfRow(r)); };
+const rowIn=(r,f)=>{ if(!onlyOk(r,f)) return false; if(f.tier&&tier(r.vendor||r.source,r.brand)!==f.tier) return false; return rowOk(r,f,!r._fp&&!bnfRow(r)); };
 const scoped=rs=>{ if($('#q').value.trim()) return rs; const f=fScope(); return rs.filter(r=>rowIn(r,f)); };
 const SEP='\u0001', sKey=r=>B===ALL?r.brand+SEP+r.series:r.series, sLab=x=>x.includes(SEP)?x.split(SEP).join('｜'):x;      /* 品牌選（全部）時，系列前面加品牌；同名系列（花磚、庭園磚）也才分得開 */
 const tier=(v,b)=>BR[v+'|'+b]?.tier||'常態';
@@ -274,7 +276,7 @@ function addFpRows(){ ROWS=ROWS.filter(r=>!r._fp); const NKx=x=>String(x||'').to
 function fillSel(id,list,cur,lab){ $(id).innerHTML=list.map(x=>`<option value="${esc(x)}"${x===cur?' selected':''}>${esc(lab?lab(x):x)}</option>`).join(''); }
 function onVendor(){ const rs=ROWS.filter(r=>V===ALL||(r.vendor||r.source)===V); const bs=[...new Set(rs.map(r=>r.brand))].sort((a,b)=>(tier(V,a)==='常態'?0:1)-(tier(V,b)==='常態'?0:1)||a.localeCompare(b)); const brands=[ALL,...bs]; B=brands.includes(B)?B:brands[1]||ALL; fillSel('#selBrand',brands,B,x=>x===ALL?x:x+(tier(V,x)!=='常態'?'（'+tier(V,x)+'）':'')); vendorFilters(rs); onBrand(); }
 function vendorFilters(rs){ const bnf=V==='新睦豐', all=V===ALL, dom=!bnf&&!all; const setSel=(id,opts,def)=>{ const el=$(id), c=el.value; el.innerHTML=opts.map(([v,t])=>v==='-'?'<option disabled>────</option>':`<option value="${v}">${t}</option>`).join(''); el.value=opts.some(([v])=>v===c&&v!=='-')?c:def; };
-  setSel('#fSt',dom?[['常態','常態'],['停產','停產']]:[['','全部'],['常態','入庫'],['限量','限量'],['-',''],['零星','零星'],['停產','停產']],'常態');   /* 期貨不放在這裡：要看期貨就勾「＋期貨」「＋原廠期貨」 */
+  setSel('#fSt',dom?[['常態','常態'],['停產','停產']]:all?[['','全部'],['常態','入庫＋常態'],['in','入庫（新睦豐，倉庫有貨）'],['dom','常態（國內工廠正常生產）'],['限量','限量'],['-',''],['零星','零星'],['停產','停產']]:[['','全部'],['常態','入庫'],['限量','限量'],['-',''],['零星','零星'],['停產','停產']],'常態');   /* 期貨不放在這裡：要看期貨就勾「＋期貨」「＋原廠期貨」 */
   $('#fStCk').style.display=dom?'none':'contents'; $('#fgGreen').style.display=bnf?'none':''; if(bnf) $('#fGreen').value='';
   setSel('#fSlip',[['','全部'],...(dom?[]:[['R10','R10'],['R11','R11 以上']]),...(bnf?[]:[['tw55',all?'CSR 0.55 以上':'0.55 以上']])],''); $('#fSlipLab').textContent=bnf?'防滑（DIN）':dom?'防滑（CSR）':'防滑性';
 }
@@ -293,12 +295,12 @@ const cur=()=>ROWS.filter(r=>(V===ALL||(r.vendor||r.source)===V)&&(B===ALL||r.br
 function groups(){ const q=$('#q').value.trim().toLowerCase(); const base=q?ROWS.filter(r=>[r.import_name,r.factory_code,r.model,r.series,r.series0,r.brand].join(' ').toLowerCase().includes(q)):cur();
   const g={}; for(const r of base){ const dom=!bnfRow(r); const k=[r.vendor,r.brand,r.series,dom?(r.name||r.model):(r.factory_code||r.model)].join('|'); (g[k]??={k,dom,vendor:r.vendor||r.source,brand:r.brand,b0:r.brand0||r.brand,sub:subB(r),series:r.series,en:nm(dom?r.model:(r.factory_code||r.model)),ch:nm(dom?(r.name||''):r.import_name),ltd:isLtdName(r.import_name),isNew:/new/i.test((r.import_name||'')+(r.factory_code||'')),rows:[]}).rows.push(r); }
   Object.values(g).forEach(x=>{ if(x.dom) x.en=[...new Set(x.rows.map(r=>nm(r.model)))].join(' / '); });   // 國產：同一個色名的不同尺寸放一格，標題列型號
-  const sv=$('#fSt').value, isT=sv==='常態'||sv==='零星'; const f={st:isT?'入庫':sv,ltd:$('#fLtd').checked,fq:$('#fFq').checked,fut:$('#fFut').checked,fin:$('#fFin').value,th:$('#fTh').value,sz:$('#fSz').value,cat:$('#fCat').value,tier:isT?sv:'',green:$('#fGreen').value,slip:$('#fSlip').value};
-  const n=[sv,f.ltd,f.fin,f.th,f.sz,f.cat,f.green,f.slip].filter(Boolean).length; $('#fsum').textContent=((sv==='常態'&&n===1)?'預設：'+(isBNF()?'入庫':'常態'):(sv==='常態'&&f.ltd&&n===2)?'入庫＋限量':n?`${n} 個條件`:'全部顯示')+(f.fq&&isBNF()?'＋期貨':'')+(f.fut&&isBNF()?'＋原廠期貨':'');
+  const sv=$('#fSt').value; const f={...stMap(sv),ltd:$('#fLtd').checked,fq:$('#fFq').checked,fut:$('#fFut').checked,fin:$('#fFin').value,th:$('#fTh').value,sz:$('#fSz').value,cat:$('#fCat').value,green:$('#fGreen').value,slip:$('#fSlip').value};
+  const n=[sv,f.ltd,f.fin,f.th,f.sz,f.cat,f.green,f.slip].filter(Boolean).length; $('#fsum').textContent=((sv==='常態'&&n===1)?'預設：'+(V===ALL?'入庫＋常態':isBNF()?'入庫':'常態'):(sv==='常態'&&f.ltd&&n===2)?'入庫＋限量':n?`${n} 個條件`:'全部顯示')+(f.fq&&isBNF()?'＋期貨':'')+(f.fut&&isBNF()?'＋原廠期貨':'');
   const ord=x=>(tier(x.vendor,x.brand)==='常態'?0:1);
   // 預設「入庫」＝只看常態庫存：帶限量／停產的型號一併剔除（整個品名都是限量就整格不顯示）
-  if(q){ f.st=''; f.tier=''; }   // 有打搜尋字＝跨全部找，狀態／等級篩選不套用（期貨、限量、零星自己搜）
-  return Object.values(g).sort((a,b)=>ord(a)-ord(b)||a.brand.localeCompare(b.brand)||serSort(a.series,b.series)).map(x=>{ if(q) return x; const rows=x.rows.filter(r=>rowOk(r,f,x.dom)); return rows.length?{...x,rows,ltd:f.st==='限量'&&x.ltd}:null; }).filter(Boolean).filter(x=>{ const rs=x.rows; if(f.fin&&!rs.some(r=>r.finish===f.fin)) return false; if(f.th&&!rs.some(r=>th(r.thickness).split('／').includes(f.th))) return false; if(f.sz&&!rs.some(r=>sizesOf(r).includes(f.sz))) return false; if(f.cat&&!rs.some(r=>catHit(r,f.cat))) return false; if(f.tier&&tier(x.vendor,x.brand)!==f.tier) return false; if(f.green&&!rs.some(r=>f.green==='any'?greenOf(r).length:greenOf(r).includes(f.green))) return false; if(f.slip&&!rs.some(r=>slipHit(r,f.slip))) return false; return true; }); }
+  if(q){ f.st=''; f.tier=''; f.only=''; }   // 有打搜尋字＝跨全部找，狀態／等級篩選不套用（期貨、限量、零星自己搜）
+  return Object.values(g).sort((a,b)=>ord(a)-ord(b)||a.brand.localeCompare(b.brand)||serSort(a.series,b.series)).map(x=>{ if(q) return x; const rows=x.rows.filter(r=>onlyOk(r,f)&&rowOk(r,f,x.dom)); return rows.length?{...x,rows,ltd:f.st==='限量'&&x.ltd}:null; }).filter(Boolean).filter(x=>{ const rs=x.rows; if(f.fin&&!rs.some(r=>r.finish===f.fin)) return false; if(f.th&&!rs.some(r=>th(r.thickness).split('／').includes(f.th))) return false; if(f.sz&&!rs.some(r=>sizesOf(r).includes(f.sz))) return false; if(f.cat&&!rs.some(r=>catHit(r,f.cat))) return false; if(f.tier&&tier(x.vendor,x.brand)!==f.tier) return false; if(f.green&&!rs.some(r=>f.green==='any'?greenOf(r).length:greenOf(r).includes(f.green))) return false; if(f.slip&&!rs.some(r=>slipHit(r,f.slip))) return false; return true; }); }
 // 原廠完整規格（factory_products）：同品牌＋原廠款名對上；每列標 入庫（我們有進）／停產（原廠 *）／未進
 const FIN_ZH={natural:'自然面',polished:'亮面','natural-plus':'自然面+','levigato-polished':'亮面（拋光）',flamed:'燒面',structured:'結構面',jewel:'晶鑽亮面','semi-polished':'半拋面',honed:'霧面',bushhammered:'荔枝面',cashmere:'絲絨面',silky:'絲滑面',antislip:'止滑面','top-lapped':'半拋面',glint:'微光面',feel:'觸感面',iridia:'虹彩面',active:'Active'};
 const szNorm=z=>{ const k=szKey(z); return k[0]===9e9?String(z):[...k].sort((a,b)=>b-a).join('x'); };
