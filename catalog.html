@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>ATLAS 型錄 v1.50</title>
+<title>ATLAS 型錄 v1.51</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Space+Mono&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#0e1012;--sb:#141618;--panel:#1a1d21;--card:#1f2328;--border:#2a2f36;--border2:#353b44;--gold:#d4a843;--gold2:#f0cc7a;--teal:#3aaa8c;--teal2:#4dc9a8;--red:#e06c6c;--indigo:#7b8cff;--amber:#e8b04a;--text:#dde2ee;--sub:#8a94a6;--muted:#4a5566}
@@ -115,7 +115,7 @@ table.mx{width:100%;border-collapse:collapse;font-size:12px}.mx th{font-weight:5
     <div class="fg"><label>面感</label><select id="fFin"><option value="">全部</option></select></div>
     <div class="fg"><label>厚度 /mm</label><select id="fTh"><option value="">全部</option></select></div>
     <div class="fg"><label>風格分類</label><select id="fCat"><option value="">全部</option></select></div>
-    <div class="fg" id="fgSt"><label>狀態</label><div class="strow"><select id="fSt"></select><span id="fStCk"><label class="ck"><input type="checkbox" id="fLtd"> ＋限量（出完不補）</label><label class="ck"><input type="checkbox" id="fFq"> ＋期貨（我們有、要等貨）</label><label class="ck"><input type="checkbox" id="fFut"> ＋原廠期貨（原廠有、我們沒進）</label></span></div></div>
+    <div class="fg" id="fgSt"><label>狀態</label><div class="strow"><select id="fSt"></select><span id="fStCk"><label class="ck" title="出完不補"><input type="checkbox" id="fLtd"> ＋限量</label><label class="ck" title="原廠有、我們沒進（含系統建過編號、要等貨的款）"><input type="checkbox" id="fFut"> ＋期貨</label></span></div></div>
     <div class="fg" id="fgGreen"><label>綠建材</label><select id="fGreen"><option value="">全部</option><option value="any">綠建材標章</option><option value="再生">再生綠建材</option><option value="高性能">高性能綠建材</option></select></div>
     <div class="fg"><label id="fSlipLab">防滑性</label><select id="fSlip"></select></div>
     <div class="fg"><label>&nbsp;</label><button class="btn sm" id="fDef">回預設</button> <button class="btn sm" id="fClear">全部顯示</button></div>
@@ -248,7 +248,7 @@ const catHit=(r,v)=>v==='?'?(!r._fp&&!bnfRow(r)&&!r.styOk):v==='-'?(!r._fp&&!bnf
 // 篩選選項（尺寸、厚度、面感、風格、系列）只列「目前狀態範圍」裡有的：沒勾＋含限量／＋原廠期貨，就不會冒出那些款的特殊尺寸
 const stMap=sv=>sv==='in'?{st:'入庫',tier:'常態',only:'bnf'}:sv==='dom'?{st:'入庫',tier:'',only:'dom'}:(sv==='常態'||sv==='零星')?{st:'入庫',tier:sv,only:sv==='零星'?'bnf':''}:{st:sv,tier:'',only:(sv==='限量')?'bnf':''};   /* 入庫＝新睦豐倉庫有貨；常態＝國內工廠正常生產 */
 const onlyOk=(r,f)=>!f.only||(f.only==='dom')===(!r._fp&&!bnfRow(r));
-const fScope=()=>({...stMap($('#fSt').value),ltd:$('#fLtd').checked,fq:$('#fFq').checked,fut:$('#fFut').checked});
+const fScope=()=>({...stMap($('#fSt').value),ltd:$('#fLtd').checked,fq:$('#fFut').checked,fut:$('#fFut').checked});
 const rowOk=(r,f,dom)=>{ if(r._fp) return f.fut&&(!f.st||f.st==='入庫'); const z=rst(r);
   if(z==='期貨') return f.fq&&(!f.st||f.st==='入庫');      /* 期貨（我們有、要等貨）、原廠期貨：沒勾就不出現，連「全部」也一樣 */
   if(!f.st) return true; if(dom) return f.st==='停產'?z==='停產':z!=='停產';
@@ -276,7 +276,7 @@ function addFpRows(){ ROWS=ROWS.filter(r=>!r._fp); const NKx=x=>String(x||'').to
 function fillSel(id,list,cur,lab){ $(id).innerHTML=list.map(x=>`<option value="${esc(x)}"${x===cur?' selected':''}>${esc(lab?lab(x):x)}</option>`).join(''); }
 function onVendor(){ const rs=ROWS.filter(r=>V===ALL||(r.vendor||r.source)===V); const bs=[...new Set(rs.map(r=>r.brand))].sort((a,b)=>(tier(V,a)==='常態'?0:1)-(tier(V,b)==='常態'?0:1)||a.localeCompare(b)); const brands=[ALL,...bs]; B=brands.includes(B)?B:brands[1]||ALL; fillSel('#selBrand',brands,B,x=>x===ALL?x:x+(tier(V,x)!=='常態'?'（'+tier(V,x)+'）':'')); vendorFilters(rs); onBrand(); }
 function vendorFilters(rs){ const bnf=V==='新睦豐', all=V===ALL, dom=!bnf&&!all; const setSel=(id,opts,def)=>{ const el=$(id), c=el.value; el.innerHTML=opts.map(([v,t])=>v==='-'?'<option disabled>────</option>':`<option value="${v}">${t}</option>`).join(''); el.value=opts.some(([v])=>v===c&&v!=='-')?c:def; };
-  setSel('#fSt',dom?[['常態','常態'],['停產','停產']]:all?[['','全部'],['常態','入庫＋常態'],['in','入庫（新睦豐，倉庫有貨）'],['dom','常態（國內工廠正常生產）'],['限量','限量'],['-',''],['零星','零星'],['停產','停產']]:[['','全部'],['常態','入庫'],['限量','限量'],['-',''],['零星','零星'],['停產','停產']],'常態');   /* 期貨不放在這裡：要看期貨就勾「＋期貨」「＋原廠期貨」 */
+  setSel('#fSt',dom?[['常態','常態'],['停產','停產']]:all?[['','全部'],['常態','入庫＋常態'],['in','入庫'],['dom','常態'],['限量','限量'],['-',''],['零星','零星'],['停產','停產']]:[['','全部'],['常態','入庫'],['限量','限量'],['-',''],['零星','零星'],['停產','停產']],'常態');   /* 期貨不放在這裡：要看期貨就勾「＋期貨」「＋原廠期貨」 */
   $('#fStCk').style.display=dom?'none':'contents'; $('#fgGreen').style.display=bnf?'none':''; if(bnf) $('#fGreen').value='';
   setSel('#fSlip',[['','全部'],...(dom?[]:[['R10','R10'],['R11','R11 以上']]),...(bnf?[]:[['tw55',all?'CSR 0.55 以上':'0.55 以上']])],''); $('#fSlipLab').textContent=bnf?'防滑（DIN）':dom?'防滑（CSR）':'防滑性';
 }
@@ -295,8 +295,8 @@ const cur=()=>ROWS.filter(r=>(V===ALL||(r.vendor||r.source)===V)&&(B===ALL||r.br
 function groups(){ const q=$('#q').value.trim().toLowerCase(); const base=q?ROWS.filter(r=>[r.import_name,r.factory_code,r.model,r.series,r.series0,r.brand].join(' ').toLowerCase().includes(q)):cur();
   const g={}; for(const r of base){ const dom=!bnfRow(r); const k=[r.vendor,r.brand,r.series,dom?(r.name||r.model):(r.factory_code||r.model)].join('|'); (g[k]??={k,dom,vendor:r.vendor||r.source,brand:r.brand,b0:r.brand0||r.brand,sub:subB(r),series:r.series,en:nm(dom?r.model:(r.factory_code||r.model)),ch:nm(dom?(r.name||''):r.import_name),ltd:isLtdName(r.import_name),isNew:/new/i.test((r.import_name||'')+(r.factory_code||'')),rows:[]}).rows.push(r); }
   Object.values(g).forEach(x=>{ if(x.dom) x.en=[...new Set(x.rows.map(r=>nm(r.model)))].join(' / '); });   // 國產：同一個色名的不同尺寸放一格，標題列型號
-  const sv=$('#fSt').value; const f={...stMap(sv),ltd:$('#fLtd').checked,fq:$('#fFq').checked,fut:$('#fFut').checked,fin:$('#fFin').value,th:$('#fTh').value,sz:$('#fSz').value,cat:$('#fCat').value,green:$('#fGreen').value,slip:$('#fSlip').value};
-  const n=[sv,f.ltd,f.fin,f.th,f.sz,f.cat,f.green,f.slip].filter(Boolean).length; $('#fsum').textContent=((sv==='常態'&&n===1)?'預設：'+(V===ALL?'入庫＋常態':isBNF()?'入庫':'常態'):(sv==='常態'&&f.ltd&&n===2)?'入庫＋限量':n?`${n} 個條件`:'全部顯示')+(f.fq&&isBNF()?'＋期貨':'')+(f.fut&&isBNF()?'＋原廠期貨':'');
+  const sv=$('#fSt').value; const f={...stMap(sv),ltd:$('#fLtd').checked,fq:$('#fFut').checked,fut:$('#fFut').checked,fin:$('#fFin').value,th:$('#fTh').value,sz:$('#fSz').value,cat:$('#fCat').value,green:$('#fGreen').value,slip:$('#fSlip').value};
+  const n=[sv,f.ltd,f.fin,f.th,f.sz,f.cat,f.green,f.slip].filter(Boolean).length; $('#fsum').textContent=((sv==='常態'&&n===1)?'預設：'+(V===ALL?'入庫＋常態':isBNF()?'入庫':'常態'):(sv==='常態'&&f.ltd&&n===2)?'入庫＋限量':n?`${n} 個條件`:'全部顯示')+(f.fut&&isBNF()?'＋期貨':'');
   const ord=x=>(tier(x.vendor,x.brand)==='常態'?0:1);
   // 預設「入庫」＝只看常態庫存：帶限量／停產的型號一併剔除（整個品名都是限量就整格不顯示）
   if(q){ f.st=''; f.tier=''; f.only=''; }   // 有打搜尋字＝跨全部找，狀態／等級篩選不套用（期貨、限量、零星自己搜）
@@ -499,10 +499,10 @@ function bindSide(g,st){
   document.querySelectorAll('[data-doc]').forEach(a=>a.addEventListener('click',async e=>{ e.preventDefault(); const {data,error}=await sb.storage.from('catalog-docs').createSignedUrl(a.dataset.doc,600); if(error){ alert(error.message); return; } window.open(data.signedUrl,'_blank'); }));
   document.querySelectorAll('[data-deldoc]').forEach(x=>x.addEventListener('click',async()=>{ if(!confirm('移除這份文件？')) return; const id=+x.dataset.deldoc; const d=DOCS.find(k=>k.id===id); await sb.storage.from('catalog-docs').remove([d.path]); await sb.from('product_docs').delete().eq('id',id); DOCS=DOCS.filter(k=>k.id!==id); renderSide(); })); }
 ['q','fFin','fTh','fSz','fCat','fGreen','fSlip'].forEach(id=>$('#'+id).addEventListener('input',()=>{ SEL=null; render(); }));
-['fSt','fLtd','fFq','fFut'].forEach(id=>$('#'+id).addEventListener('input',()=>{ SEL=null; onBrand(true); }));   /* 狀態範圍變了，尺寸／厚度／面感／系列的選項跟著重列 */
-const DEF=()=>{ ['fFin','fTh','fSz','fCat','fGreen','fSlip'].forEach(id=>$('#'+id).value=''); $('#fSt').value='常態'; $('#fLtd').checked=false; $('#fFq').checked=false; $('#fFut').checked=false; };   // 預設只看「常態品牌 × 入庫」
+['fSt','fLtd','fFut'].forEach(id=>$('#'+id).addEventListener('input',()=>{ SEL=null; onBrand(true); }));   /* 狀態範圍變了，尺寸／厚度／面感／系列的選項跟著重列 */
+const DEF=()=>{ ['fFin','fTh','fSz','fCat','fGreen','fSlip'].forEach(id=>$('#'+id).value=''); $('#fSt').value='常態'; $('#fLtd').checked=false; $('#fFut').checked=false; };   // 預設只看「常態品牌 × 入庫」
 $('#fClear').addEventListener('click',()=>{ ['fSt','fFin','fTh','fSz','fCat','fGreen','fSlip'].forEach(id=>$('#'+id).value=''); if(![...$('#fSt').options].some(o=>o.value==='')) $('#fSt').value='常態';   /* 國產只有常態／停產兩項 */
-  $('#fLtd').checked=false; $('#fFq').checked=true; $('#fFut').checked=true; onBrand(true); });
+  $('#fLtd').checked=false; $('#fFut').checked=true; onBrand(true); });
 $('#fDef').addEventListener('click',()=>{ DEF(); onBrand(true); });
 $('#fh').addEventListener('click',()=>$('#filt').classList.toggle('closed'));
 let LB=[],LBI=0;   // 燈箱：同一排的圖可以左右切換；第一張往左＝最後一張
